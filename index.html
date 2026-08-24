@@ -491,6 +491,18 @@ the picks are deterministic, and once frozen they were not changed.</div>
 <tr><td>objects per room</td><td class="mut">13.5</td><td class="mut">13.3</td><td class="mut">matched</td></tr>
 </tbody></table></div>
 
+<figure>
+  <img src="assets/bench10.png" alt="A ten-room-benchmark example: PhyScene left, ReRoom right">
+  <figcaption>One room from the ten-room benchmark. Left: PhyScene has six
+  dining chairs overlapping the table and a television unit that hangs half a
+  metre outside the wall &mdash; Col<sub>obj</sub> 0.56, R<sub>out</sub> 0.38.
+  Right: ReRoom keeps every object inside the room and none of them intersect
+  &mdash; 0.00 and 0.00. What ReRoom still gets wrong is visible too: the
+  dining chairs are around the table but not tucked in, one is a metre off, and
+  functional score reflects that at 0.96 against a lucky 1.00 on the left.
+  Numbers are the ones from Table&nbsp;8 measured on this particular room.</figcaption>
+</figure>
+
 <p>Two large wins on the physical axes, essentially level on functional
 plausibility, and one loss on free-space connectivity. Object counts match, so
 this is not a case of one method looking better by placing fewer things.</p>
