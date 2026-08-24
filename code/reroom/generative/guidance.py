@@ -61,8 +61,22 @@ class GuidanceConfig:
 
     def __init__(self, bound: float = 3.0, coll: float = 1.0,
                  clear: float = 0.2, corridor: float = 0.25,
+                 wall_align: float = 0.0, wall_pull: float = 0.0,
+                 wall_min: float = 0.5, wall_slack: float = 0.75,
                  start: float = 0.5, nestable_slack: float = 0.6,
                  bound_margin: float = 0.12):
+        # E_func wall term (section 8): an object that hugged a wall in the
+        # reference should end up *parallel* to a wall (align) and *against* it
+        # (pull) in the target.  Both are gated by the per-instance reference
+        # wall affinity, so an object that floated in the middle is not dragged
+        # to a wall.  ``wall_min`` is the affinity below which neither fires;
+        # ``wall_slack`` metres of centre-to-wall distance are tolerated before
+        # the pull acts, so an object at its natural depth is left alone and
+        # only a clearly floating one is pulled in.
+        self.wall_align = wall_align
+        self.wall_pull = wall_pull
+        self.wall_min = wall_min
+        self.wall_slack = wall_slack
         # E_clear (section 8): objects from *different* functional groups need a
         # gap a person can pass through.  ``corridor`` is that gap in metres;
         # ``clear`` weights it.  Only cross-motif pairs are pushed -- objects
@@ -210,11 +224,41 @@ def feasibility_grad(x1_hat: torch.Tensor, batch: dict, frames: list,
                      * cross.float() * valid.float() * (~exempt).float())
         phi = phi + cfg.clear * (clear_pen ** 2).sum() * 0.5
 
+    # ---- phi_wall (E_func, section 8): align to and hug the wall ------------
+    # Gated by the per-instance reference wall affinity (cond[-1]): only objects
+    # that were against a wall in the reference are touched.  ``align`` rotates
+    # the object so its facing is perpendicular to the wall (its body parallel
+    # to it) -- this is the term that un-skews a bookshelf; ``pull`` slides a
+    # clearly-floating one in.  The alignment penalty is kept in a *separate*
+    # objective so its gradient feeds only the orientation channels: letting
+    # the position terms above also rotate objects (through the corner
+    # geometry) over-corrects and fragments the free space.
+    if cfg.wall_align > 0.0 or cfg.wall_pull > 0.0:
+        aff = batch["cond"][..., -1]                             # (B, N) reference affinity
+        gate = (aff * (aff > cfg.wall_min).float()) * mask       # soft, thresholded
+        dc = torch.cdist(world, bp_world)                        # (B, N, Nb)
+        nnc = dc.argmin(-1)
+        n_c = torch.gather(bn, 1, nnc[..., None].expand(-1, -1, 2))   # inward normal
+        p_c = torch.gather(bp_world, 1, nnc[..., None].expand(-1, -1, 2))
+        if cfg.wall_align > 0.0:
+            # object facing (world +y) should be parallel to +/- the wall normal
+            fdot = (fwd * n_c).sum(-1)                           # cos(angle facing<->normal)
+            align_pen = gate * (1.0 - fdot ** 2)                # 0 when parallel/anti-parallel
+            phi = phi + cfg.wall_align * align_pen.sum()
+        if cfg.wall_pull > 0.0:
+            # slide a floating wall-lover in; only past ``wall_slack`` of centre
+            # distance, so an object already at its natural depth is left alone
+            signed = ((world - p_c) * n_c).sum(-1)              # inward distance of centre
+            pull_pen = gate * torch.relu(signed - cfg.wall_slack)
+            phi = phi + cfg.wall_pull * (pull_pen ** 2).sum()
+
     # degenerate case: a fully feasible predicted layout makes phi structurally
     # zero, with no gradient to take -- the correction is legitimately nothing.
     if not phi.requires_grad or float(phi) == 0.0:
         return torch.zeros_like(x1_hat)
     g, = torch.autograd.grad(phi, x)
     out = torch.zeros_like(x1_hat)
-    out[..., :2] = torch.nan_to_num(g[..., :2])
+    out[..., :2] = torch.nan_to_num(g[..., :2])   # position
+    if cfg.wall_align > 0.0:                       # orientation only when aligning
+        out[..., 2:] = torch.nan_to_num(g[..., 2:])
     return out

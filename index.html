@@ -484,8 +484,8 @@ the picks are deterministic, and once frozen they were not changed.</div>
 <table>
 <thead><tr><th>metric</th><th>PhyScene</th><th>ReRoom (guided flow)</th><th>note</th></tr></thead>
 <tbody>
-<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.374</b></td><td class="mut">better; both tolerate tuck-in</td></tr>
-<tr><td>R<sub>out</sub> &darr;</td><td class="win"><b>0.128</b></td><td>0.156</td><td class="mut">&minus;0.028, wall-hug overhang</td></tr>
+<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.387</b></td><td class="mut">better; both tolerate tuck-in</td></tr>
+<tr><td>R<sub>out</sub> &darr;</td><td class="win"><b>0.128</b></td><td>0.150</td><td class="mut">&minus;0.022, wall-hug overhang</td></tr>
 <tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td class="win"><b>0.972</b></td><td class="mut">better</td></tr>
 <tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.962</b></td><td class="mut">+0.019</td></tr>
 <tr><td><b>S<sub>rel</sub></b> (reference kept) &uarr;</td><td class="mut">n/a</td><td class="win"><b>0.985</b></td><td class="mut">PhyScene has no reference</td></tr>
@@ -680,8 +680,8 @@ Reference &rarr; Intent graph + elasticity &alpha; &rarr; Flow transformer &rarr
 <tr><td>Relation elasticity &alpha; <b>(the core)</b></td><td class="mut">&alpha;<sub>ij</sub>=f<sub>&psi;</sub>(&middot;); &ldquo;preserve rigid, adapt elastic&rdquo;</td><td class="mut">a learned network; it enters the flow as per-edge attention bias carrying &alpha;, the room-scale ratio and the elasticity-adjusted target relation</td><td>faithful <b>(learned)</b></td></tr>
 <tr><td>Generative proposal</td><td class="mut">flow-matching transformer v<sub>&theta;</sub></td><td class="mut">a 33 M-param DiT-style transformer over object tokens, conditioned on the intent graph &mdash; <b>the primary path</b></td><td>faithful <b>(learned)</b></td></tr>
 <tr><td>Feasibility (eq.&nbsp;37)</td><td class="mut">correct collision / boundary / clearance without breaking the layout</td><td class="mut">PhyScene-style guidance <em>inside</em> the sampler carrying the E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub> terms as active priors: a differentiable gradient on the predicted clean sample, tolerant of legitimate overlaps</td><td>faithful <b>(learned)</b></td></tr>
-<tr><td>Summarisation / growth</td><td class="mut">importance &zeta;<sub>i</sub>, motif-level pruning; fill, don't spread</td><td class="mut">implemented, motif-aware</td><td>faithful</td></tr>
-<tr><td>Style retrieval</td><td class="mut">(L<sub>t</sub>, I<sub>r</sub>) &rarr; S<sub>t</sub></td><td class="mut">asset bank, category + size</td><td>faithful</td></tr>
+<tr><td>Selection: summarise / grow</td><td class="mut">importance &zeta;<sub>i</sub>, motif-level pruning; fill a bigger room, don't spread</td><td class="mut">runs around the flow: summarisation drops for a smaller room, population fills a larger one (planner-placed, then a feasibility gate admits each addition only if it costs nothing)</td><td>faithful</td></tr>
+<tr><td>Substitution / style</td><td class="mut">(L<sub>t</sub>, I<sub>r</sub>) &rarr; S<sub>t</sub>; swap, don't rescale</td><td class="mut">asset bank retrieval on the flow's output: a reference piece too large for the target becomes a closer-fitting real one</td><td>faithful</td></tr>
 </tbody></table></div>
 
 <div class="note"><strong>The core is preserved, and measurable.</strong> The

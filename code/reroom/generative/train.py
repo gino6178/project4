@@ -76,6 +76,8 @@ class TrainConfig:
     seed: int = 0
     wall_aux: float = 3.0        # weight of the reference-conditioned
                                  # wall-hugging auxiliary loss (0 disables)
+    yaw_norm: float = 0.0        # weight of the unit-norm yaw-confidence
+                                 # regulariser on the predicted (cos, sin)
     init_from: str = ""          # warm-start checkpoint; layers whose shape
                                  # still matches are copied, the rest are left
                                  # at their fresh init (e.g. the input
@@ -192,8 +194,9 @@ def train_flow(scenes: list[Scene], val_scenes: list[Scene] | None = None,
             # boundary, so this pulls exactly those objects tight to the wall
             # they hugged in the reference; free objects (affinity ~0) are
             # untouched.
+            # predicted clean endpoint, shared by the auxiliary losses
+            x1_hat = xt + (1 - tau)[:, None, None] * v
             if cfg.wall_aux > 0.0:
-                x1_hat = xt + (1 - tau)[:, None, None] * v
                 pp = x1_hat[..., :2]                             # (B, N, 2)
                 pt = x1[..., :2]
                 bnd = batch["boundary"][..., :2]                # (B, Nb, 2)
@@ -207,7 +210,23 @@ def train_flow(scenes: list[Scene], val_scenes: list[Scene] | None = None,
                 wall_loss = (pen * mm).sum() / part
             else:
                 wall_loss = torch.zeros((), device=dev)
-            loss = fm_loss + cfg.wall_aux * wall_loss
+
+            # yaw-confidence regularisation: the predicted (cos, sin) endpoint
+            # should sit on the unit circle.  On hard, ambiguous orientations
+            # the flow otherwise hedges and outputs a *shrunk* vector (norm ~0.5
+            # for ~2 % of objects); atan2 still yields an angle, but the shrink
+            # doubles the angular noise, so a bookcase that was perfectly
+            # parallel in the reference lands ~11 deg skewed.  Penalising the
+            # endpoint norm away from 1 forces a confident orientation.
+            if cfg.yaw_norm > 0.0:
+                mm = batch["mask"].float()
+                yn = x1_hat[..., 2:4].norm(dim=-1)                  # (B, N)
+                yaw_norm_loss = (((yn - 1.0) ** 2) * mm).sum() / mm.sum().clamp(min=1)
+            else:
+                yaw_norm_loss = torch.zeros((), device=dev)
+
+            loss = fm_loss + cfg.wall_aux * wall_loss \
+                + cfg.yaw_norm * yaw_norm_loss
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
