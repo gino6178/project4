@@ -227,7 +227,8 @@ $$\tilde d_{ij} \;=\; (1-\alpha_{ij})\, d_{ij} \;+\; \alpha_{ij}\, \gamma\, d_{i
 
 <p>Every object gets a decision variable \(y_i = (k_i, a_i, x_i, y_i, \theta_i, s_i)\): whether it
 is kept, which asset realises it, where it sits, how it is turned, and a bounded footprint trim.
-Retargeting therefore contains <em>placement + selection + substitution</em> at once, and minimises</p>
+Retargeting therefore contains <em>placement + selection + substitution</em> at once. The quality
+of a candidate layout is scored by an energy</p>
 
 <div class="eq"><div class="body">
 $$E(Y) = \lambda_{\text{rel}} E_{\text{rel}} + \lambda_{\text{bound}} E_{\text{bound}}
@@ -236,24 +237,65 @@ $$E(Y) = \lambda_{\text{rel}} E_{\text{rel}} + \lambda_{\text{bound}} E_{\text{b
 + \lambda_{\text{edit}} E_{\text{edit}}$$
 </div><div class="num">(3)</div></div>
 
-<p>The objective is implemented twice. An <b>exact</b> form computes areas with real polygon
-intersection and decides the winner; a <b>differentiable surrogate</b> &mdash; a floor signed
-distance field sampled by <code>grid_sample</code>, separating-axis penetration depth for oriented
-boxes &mdash; is optimised by batched Adam over random restarts. The surrogate proposes; the exact
-energy disposes. Non-differentiable quantities such as free-space connectivity can therefore still
-enter the selection, which turns out to matter and to be insufficient (&sect;6).</p>
+<p>but the layout is not found by descending (3) from scratch &mdash; doing so lands in local minima
+a person reads as wrong (a sofa a few degrees off square) and, worse, drives the collision term to
+zero by scattering a dining set whose chairs are <em>supposed</em> to tuck under the table. The
+shipped method instead follows the plan's two-stage design (&sect;7): a generative model proposes
+the layout and the energy is spent on conditioning, guidance and selection, not on a from-scratch
+search.</p>
 
-<h3>3.3 Shrinking, growing, and the user</h3>
+<h4>3.2.1 The generative proposal</h4>
 
-<p>When the target is smaller, capacity planning drops whole motifs or prunes structurally within
-them (six dining chairs become four) rather than deleting objects by score. When the target is
-larger, the plan's own principle is that a bigger room is filled by <em>adding</em> furniture, not
-by stretching what is there &mdash; and enforcing that principle turned out to require two fixes
-that the measurements found for us (&sect;4.3).</p>
+<p>Placement is produced by a graph-conditioned, permutation-equivariant transformer over object
+tokens (DiT-style, 33&nbsp;M parameters) that predicts the pose of every kept object at once. The
+design intent enters as <em>conditioning, never as order</em>: each relation of the intent graph
+becomes an additive per-head attention bias carrying its type, its weight, the fitted elasticity
+\(\alpha\), the room-scale ratio \(\gamma\) and the elasticity-adjusted target relation
+\(\tilde d\); the target floor polygon enters as sampled boundary points with inward normals, so
+concave and slanted outlines are representable rather than flattened to width&times;depth. The model
+is trained by flow matching on <em>manufactured</em> pairs &mdash; a real 3D-FRONT layout, and the
+same design warped into a curriculum-deformed room as a pseudo-reference &mdash; so it learns to
+carry a design across a change of room shape, with free supervision and no need for paired data.</p>
+
+<h4>3.2.2 Feasibility as in-sampling guidance</h4>
+
+<p>The energy's physical terms do not disappear; they change role. \(E_{\text{bound}}\),
+\(E_{\text{col}}\) and \(E_{\text{clear}}\) become a differentiable <b>guidance gradient applied
+inside the sampler</b>: at each step of the probability-flow ODE the predicted clean layout is
+scored and nudged toward feasibility &mdash; PhyScene's classifier-guidance idea, ported to flow
+matching. Out-of-plan overhang is measured on the footprint corners against the boundary samples;
+collision is charged only between pairs that should <em>not</em> overlap, with a nestable exemption
+(a chair and its table, a nightstand and its bed) so a functional group stays intact; clearance
+opens a walkable corridor between different motifs without spreading a single group apart. Because
+the correction is a gradient inside the generative loop, there is no post-hoc snapping and the
+legitimate overlaps of a real room are kept &mdash; the same reason PhyScene tolerates them.</p>
+
+<h4>3.2.3 The energy's remaining roles, and selection</h4>
+
+<p>The rest of (3) is distributed across the learned system rather than optimised directly.
+\(E_{\text{rel}}\) lives in the attention bias (the elasticity-conditioned relations the transformer
+is trained to reproduce); \(E_{\text{style}}\) is handled by asset substitution; \(E_{\text{edit}}\)
+by summarisation. Finally the <b>full exact energy ranks the \(k\) sampled candidates</b> and picks
+the winner &mdash; the section-8 energy acting as a selection prior over the generative proposal,
+which is the eq.-(37) division of labour: the model supplies diversity and a global layout prior,
+the energy supplies feasibility and choice.</p>
+
+<h3>3.3 Selection, growth, and substitution</h3>
+
+<p>The other two thirds of the decision variable are handled around the generative core. When the
+target is <b>smaller</b>, capacity planning drops whole motifs or prunes structurally within them
+(six dining chairs become four) rather than deleting objects by score. When the target is
+<b>larger</b>, a bigger room is filled by <em>adding</em> furniture, not by stretching what is
+there: a population planner places new pieces relative to the surviving motifs, and a feasibility
+gate then admits each addition only while it costs the layout nothing. <b>Substitution</b> swaps
+each asset for the closest-fitting real one in the bank when the room shrank &mdash; a reference
+sofa too large becomes a smaller sofa of similar style, not a non-physically rescaled one. So
+placement (the flow), selection (summarise / grow) and substitution (retrieval) together realise
+the whole of \(y_i\).</p>
 
 <p>User constraints \(C_t\) are hard: an object the user pins keeps its pose exactly and can never
-be dropped, and floor the user marks as no-go is punched out of the signed distance field the
-boundary term reads, so a no-go zone has a wall's gradient.</p>
+be dropped, and floor the user marks as no-go is punched out of the boundary the guidance reads, so
+a no-go zone has a wall's gradient.</p>
 
 <figure>
   <img src="assets/levels.png" alt="One design retargeted across the deformation curriculum">
@@ -269,6 +311,14 @@ boundary term reads, so a no-go zone has a wall's gradient.</p>
 are anchors rather than methods: <em>source reference</em> is the design scored in its own room, the
 ceiling for preservation; it is also the floor for feasibility, because professionally designed
 rooms are not collision-free either.</p>
+
+<p class="mut" style="font-size:.92em"><b>What this section isolates.</b> The ablations below hold
+the design-intent representation of &sect;3.1 fixed and turn its parts on and off, using the energy
+of &sect;3.2 as the retargeting engine &mdash; the cleanest way to attribute an effect to a
+component, and the setting under which the elasticity and motif machinery were validated. The
+shipped generative pipeline of &sect;3.2.1&ndash;3.2.3 is the system evaluated head-to-head against a
+released method in &sect;5; because both condition on the same intent graph, what these ablations
+establish about the representation carries over.</p>
 
 <div class="tw"><p class="tnum">Table 1 &mdash; Oracle retargeting, 200 held-out rooms &times; 5 deformation levels (n = 1000)</p>
 <table>
