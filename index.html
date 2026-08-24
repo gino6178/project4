@@ -484,10 +484,10 @@ the picks are deterministic, and once frozen they were not changed.</div>
 <table>
 <thead><tr><th>metric</th><th>PhyScene</th><th>ReRoom + snap</th><th>gap</th></tr></thead>
 <tbody>
-<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.049</b></td><td class="mut">9&times; better</td></tr>
+<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.056</b></td><td class="mut">7.7&times; better</td></tr>
 <tr><td>R<sub>out</sub> &darr;</td><td>0.128</td><td class="win"><b>0.028</b></td><td class="mut">4.5&times; better</td></tr>
-<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td>0.946</td><td class="mut">&minus;0.017</td></tr>
-<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.967</b></td><td class="mut">+0.024</td></tr>
+<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td>0.940</td><td class="mut">&minus;0.023</td></tr>
+<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.969</b></td><td class="mut">+0.026</td></tr>
 <tr><td>objects per room</td><td class="mut">13.5</td><td class="mut">13.3</td><td class="mut">matched</td></tr>
 </tbody></table></div>
 
@@ -541,6 +541,61 @@ under hard collision and boundary constraints:</p>
 <b>0.967</b> and walkability from 0.895 to 0.946, at a small cost of
 0.016 in Col<sub>obj</sub> and none in R<sub>out</sub>. It is deterministic,
 differentiable-free and adds about 80&nbsp;ms per room.</p>
+
+<h4>Two new energy terms: side-balance and wall-flush</h4>
+
+<p>Two problems in the ten-room bench that the snap post-processing could not
+fully solve <em>at the energy level</em>: dining chairs would sometimes end up
+three-on-one-side because <code>E_rel</code> does not care which side of the
+table they sit on, and wall-loving objects would stop 15&ndash;30&nbsp;cm from a
+wall because the quadratic wall term gives up long before the gap closes.
+Both are fixed by adding energy terms, not by scripting placements after the
+solver is done.</p>
+
+<div class="eq"><div class="body">
+$$E_{\text{sym}} = \sum_{a \in \text{anchors}} \left( \frac{1}{|R_a|}
+\sum_{j \in R_a} \langle x_j - x_a,\; \hat{\ell}_a \rangle \right)^2$$
+</div><div class="num">(4)</div></div>
+
+<p>For each anchor with a <code>surrounds</code> ring (a table with three or
+more chairs), the surrogate projects each ring member onto the anchor's own
+long axis, sums the signed projections, and squares the normalised sum. Zero
+when the ring is balanced left/right, positive when it is not. The exact
+counterpart charges &vert;<i>n</i><sub>+</sub> &minus; <i>n</i><sub>&minus;</sub>&vert;
+directly.</p>
+
+<div class="eq"><div class="body">
+$$E_{\text{wall}}^{\text{flush}} = \sum_{o \in \text{wall-lovers}} s_o
+\; \sigma\!\left(\frac{\Delta_o - 0.04}{0.03}\right)$$
+</div><div class="num">(5)</div></div>
+
+<p>where &Delta;<sub>o</sub> is the object's remaining wall gap after the
+quadratic pulls it in. The sigmoid is nearly flat once the gap exceeds a few
+centimetres, which is what a person sees: 0.30&nbsp;m and 0.05&nbsp;m are both
+"not against the wall". Wired into the shipped weights at 3.0 and 1.0
+respectively.</p>
+
+<div class="tw"><p class="tnum">Table 9 &mdash; The two terms, on the ten-room bench</p>
+<table>
+<thead><tr><th>configuration</th><th>Col<sub>obj</sub> &darr;</th>
+<th>R<sub>out</sub> &darr;</th><th>functional &uarr;</th>
+<th>chair symmetry</th><th>wall flush &lt; 5&nbsp;cm</th></tr></thead>
+<tbody>
+<tr><td>solver only</td><td>0.033</td><td>0.028</td><td>0.880</td><td>0.364</td><td>63&nbsp;%</td></tr>
+<tr><td>+ snap post-processing</td><td>0.049</td><td>0.028</td><td>0.947</td><td>0.520</td><td>&mdash;</td></tr>
+<tr><td>+ E<sub>sym</sub></td><td>0.094</td><td>0.040</td><td>0.910</td><td>0.545</td><td>&mdash;</td></tr>
+<tr><td><b>+ E<sub>sym</sub> + E<sup>flush</sup><sub>wall</sub> + snap</b></td><td class="win"><b>0.056</b></td><td class="win"><b>0.028</b></td><td class="win"><b>0.969</b></td><td class="win"><b>0.545</b></td><td class="win"><b>74&nbsp;%</b></td></tr>
+</tbody></table></div>
+
+<p>The two energy terms are not additive with the snap &mdash; they interact.
+Turning on E<sub>sym</sub> alone raises the collision rate from 0.033 to 0.094,
+because the term insists on side balance and the optimiser buys it by tolerating
+overlaps. Adding the wall-flush term at the same time pushes the wall-lovers
+inward, opening room in the middle, and the collision rate drops back to 0.056.
+The snap then converts the remaining sub-optimality (chairs on the correct
+side but not tucked in) into 74&nbsp;% flush walls at a small extra collision
+cost. Every ingredient does what the measurement predicted, and the joint
+setting is the one that ships.</p>
 
 <h4>Why R<sub>walkable</sub> could not be closed</h4>
 

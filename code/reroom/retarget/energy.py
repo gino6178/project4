@@ -43,6 +43,7 @@ CEIL_CLEAR = 1.9            # objects hung this high do not occupy the floor
 @dataclass
 class EnergyWeights:
     rel: float = 1.0
+    sym: float = 3.0   # balance chairs left/right across a table
     bound: float = 40.0
     col: float = 30.0
     clear: float = 4.0
@@ -66,7 +67,7 @@ class EnergyWeights:
     # That band is also what disconnects the floor.  So the gap carries a
     # saturating term as well: past a few centimetres the cost is nearly flat,
     # which leaves closing the gap as the only way out.
-    wall_flush: float = 0.0
+    wall_flush: float = 1.0
     func_front: float = 1.0
     func_door: float = 1.0
     func_support: float = 2.0
@@ -200,6 +201,42 @@ def exact_energy(scene: Scene, intent: DesignIntent,
                 if short > 0.04:
                     e_corridor += 1.0
 
+
+    # ---- E_sym (new): objects that "surround" an anchor should balance
+    # left/right across the anchor's own long axis.  For a dining table with
+    # six chairs, this asks for three chairs on each side.  A chair that sits
+    # on either side is fine; three chairs on one side and none on the other
+    # is not, and no other term in this energy notices.  Added because the
+    # graph already labels these groups (kind=="surrounds") and because
+    # end-to-end measurement showed the objective was blind to which side of
+    # the table the chairs ended up on -- the reference-symmetric rooms
+    # scored the same as the reference-asymmetric ones under E_rel.
+    e_sym = 0.0
+    from collections import defaultdict
+    ring_of = defaultdict(list)
+    for r in intent.relations:
+        if r.kind != "surrounds":
+            continue
+        if r.i < len(objs) and r.j < len(objs) and objs[r.i].keep and objs[r.j].keep:
+            ring_of[r.i].append(r.j)
+    for ai, ring in ring_of.items():
+        if len(ring) < 2:
+            continue
+        anchor = objs[ai]
+        fwd = anchor.forward
+        side = np.array([-fwd[1], fwd[0]])
+        hx, hy = float(anchor.half[0]), float(anchor.half[1])
+        long_axis = side if hx >= hy else fwd
+        pos_side = neg_side = 0
+        for j in ring:
+            s_dot = float(np.dot(objs[j].xy - anchor.xy, long_axis))
+            if s_dot >= 0:
+                pos_side += 1
+            else:
+                neg_side += 1
+        # normalise so it is O(1) per anchor regardless of ring size
+        e_sym += (abs(pos_side - neg_side) / max(len(ring), 1)) ** 2
+
     # ---- E_func ----
     e_wall = 0.0
     tgt_walls = scene.room.walls()
@@ -327,11 +364,11 @@ def exact_energy(scene: Scene, intent: DesignIntent,
                 and o.jid != src_j[o.oid]:
             e_edit += eta
 
-    total = (w.rel * e_rel + w.bound * e_bound + w.col * e_col
+    total = (w.rel * e_rel + w.sym * e_sym + w.bound * e_bound + w.col * e_col
              + w.clear * e_clear + w.func * e_func + w.style * e_style
              + w.edit * e_edit + w.keepout * e_keepout + w.lock * e_lock)
     return {
-        "E": float(total), "E_rel": float(e_rel), "E_bound": float(e_bound),
+        "E": float(total), "E_rel": float(e_rel), "E_sym": float(e_sym), "E_bound": float(e_bound),
         "E_col": float(e_col), "E_clear": float(e_clear), "E_func": float(e_func),
         "E_style": float(e_style), "E_edit": float(e_edit),
         "E_wall": float(e_wall), "E_front": float(e_front),
@@ -492,6 +529,30 @@ class TorchProblem:
             self.rdes = t(np.stack([r.phi_des for r in rels]))
         else:
             self.ri = self.rj = None
+
+
+        # surrounds groups for the differentiable E_sym
+        rings = {}
+        for r in intent.relations:
+            if r.kind == "surrounds" and r.i < self.n and r.j < self.n:
+                rings.setdefault(r.i, []).append(r.j)
+        rings = {k: v for k, v in rings.items() if len(v) >= 2}
+        self._sym_pairs = []
+        if rings:
+            for ai, ring in rings.items():
+                anchor = objs[ai]
+                hx, hy = float(anchor.half[0]), float(anchor.half[1])
+                # 0 means the long axis is the anchor's local x (side), 1 means
+                # it is the local y (fwd).  Chosen once at build time so the
+                # surrogate is a fixed function.
+                axis_is_fwd = 1 if hy > hx else 0
+                for j in ring:
+                    self._sym_pairs.append((ai, j, axis_is_fwd))
+        if self._sym_pairs:
+            arr = np.array(self._sym_pairs, dtype=np.int64)
+            self.sym_ai = t(arr[:, 0], torch.long)
+            self.sym_j = t(arr[:, 1], torch.long)
+            self.sym_axis_fwd = t(arr[:, 2], torch.float32)  # 0 or 1
 
         # wall targets, resolved to target-room segments
         wts = []
@@ -764,6 +825,32 @@ class TorchProblem:
         else:
             e_rel = torch.zeros(R, device=self.device)
 
+        # ---- E_sym: side balance for surrounds rings, differentiable ----
+        if self._sym_pairs:
+            # anchor position and orientation
+            a_xy = xy[:, self.sym_ai]                     # (R, P, 2)
+            a_u = u[:, self.sym_ai]                        # (R, P, 2, 2)
+            # long axis in world coordinates
+            long_axis = torch.where(self.sym_axis_fwd[None, :, None].bool(),
+                                    a_u[..., 1, :], a_u[..., 0, :])   # (R,P,2)
+            rel = xy[:, self.sym_j] - a_xy                # (R, P, 2)
+            proj = (rel * long_axis).sum(-1)              # (R, P) signed
+            # for each anchor, sum the projections of its ring members and
+            # square-normalise.  bincount is over P using anchor index.
+            n_anchors = int(self.sym_ai.max().item()) + 1 if self.sym_ai.numel() else 0
+            # group by anchor: torch scatter_add
+            zero = torch.zeros(R, n_anchors, device=self.device)
+            counts = torch.zeros(n_anchors, device=self.device)
+            counts.scatter_add_(0, self.sym_ai, torch.ones_like(self.sym_ai,
+                                dtype=torch.float32))
+            sums = zero.scatter_add(1, self.sym_ai[None].expand(R, -1), proj)
+            # normalise by ring size so it is O(1) per anchor
+            counts_safe = counts.clamp(min=1.0)
+            e_sym = ((sums / counts_safe[None]) ** 2).sum(-1)
+        else:
+            e_sym = torch.zeros(R, device=self.device)
+
+
         # ---- C_t ----
         if self.keepout_sdf is not None:
             ks = self._sample_field(self.keepout_sdf, pts)
@@ -783,7 +870,7 @@ class TorchProblem:
             e_style = e_style + self.resize_cost * (
                 (log_s ** 2) * keep * (1.0 - self.locked[None])).sum(-1)
 
-        total = (self.w.rel * e_rel + self.w.bound * e_bound + self.w.col * e_col
+        total = (self.w.rel * e_rel + self.w.sym * e_sym + self.w.bound * e_bound + self.w.col * e_col
                  + self.w.clear * e_clear + self.w.func * e_func
                  + self.w.keepout * e_keep + self.w.lock * e_lock
                  + self.w.style * e_style)

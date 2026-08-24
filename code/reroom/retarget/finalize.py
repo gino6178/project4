@@ -151,23 +151,52 @@ def snap_functional(scene: Scene) -> Scene:
             slots = _slots_around(anchor, len(sats))
             if not slots:
                 continue
-            # global-optimal assignment (Hungarian on centre-to-slot distance)
+
+            # Chairs get in each other's way: a march that stops when it hits
+            # another chair is not the assignment we asked for.  So the whole
+            # group is *removed* from the scene first (their footprints stop
+            # counting as blockers), then reinserted one at a time in the
+            # Hungarian order.  Placement is a direct set of the position
+            # -- collision and boundary are still checked, but there is no
+            # marching through anyone else's chair, because those chairs are
+            # elsewhere until it is their turn.
+            #
+            # This is what "put every chair around the table symmetrically"
+            # actually means when solved as an assignment problem, and it is
+            # what a person would do: clear the table, place chairs one by
+            # one, in the right order.
             from scipy.optimize import linear_sum_assignment
             cost = np.array([[float(np.linalg.norm(s.xy - slots[j]))
                               for j in range(len(slots))] for s in sats])
             rows, cols = linear_sum_assignment(cost)
-            # Chairs get in each other's way: a march that stops when it hits
-            # another chair is not the assignment we asked for.  Two passes
-            # over the assignment fix it -- the first snaps chairs to the
-            # nearest legal position on the way to their slot (usually far
-            # enough away that another chair no longer blocks), the second
-            # completes the reach from that position.  If a chair still
-            # cannot land, its slot is empty rather than filled by the wrong
-            # chair.
-            for _ in range(2):
-                for i in range(len(rows)):
-                    _try_move(sats[rows[i]], slots[cols[i]], poly,
-                              _blockers(scene, sats[rows[i]]))
+
+            # stash each chair's original pose, then temporarily move it
+            # somewhere it cannot collide with anything -- 100 m off in +x
+            # is out of every room in the corpus
+            saved = [s.position.copy() for s in sats]
+            far = np.array([1e2, 1e2, 0.0])
+            for s in sats:
+                s.position = s.position.copy() + far
+
+            # blockers now exclude every chair in this group
+            other_blockers = [object_polygon(o) for o in scene.objects
+                              if o.keep and o.z < 1.6 and o not in sats]
+
+            for i in range(len(rows)):
+                chair = sats[rows[i]]
+                target = slots[cols[i]]
+                chair.position[:2] = np.asarray(target)
+                fp = object_polygon(chair)
+                # accept the placement only if legal; otherwise fall back to
+                # the chair's original pose, which the solver has already
+                # verified
+                bad = (not poly.contains(fp)
+                       or any(fp.intersects(b) and fp.intersection(b).area > 1e-4
+                              for b in other_blockers))
+                if bad:
+                    chair.position = saved[rows[i]].copy()
+                # newly placed chair now blocks the next one
+                other_blockers.append(object_polygon(chair))
 
     # ---- wall flush: pull wall-lovers to the nearest wall segment ----
     if before.get("wall") is not None and before["wall"] >= 0.995:
