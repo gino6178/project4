@@ -1,0 +1,112 @@
+[
+ {
+  "room": "LivingDiningRoom-10201",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-10201__201.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/cc630582-147a-4713-8a41-16912ec0af41_LivingDiningRoom-10201/boxes.npz",
+  "targets": {
+   "Col_obj": 0.45454545454545453,
+   "R_out": 0.09090909090909091,
+   "R_walkable": 1.0,
+   "functional": 1.0
+  }
+ },
+ {
+  "room": "LivingDiningRoom-10201",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-10201__34.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/cc630582-147a-4713-8a41-16912ec0af41_LivingDiningRoom-10201/boxes.npz",
+  "targets": {
+   "Col_obj": 0.45454545454545453,
+   "R_out": 0.18181818181818182,
+   "R_walkable": 1.0,
+   "functional": 1.0
+  }
+ },
+ {
+  "room": "LivingDiningRoom-10479",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-10479__228.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/881ca3a4-592f-4e86-8dd8-f95513165c94_LivingDiningRoom-10479/boxes.npz",
+  "targets": {
+   "Col_obj": 0.3333333333333333,
+   "R_out": 0.1111111111111111,
+   "R_walkable": 1.0,
+   "functional": 1.0
+  }
+ },
+ {
+  "room": "LivingDiningRoom-10576",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-10576__182.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/7e38438b-b4ff-45b2-91fc-cd66c249357e_LivingDiningRoom-10576/boxes.npz",
+  "targets": {
+   "Col_obj": 0.25,
+   "R_out": 0.0625,
+   "R_walkable": 0.9380972879896685,
+   "functional": 0.6663865546218487
+  }
+ },
+ {
+  "room": "LivingDiningRoom-10681",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-10681__173.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/33635b59-7c01-4e50-8c68-a401b3563182_LivingDiningRoom-10681/boxes.npz",
+  "targets": {
+   "Col_obj": 0.5625,
+   "R_out": 0.375,
+   "R_walkable": 1.0,
+   "functional": 1.0
+  }
+ },
+ {
+  "room": "LivingDiningRoom-10711",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-10711__101.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/c3164354-e3f5-4e95-ad54-dd9254316d97_LivingDiningRoom-10711/boxes.npz",
+  "targets": {
+   "Col_obj": 0.6153846153846154,
+   "R_out": 0.0,
+   "R_walkable": 0.9389304197814836,
+   "functional": 0.9883501571596272
+  }
+ },
+ {
+  "room": "LivingDiningRoom-107",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-107__220.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/33253f91-fb29-4a9e-aec7-42e3cf96b25a_LivingDiningRoom-107/boxes.npz",
+  "targets": {
+   "Col_obj": 0.6,
+   "R_out": 0.0,
+   "R_walkable": 1.0,
+   "functional": 0.7981938447048416
+  }
+ },
+ {
+  "room": "LivingDiningRoom-108064",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-108064__57.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/b76b3b9e-1709-49eb-a5cc-8e5b76da6939_LivingDiningRoom-108064/boxes.npz",
+  "targets": {
+   "Col_obj": 0.3888888888888889,
+   "R_out": 0.3333333333333333,
+   "R_walkable": 0.7745142857142857,
+   "functional": 0.9796237515820945
+  }
+ },
+ {
+  "room": "LivingDiningRoom-10921",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-10921__50.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/bf0d1803-a01d-4e17-9986-0607fbab1cd0_LivingDiningRoom-10921/boxes.npz",
+  "targets": {
+   "Col_obj": 0.3125,
+   "R_out": 0.125,
+   "R_walkable": 1.0,
+   "functional": 1.0
+  }
+ },
+ {
+  "room": "LivingDiningRoom-109572",
+  "physcene_json": "outputs/physcene_scenes/physcene__LivingDiningRoom-109572__89.json",
+  "boxes_npz": "/home/gino/data/reroom/physcene/dataset/preprocessed_data/LivingRoom/07cba4b4-3e2b-4c90-8b3c-c44ae6ab014e_LivingDiningRoom-109572/boxes.npz",
+  "targets": {
+   "Col_obj": 0.3333333333333333,
+   "R_out": 0.0,
+   "R_walkable": 0.9805250596658711,
+   "functional": 1.0
+  }
+ }
+]

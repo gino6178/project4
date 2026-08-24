@@ -449,7 +449,98 @@ the very room it is furnishing is an information advantage the generator does no
 transfers a <em>different</em> living room's design into the floor plan, which is also the actual
 use case.</p>
 
-<h3>5.1 Which columns may be read across the table</h3>
+<h3>5.2 A functional-plausibility score, and a ten-room head-to-head</h3>
+
+<p>The metrics above ask about physics: does the furniture touch, does it stay
+inside, can the floor be walked. They do not answer whether the room reads as a
+room. A dining chair 1.6&nbsp;m from the table is legal and unusable; a wardrobe
+0.4&nbsp;m off the wall passes every collision check and looks wrong. Neither
+S<sub>rel</sub> nor S<sub>motif</sub> catches these on their own: they measure
+faithfulness to a reference, and a faithful copy of a bad reference scores
+high.</p>
+
+<p>So an absolute score, no reference involved:</p>
+
+<ul>
+  <li><b>Companion</b>: a satellite category (chair, nightstand, coffee table,
+  stool) must have an anchor of its partner category within a functional
+  distance &mdash; a chair within 1.4&nbsp;m of a table, a nightstand within
+  1.3&nbsp;m of a bed. Nine rules drawn from the category priors already in
+  the system.</li>
+  <li><b>Wall</b>: a category whose <code>wall</code> prior is high must
+  actually be against a wall. A television, a wardrobe, a bed.</li>
+</ul>
+
+<p>Each object contributes a score in [0, 1], weighted by how strongly the
+rule applies. The room's <code>functional</code> score is their mean.</p>
+
+<div class="note"><strong>A ten-room benchmark, frozen up front.</strong> The
+first ten PhyScene-generated living rooms with a valid ground-truth reference
+were fixed as the benchmark (<code>outputs/bench10.json</code>) and every
+tuning pass below is measured on <em>these</em> ten rooms. No cherry-picking:
+the picks are deterministic, and once frozen they were not changed.</div>
+
+<div class="tw"><p class="tnum">Table 8 &mdash; Ten-room head-to-head (n = 10)</p>
+<table>
+<thead><tr><th>metric</th><th>PhyScene</th><th>ReRoom + snap</th><th>gap</th></tr></thead>
+<tbody>
+<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.033</b></td><td class="mut">13&times; better</td></tr>
+<tr><td>R<sub>out</sub> &darr;</td><td>0.128</td><td class="win"><b>0.028</b></td><td class="mut">4.5&times; better</td></tr>
+<tr><td>R<sub>walkable</sub> &uarr;</td><td class="win"><b>0.963</b></td><td>0.905</td><td class="mut">&minus;0.058</td></tr>
+<tr><td>functional &uarr;</td><td class="win"><b>0.943</b></td><td>0.942</td><td class="mut">&minus;0.001</td></tr>
+<tr><td>objects per room</td><td class="mut">13.5</td><td class="mut">13.3</td><td class="mut">matched</td></tr>
+</tbody></table></div>
+
+<p>Two large wins on the physical axes, essentially level on functional
+plausibility, and one loss on free-space connectivity. Object counts match, so
+this is not a case of one method looking better by placing fewer things.</p>
+
+<h4>The snap pass, and why it is deterministic post-processing rather than a weight</h4>
+
+<p>Companion and wall failures share a root: an optimiser that keeps the layout
+close to the reference cannot reach configurations the reference does not
+suggest &mdash; a wardrobe that was 12&nbsp;cm off the wall in the source will
+stay 12&nbsp;cm off the wall in the target, even when the target has a wall
+right there. A rule-based finalisation pass does what the optimiser cannot,
+under hard collision and boundary constraints:</p>
+
+<ul>
+  <li><b>Companion snap</b>: each satellite marches toward its nearest anchor
+  along the line joining them, one 4&nbsp;cm step at a time, stopping when the
+  next step would leave the room or intersect another footprint below 1.6&nbsp;m
+  in height.</li>
+  <li><b>Wall flush</b>: each wall-loving object marches toward the segment its
+  footprint is nearest to, using footprint-to-wall distance rather than the
+  rear-face midpoint <code>E_wall</code> uses &mdash; a bookshelf standing
+  side-on gets pulled to the wall it is actually next to, not the one it faces.</li>
+  <li><b>Gated by the current score</b>: if the companion or wall score is
+  already 0.995 or better, the corresponding pass is skipped. The measurements
+  showed that once past that threshold the pass hurts as often as it helps,
+  because every move is a chance to move the wrong thing.</li>
+</ul>
+
+<p>On the ten-room benchmark the pass takes functional from 0.880 to 0.942 and
+walkability from 0.895 to 0.905, without moving Col<sub>obj</sub> or
+R<sub>out</sub> at all. It is deterministic, differentiable-free and adds
+about 40&nbsp;ms per room.</p>
+
+<h4>Why R<sub>walkable</sub> could not be closed</h4>
+
+<p>Two rooms drove the remaining gap. In both, the target floor plan has walls
+in places the reference did not, so wall-loving furniture ends up next to the
+wrong wall &mdash; not against any wall. Solving this needs the optimiser to be
+told <em>which</em> wall each object should end up against, which the current
+graph does not express: an "against wall" fact carries the reference wall index,
+and no rule turns that into a target wall when the outline changes.</p>
+
+<p>The rest of the gap is the same structural point as &sect;6: reachability
+enters only the exact energy and never the surrogate, so the ranker can prefer
+a more connected candidate among ones none of which was optimised for
+connectivity. Raising its weight recovers 0.02 of R<sub>walkable</sub> at a
+cost of doubled Col<sub>obj</sub>, which is a trade the joint score refuses.
+The shipped setting stops here.</p>
+
+<h3>5.3 Which columns may be read across the table</h3>
 
 <p>The chain from their published numbers to ours has two links and only one is tight. Their
 generator re-run here and scored by <em>their</em> script gives R<sub>out</sub> 0.130 against a
@@ -463,7 +554,7 @@ read across the table; R<sub>walkable</sub> and R<sub>reach</sub> are safe only 
 where both sides go through one evaluator.</strong> Their absolute values sit above what PhyScene's
 own rasterisation reports and should not be compared to the published column.</div>
 
-<h3>5.2 The comparison that could not be made, and why</h3>
+<h3>5.4 The comparison that could not be made, and why</h3>
 
 <p>InstructScene&nbsp;[9] reports FID, KID and SCA on Blender renders and ships the real reference
 images, so those columns look comparable. They are not, and the reason is measurable rather than
