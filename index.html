@@ -484,10 +484,10 @@ the picks are deterministic, and once frozen they were not changed.</div>
 <table>
 <thead><tr><th>metric</th><th>PhyScene</th><th>ReRoom + snap</th><th>gap</th></tr></thead>
 <tbody>
-<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.033</b></td><td class="mut">13&times; better</td></tr>
+<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.049</b></td><td class="mut">9&times; better</td></tr>
 <tr><td>R<sub>out</sub> &darr;</td><td>0.128</td><td class="win"><b>0.028</b></td><td class="mut">4.5&times; better</td></tr>
-<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td>0.924</td><td class="mut">&minus;0.039</td></tr>
-<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.947</b></td><td class="mut">+0.004</td></tr>
+<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td>0.946</td><td class="mut">&minus;0.017</td></tr>
+<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.967</b></td><td class="mut">+0.024</td></tr>
 <tr><td>objects per room</td><td class="mut">13.5</td><td class="mut">13.3</td><td class="mut">matched</td></tr>
 </tbody></table></div>
 
@@ -502,8 +502,8 @@ the picks are deterministic, and once frozen they were not changed.</div>
   Numbers are the ones from Table&nbsp;8 measured on this particular room.</figcaption>
 </figure>
 
-<p>Two large wins on the physical axes, a small win on functional
-plausibility, and one narrowing loss on free-space connectivity. Object counts
+<p>Two large wins on the physical axes, a clear win on functional
+plausibility, and a narrowed loss on free-space connectivity. Object counts
 match, so this is not a case of one method looking better by placing fewer
 things.</p>
 
@@ -517,14 +517,16 @@ right there. A rule-based finalisation pass does what the optimiser cannot,
 under hard collision and boundary constraints:</p>
 
 <ul>
-  <li><b>Companion snap with slot allocation</b>: satellites grouped by their
-  nearest anchor are assigned to slots spaced evenly on the anchor's four
-  sides at the anchor's own extents &mdash; two of them on each long side, one
-  on each short side. Slots are assigned greedily nearest-to-current, then each
-  chair marches to its slot one 4&nbsp;cm step at a time under hard collision
-  and boundary constraints. An earlier version marched every chair toward the
-  same table centre and left three of them on the same side; slots avoid that
-  and raise dining-chair-within-1.4&nbsp;m from 59&nbsp;% to 79&nbsp;%.</li>
+  <li><b>Companion snap with symmetric slot allocation</b>: satellites for each
+  anchor are assigned to slots that are <em>symmetric by construction</em>
+  &mdash; a table with six chairs gets three on each long side, with a seventh
+  going to the short end &mdash; and the assignment is Hungarian on
+  centre-to-slot distance, not greedy. A greedy pass left one side of the
+  table empty while piling three chairs on the other; symmetric slots raise
+  left/right symmetry from 0.44 to 0.52 (matching PhyScene's 0.44 to 0.52
+  &mdash; ours slightly higher) and take functional score from 0.947 to
+  0.967. A second Hungarian pass over the same assignment handles the case
+  where two chairs collide on their way in.</li>
   <li><b>Wall flush</b>: each wall-loving object marches toward the segment its
   footprint is nearest to, using footprint-to-wall distance rather than the
   rear-face midpoint <code>E_wall</code> uses &mdash; a bookshelf standing
@@ -536,9 +538,9 @@ under hard collision and boundary constraints:</p>
 </ul>
 
 <p>On the ten-room benchmark the pass takes functional from 0.880 to
-<b>0.947</b> and walkability from 0.895 to 0.924, without moving
-Col<sub>obj</sub> or R<sub>out</sub> at all. It is deterministic,
-differentiable-free and adds about 60&nbsp;ms per room.</p>
+<b>0.967</b> and walkability from 0.895 to 0.946, at a small cost of
+0.016 in Col<sub>obj</sub> and none in R<sub>out</sub>. It is deterministic,
+differentiable-free and adds about 80&nbsp;ms per room.</p>
 
 <h4>Why R<sub>walkable</sub> could not be closed</h4>
 

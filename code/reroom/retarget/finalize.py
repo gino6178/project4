@@ -61,24 +61,51 @@ def _try_move(o, target_xy, room_poly, blockers, step=STEP,
     return not np.allclose(best, start)
 
 
-def _slots_around(anchor, n_slots):
-    """Evenly-spaced slots on the anchor's four sides, at its own extents."""
+def _slots_around(anchor, n_slots, sat_half=0.30):
+    """Symmetric slots around the anchor.
+
+    For ``n_slots`` satellites the layout is fixed by symmetry rather than
+    greedy choice: chairs at a dining table go on the two long sides in equal
+    numbers when the count is even, and one on a short side when it is odd.
+    An earlier version handed out slots on all four sides in a fixed ratio,
+    which put a lone chair at the head even when the two long sides could hold
+    every chair symmetrically -- and, because the assignment was greedy, would
+    leave one side of the table empty while piling three chairs on the other.
+    """
     fwd = anchor.forward
     side = np.array([-fwd[1], fwd[0]])
     hx, hy = float(anchor.half[0]), float(anchor.half[1])
-    r_long = hy + 0.32
-    r_short = hx + 0.32
-    long_slots = max(2, n_slots // 3)
-    short_slots = max(1, n_slots // 4)
+    # local axes: `fwd` is the anchor's own +y, so the *long* sides are the
+    # ones normal to fwd if hx > hy, and normal to side otherwise
+    if hx >= hy:
+        long_axis, short_axis, hl, hs = side, fwd, hx, hy
+    else:
+        long_axis, short_axis, hl, hs = fwd, side, hy, hx
+    r_long = hs + sat_half + 0.02
+    r_short = hl + sat_half + 0.02
+
     slots = []
-    for sign in (+1, -1):
-        for k in range(long_slots):
-            u = -0.75 + 1.5 * (k + 0.5) / long_slots
-            slots.append(anchor.xy + sign * fwd * r_long + u * side * hx)
-    for sign in (+1, -1):
-        for k in range(short_slots):
-            u = -0.55 + 1.1 * (k + 0.5) / short_slots
-            slots.append(anchor.xy + sign * side * r_short + u * fwd * hy)
+    if n_slots <= 0:
+        return slots
+    # split: as many pairs on the long sides as fit, then odd one at a short end
+    n_pairs_long = n_slots // 2
+    n_odd = n_slots % 2
+    per_side = n_pairs_long                    # equal on both long sides
+    # spacing along the long edge, symmetric around the anchor centre
+    if per_side >= 1:
+        span = 2.0 * hl - 0.1                  # small margin from the corners
+        # evenly spaced positions from -span/2 to +span/2
+        if per_side == 1:
+            offsets = [0.0]
+        else:
+            offsets = list(np.linspace(-span / 2.0, span / 2.0, per_side))
+        for sign in (+1, -1):
+            for u in offsets:
+                slots.append(anchor.xy + sign * long_axis * r_long
+                             + u * short_axis)
+    if n_odd == 1:
+        # one satellite at the head of the table
+        slots.append(anchor.xy + long_axis * 0.0 + short_axis * r_short)
     return slots
 
 
@@ -112,18 +139,35 @@ def snap_functional(scene: Scene) -> Scene:
             anchor = min(partners, key=lambda a: np.linalg.norm(o.xy - a.xy))
             groups.setdefault(id(anchor), [anchor, []])[1].append(o)
         for anchor, sats in groups.values():
-            need = [s for s in sats
-                    if float(np.linalg.norm(s.xy - anchor.xy)) > dmax * 0.55]
-            if not need:
+            # symmetry means every satellite of this group participates in the
+            # allocation, not just the ones outside the threshold: leaving one
+            # chair in place and moving the others only inherits the reference's
+            # asymmetry.  Skipping remains cheap when every chair is already at
+            # its slot, because _try_move exits immediately when the target is
+            # under 1 mm away.
+            if all(float(np.linalg.norm(s.xy - anchor.xy)) <= dmax * 0.55
+                   for s in sats) and len(sats) < 2:
                 continue
-            slots = _slots_around(anchor, len(sats) + 1)
-            free = list(range(len(slots)))
-            for s in sorted(need, key=lambda x: -float(np.linalg.norm(x.xy - anchor.xy))):
-                if not free:
-                    break
-                k = min(free, key=lambda i: float(np.linalg.norm(s.xy - slots[i])))
-                free.remove(k)
-                _try_move(s, slots[k], poly, _blockers(scene, s))
+            slots = _slots_around(anchor, len(sats))
+            if not slots:
+                continue
+            # global-optimal assignment (Hungarian on centre-to-slot distance)
+            from scipy.optimize import linear_sum_assignment
+            cost = np.array([[float(np.linalg.norm(s.xy - slots[j]))
+                              for j in range(len(slots))] for s in sats])
+            rows, cols = linear_sum_assignment(cost)
+            # Chairs get in each other's way: a march that stops when it hits
+            # another chair is not the assignment we asked for.  Two passes
+            # over the assignment fix it -- the first snaps chairs to the
+            # nearest legal position on the way to their slot (usually far
+            # enough away that another chair no longer blocks), the second
+            # completes the reach from that position.  If a chair still
+            # cannot land, its slot is empty rather than filled by the wrong
+            # chair.
+            for _ in range(2):
+                for i in range(len(rows)):
+                    _try_move(sats[rows[i]], slots[cols[i]], poly,
+                              _blockers(scene, sats[rows[i]]))
 
     # ---- wall flush: pull wall-lovers to the nearest wall segment ----
     if before.get("wall") is not None and before["wall"] >= 0.995:
