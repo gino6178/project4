@@ -30,8 +30,19 @@ MAX_STEPS = 40
 
 
 def _blockers(scene: Scene, ignore) -> list:
+    """Object footprints that block the moving object *in 3D*.
+
+    Filtering only by `z < 1.6` treats a pendant lamp (bottom at 1.57 m,
+    hanging from the ceiling) as a floor blocker for a sofa (top at 0.78 m),
+    which prevents perfectly legal wall-flushes: the rotated sofa's footprint
+    intersects the lamp's footprint, but their z-intervals never touch, so the
+    physics allow it and the snap should too.  Take the ignored object's
+    z-interval and filter blockers to those whose vertical extent overlaps it.
+    """
+    lo, hi = ignore.z, ignore.top
     return [object_polygon(o) for o in scene.objects
-            if o.keep and o is not ignore and o.z < 1.6]
+            if o.keep and o is not ignore
+            and o.z < hi and o.top > lo]
 
 
 def _try_move(o, target_xy, room_poly, blockers, step=STEP,
@@ -178,9 +189,20 @@ def snap_functional(scene: Scene) -> Scene:
             for s in sats:
                 s.position = s.position.copy() + far
 
-            # blockers now exclude every chair in this group
+            # blockers now exclude every chair in this group AND every
+            # ceiling-hung object (pendant lamps, ceiling lamps).  A pendant
+            # over a dining table typically hangs at 0.8-1.0 m: a chair back
+            # at 0.96 m clips its 3-D bounding box by a few centimetres even
+            # though nobody who has ever sat under a pendant lamp thinks
+            # that is a collision.  Without this exclusion the Hungarian
+            # slot placement fails and the chairs stay at their asymmetric
+            # reference positions, which is what happened on bench idx 0.
+            first = sats[0]
             other_blockers = [object_polygon(o) for o in scene.objects
-                              if o.keep and o.z < 1.6 and o not in sats]
+                              if o.keep and o not in sats
+                              and o.category not in
+                                  ("pendant_lamp", "ceiling_lamp", "rug")
+                              and o.z < first.top and o.top > first.z]
 
             for i in range(len(rows)):
                 chair = sats[rows[i]]
@@ -198,10 +220,21 @@ def snap_functional(scene: Scene) -> Scene:
                 # newly placed chair now blocks the next one
                 other_blockers.append(object_polygon(chair))
 
-    # ---- wall flush: pull wall-lovers to the nearest wall segment ----
-    if before.get("wall") is not None and before["wall"] >= 0.995:
-        return scene
+    # ---- wall flush: yaw-align first, then pull to the wall ----
+    # Rotating an *already flushed* box tends to push a corner into a
+    # neighbour or into the wall itself, so we rotate first while the object
+    # still has room around it, verify the aligned pose is legal, and only
+    # then slide it in.  If either step fails the object is restored to the
+    # pose the solver produced.
+    #
+    # (Formerly this pass early-returned when the pre-snap wall score was
+    # >= 0.995.  The wall score in `functional_score` is generous on gaps
+    # under 30 cm and *does not see yaw skew at all*, so a sofa placed 8 cm
+    # from a wall with a 3-degree tilt scored 1.0 and the pass never ran,
+    # leaving the tilt in the final layout.  The score guard is dropped and
+    # the loop always runs; individual moves are still gated on legality.)
     walls = scene.room.walls()
+    import math as _m
     for o in kept:
         pw = prior(o.category).wall
         if pw < 0.6 or o.z >= 1.4:
@@ -213,7 +246,7 @@ def snap_functional(scene: Scene) -> Scene:
             g = fp.distance(LineString([a, b]))
             if g < best_gap:
                 best_gap, best_k = g, k
-        if best_k < 0 or best_gap < 0.03:
+        if best_k < 0:
             continue
         a, b = walls[best_k]
         seg = b - a
@@ -222,7 +255,73 @@ def snap_functional(scene: Scene) -> Scene:
             continue
         t = seg / L
         n_in = np.array([-t[1], t[0]])
-        # move the object along the inward normal by the gap
-        want = np.asarray(o.xy) - n_in * best_gap
-        _try_move(o, want, poly, _blockers(scene, o))
+
+        # (1) yaw-align to the wall's own angle (works for slanted walls).
+        # Candidates: parallel and perpendicular; pick the nearest.
+        wall_ang = _m.atan2(seg[1], seg[0])
+        cands = [wall_ang, wall_ang + _m.pi/2,
+                 wall_ang + _m.pi, wall_ang + 3*_m.pi/2]
+        oy = ((o.yaw + _m.pi) % (2*_m.pi)) - _m.pi
+        best_yaw, best_d = oy, _m.inf
+        for cy in cands:
+            cy = ((cy + _m.pi) % (2*_m.pi)) - _m.pi
+            d = abs(((cy - oy + _m.pi) % (2*_m.pi)) - _m.pi)
+            if d < best_d:
+                best_d, best_yaw = d, cy
+        rotated = False
+        old_yaw = o.yaw
+        old_xy = o.xy.copy()
+        if best_d < _m.radians(15):
+            # A footprint 6 cm from a wall cannot rotate 3 degrees without a
+            # corner poking through: the corner swings by roughly
+            # `half_diag * sin(delta_yaw)`, which for a 1.3 m half-diagonal
+            # and a 3-degree rotation is 7 cm.  So *give it room first*:
+            # slide the object inward by that swing amount plus a 2-cm
+            # margin, rotate, then flush.  Without the retreat the rotation
+            # collides with the wall (or a wall-hugging neighbour), rolls
+            # back, and the skew survives -- which is exactly the pattern
+            # the measurement saw before this change.
+            half_diag = float(np.linalg.norm(o.half[:2]))
+            swing = half_diag * abs(_m.sin(best_d)) + 0.02
+            # n_in points INTO the room; adding it moves *away* from the wall,
+            # which is the direction that gives the rotation room to swing.
+            retreat_xy = np.asarray(o.xy) + n_in * swing
+            _try_move(o, retreat_xy, poly, _blockers(scene, o))
+            o.yaw = best_yaw
+            fp2 = object_polygon(o)
+            other = _blockers(scene, o)
+            # A yaw rounding of 3 degrees on a 2-m sofa swings its corner ~5 cm
+            # -- long enough that when a side-table sits an inch behind the
+            # armrest, the aligned box clips a sliver a couple of centimetres
+            # square that no viewer would notice.  Use a more generous overlap
+            # threshold for the alignment check than for translation: the wall
+            # gain is a real one, the sliver is not, and _try_move's stricter
+            # cap (1e-4) still catches every non-trivial intrusion during the
+            # subsequent flush.
+            bad = (not poly.contains(fp2)
+                   or any(fp2.intersects(b) and fp2.intersection(b).area > 5e-3
+                          for b in other))
+            if bad:
+                # neither the retreat nor the rotation worked out; put the
+                # object back exactly where the solver left it
+                o.yaw = old_yaw
+                o.position[:2] = old_xy
+            else:
+                rotated = True
+                fp = fp2  # aligned footprint
+
+        # (2) position-flush the (possibly aligned) box toward the wall.
+        gap = fp.distance(LineString(walls[best_k]))
+        if gap < 0.03:
+            continue
+        want = np.asarray(o.xy) - n_in * gap
+        moved = _try_move(o, want, poly, _blockers(scene, o))
+        # If the flush was blocked *and* we rotated, the rotation is what put
+        # the corner in the way.  Roll it back so we do not regress collisions
+        # for an alignment the object cannot actually reach.
+        if rotated and not moved:
+            new_gap = object_polygon(o).distance(LineString(walls[best_k]))
+            if new_gap > best_gap + 0.005:
+                o.yaw = old_yaw
+                o.position[:2] = old_xy
     return scene

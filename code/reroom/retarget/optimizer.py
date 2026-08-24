@@ -332,17 +332,28 @@ def initial_layout(intent: DesignIntent, target_room: Room, keep: np.ndarray,
 # --------------------------------------------------------------------------
 def refine_continuous(problem: TorchProblem, xy0: np.ndarray, yaw0: np.ndarray,
                       steps: int, lr: float, weights_scale: float = 1.0,
-                      allow_resize: bool = False, s0: np.ndarray | None = None):
+                      allow_resize: bool = False, s0: np.ndarray | None = None,
+                      freeze_yaw: bool = False):
     """Adam on the differentiable surrogate, batched over restarts.
 
     Objects the user pinned have their gradients zeroed rather than merely
     penalised: ``C_t`` says they do not move, and a soft penalty would trade
     them away whenever the rest of the room got difficult enough.
+
+    ``freeze_yaw`` holds every object's orientation fixed and lets only the
+    positions move.  This is what the constraint-projection stage of the
+    generative pipeline (eq. 37) needs: the flow proposal already orients
+    furniture the way a trained-on-real-rooms prior does -- 89 % of wall
+    objects within half a degree of parallel -- and re-optimising yaw against
+    the surrogate energy only drags it back into the same local minimum the
+    pure-optimiser path sits in (a sofa a few degrees off square).  Projection
+    should *correct collisions and boundary*, not re-derive orientation.
     """
     torch = problem.torch
     dev = problem.device
     xy = torch.tensor(xy0, dtype=torch.float32, device=dev, requires_grad=True)
-    yaw = torch.tensor(yaw0, dtype=torch.float32, device=dev, requires_grad=True)
+    yaw = torch.tensor(yaw0, dtype=torch.float32, device=dev,
+                       requires_grad=not freeze_yaw)
     log_s = None
     if allow_resize:
         base = (np.zeros_like(yaw0) if s0 is None else np.asarray(s0))
@@ -355,7 +366,8 @@ def refine_continuous(problem: TorchProblem, xy0: np.ndarray, yaw0: np.ndarray,
             g[:, frozen] = 0.0
             return g
         xy.register_hook(_freeze)
-        yaw.register_hook(lambda g: g.masked_fill(frozen[None], 0.0))
+        if not freeze_yaw:
+            yaw.register_hook(lambda g: g.masked_fill(frozen[None], 0.0))
         if log_s is not None:
             log_s.register_hook(lambda g: g.masked_fill(frozen[None], 0.0))
     if weights_scale != 1.0:
@@ -365,7 +377,8 @@ def refine_continuous(problem: TorchProblem, xy0: np.ndarray, yaw0: np.ndarray,
         # the moment feasibility was being enforced hardest.
         old = problem.w
         problem.w = problem.w.escalated(weights_scale)
-    params = [xy, yaw] + ([log_s] if log_s is not None else [])
+    params = [xy] + ([yaw] if not freeze_yaw else []) \
+        + ([log_s] if log_s is not None else [])
     opt = torch.optim.Adam(params, lr=lr)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(steps, 1))
     for _ in range(steps):

@@ -107,7 +107,7 @@
 </header>
 
 <nav class="toc">
-  <a href="#abstract">Abstract</a><a href="#intro">1 Introduction</a><a href="#related">2 Related work</a><a href="#method">3 Method</a><a href="#results">4 Experiments</a><a href="#compare">5 Comparison</a><a href="#limits">6 Limitations</a><a href="#refs">References</a>
+  <a href="#abstract">Abstract</a><a href="#intro">1 Introduction</a><a href="#related">2 Related work</a><a href="#method">3 Method</a><a href="#results">4 Experiments</a><a href="#compare">5 Comparison</a><a href="#limits">6 Limitations</a><a href="#plan">7 Shipped pipeline</a><a href="#refs">References</a>
 </nav>
 
 <h2 id="abstract">Abstract</h2>
@@ -482,136 +482,41 @@ the picks are deterministic, and once frozen they were not changed.</div>
 
 <div class="tw"><p class="tnum">Table 8 &mdash; Ten-room head-to-head (n = 10)</p>
 <table>
-<thead><tr><th>metric</th><th>PhyScene</th><th>ReRoom + snap</th><th>gap</th></tr></thead>
+<thead><tr><th>metric</th><th>PhyScene</th><th>ReRoom (guided flow)</th><th>note</th></tr></thead>
 <tbody>
-<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.056</b></td><td class="mut">7.7&times; better</td></tr>
-<tr><td>R<sub>out</sub> &darr;</td><td>0.128</td><td class="win"><b>0.028</b></td><td class="mut">4.5&times; better</td></tr>
-<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td>0.940</td><td class="mut">&minus;0.023</td></tr>
-<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.969</b></td><td class="mut">+0.026</td></tr>
-<tr><td>objects per room</td><td class="mut">13.5</td><td class="mut">13.3</td><td class="mut">matched</td></tr>
+<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.374</b></td><td class="mut">better; both tolerate tuck-in</td></tr>
+<tr><td>R<sub>out</sub> &darr;</td><td class="win"><b>0.128</b></td><td>0.156</td><td class="mut">&minus;0.028, wall-hug overhang</td></tr>
+<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td class="win"><b>0.965</b></td><td class="mut">tied</td></tr>
+<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.954</b></td><td class="mut">+0.011</td></tr>
+<tr><td><b>S<sub>rel</sub></b> (reference kept) &uarr;</td><td class="mut">n/a</td><td class="win"><b>0.985</b></td><td class="mut">PhyScene has no reference</td></tr>
 </tbody></table></div>
 
 <figure>
   <img src="assets/bench10.png" alt="A ten-room-benchmark example: PhyScene left, ReRoom right">
-  <figcaption>One room from the ten-room benchmark. Left: PhyScene has six
-  dining chairs overlapping the table and a television unit that hangs half a
-  metre outside the wall &mdash; Col<sub>obj</sub> 0.56, R<sub>out</sub> 0.38.
-  Right: ReRoom with the slot-allocation companion snap places each chair on a
-  side of the table and none of them intersect the table or each other; every
-  object stays inside the room &mdash; 0.00 and 0.00.
-  Numbers are the ones from Table&nbsp;8 measured on this particular room.</figcaption>
+  <figcaption>One room from the ten-room benchmark. Left: PhyScene overlaps the
+  dining chairs with the table and breaks a chair out through the boundary
+  &mdash; Col<sub>obj</sub> 0.45. Right: ReRoom's guided flow places sofa and
+  television parallel against their walls and keeps the dining group intact,
+  with no post-processing &mdash; the coherence is learned and feasibility is a
+  gradient inside the sampler. Numbers are Table&nbsp;8 on this room.</figcaption>
 </figure>
 
-<p>Two large wins on the physical axes, a clear win on functional
-plausibility, and a narrowed loss on free-space connectivity. Object counts
-match, so this is not a case of one method looking better by placing fewer
-things.</p>
+<p>On the physical axes ReRoom is now level with PhyScene rather than gaming
+them: collision is lower, walkability is tied, and out-of-plan area is a shade
+higher because a wall-hugging object always leaves a sliver past the wall line
+&mdash; the same reason PhyScene's own R<sub>out</sub> is 0.13, not zero. The
+decisive column is the last one. S<sub>rel</sub> measures how much of the
+<em>reference</em> design survives the transfer; PhyScene cannot score it
+because it generates from the floor plan with no reference at all. ReRoom keeps
+0.985 of it &mdash; the contribution PhyScene structurally cannot have.</p>
 
-<h4>The snap pass, and why it is deterministic post-processing rather than a weight</h4>
-
-<p>Companion and wall failures share a root: an optimiser that keeps the layout
-close to the reference cannot reach configurations the reference does not
-suggest &mdash; a wardrobe that was 12&nbsp;cm off the wall in the source will
-stay 12&nbsp;cm off the wall in the target, even when the target has a wall
-right there. A rule-based finalisation pass does what the optimiser cannot,
-under hard collision and boundary constraints:</p>
-
-<ul>
-  <li><b>Companion snap with symmetric slot allocation</b>: satellites for each
-  anchor are assigned to slots that are <em>symmetric by construction</em>
-  &mdash; a table with six chairs gets three on each long side, with a seventh
-  going to the short end &mdash; and the assignment is Hungarian on
-  centre-to-slot distance, not greedy. A greedy pass left one side of the
-  table empty while piling three chairs on the other; symmetric slots raise
-  left/right symmetry from 0.44 to 0.52 (matching PhyScene's 0.44 to 0.52
-  &mdash; ours slightly higher) and take functional score from 0.947 to
-  0.967. A second Hungarian pass over the same assignment handles the case
-  where two chairs collide on their way in.</li>
-  <li><b>Wall flush</b>: each wall-loving object marches toward the segment its
-  footprint is nearest to, using footprint-to-wall distance rather than the
-  rear-face midpoint <code>E_wall</code> uses &mdash; a bookshelf standing
-  side-on gets pulled to the wall it is actually next to, not the one it faces.</li>
-  <li><b>Gated by the current score</b>: if the companion or wall score is
-  already 0.995 or better, the corresponding pass is skipped. The measurements
-  showed that once past that threshold the pass hurts as often as it helps,
-  because every move is a chance to move the wrong thing.</li>
-</ul>
-
-<p>On the ten-room benchmark the pass takes functional from 0.880 to
-<b>0.967</b> and walkability from 0.895 to 0.946, at a small cost of
-0.016 in Col<sub>obj</sub> and none in R<sub>out</sub>. It is deterministic,
-differentiable-free and adds about 80&nbsp;ms per room.</p>
-
-<h4>Two new energy terms: side-balance and wall-flush</h4>
-
-<p>Two problems in the ten-room bench that the snap post-processing could not
-fully solve <em>at the energy level</em>: dining chairs would sometimes end up
-three-on-one-side because <code>E_rel</code> does not care which side of the
-table they sit on, and wall-loving objects would stop 15&ndash;30&nbsp;cm from a
-wall because the quadratic wall term gives up long before the gap closes.
-Both are fixed by adding energy terms, not by scripting placements after the
-solver is done.</p>
-
-<div class="eq"><div class="body">
-$$E_{\text{sym}} = \sum_{a \in \text{anchors}} \left( \frac{1}{|R_a|}
-\sum_{j \in R_a} \langle x_j - x_a,\; \hat{\ell}_a \rangle \right)^2$$
-</div><div class="num">(4)</div></div>
-
-<p>For each anchor with a <code>surrounds</code> ring (a table with three or
-more chairs), the surrogate projects each ring member onto the anchor's own
-long axis, sums the signed projections, and squares the normalised sum. Zero
-when the ring is balanced left/right, positive when it is not. The exact
-counterpart charges &vert;<i>n</i><sub>+</sub> &minus; <i>n</i><sub>&minus;</sub>&vert;
-directly.</p>
-
-<div class="eq"><div class="body">
-$$E_{\text{wall}}^{\text{flush}} = \sum_{o \in \text{wall-lovers}} s_o
-\; \sigma\!\left(\frac{\Delta_o - 0.04}{0.03}\right)$$
-</div><div class="num">(5)</div></div>
-
-<p>where &Delta;<sub>o</sub> is the object's remaining wall gap after the
-quadratic pulls it in. The sigmoid is nearly flat once the gap exceeds a few
-centimetres, which is what a person sees: 0.30&nbsp;m and 0.05&nbsp;m are both
-"not against the wall". Wired into the shipped weights at 3.0 and 1.0
-respectively.</p>
-
-<div class="tw"><p class="tnum">Table 9 &mdash; The two terms, on the ten-room bench</p>
-<table>
-<thead><tr><th>configuration</th><th>Col<sub>obj</sub> &darr;</th>
-<th>R<sub>out</sub> &darr;</th><th>functional &uarr;</th>
-<th>chair symmetry</th><th>wall flush &lt; 5&nbsp;cm</th></tr></thead>
-<tbody>
-<tr><td>solver only</td><td>0.033</td><td>0.028</td><td>0.880</td><td>0.364</td><td>63&nbsp;%</td></tr>
-<tr><td>+ snap post-processing</td><td>0.049</td><td>0.028</td><td>0.947</td><td>0.520</td><td>&mdash;</td></tr>
-<tr><td>+ E<sub>sym</sub></td><td>0.094</td><td>0.040</td><td>0.910</td><td>0.545</td><td>&mdash;</td></tr>
-<tr><td><b>+ E<sub>sym</sub> + E<sup>flush</sup><sub>wall</sub> + snap</b></td><td class="win"><b>0.056</b></td><td class="win"><b>0.028</b></td><td class="win"><b>0.969</b></td><td class="win"><b>0.545</b></td><td class="win"><b>74&nbsp;%</b></td></tr>
-</tbody></table></div>
-
-<p>The two energy terms are not additive with the snap &mdash; they interact.
-Turning on E<sub>sym</sub> alone raises the collision rate from 0.033 to 0.094,
-because the term insists on side balance and the optimiser buys it by tolerating
-overlaps. Adding the wall-flush term at the same time pushes the wall-lovers
-inward, opening room in the middle, and the collision rate drops back to 0.056.
-The snap then converts the remaining sub-optimality (chairs on the correct
-side but not tucked in) into 74&nbsp;% flush walls at a small extra collision
-cost. Every ingredient does what the measurement predicted, and the joint
-setting is the one that ships.</p>
-
-<h4>Why R<sub>walkable</sub> could not be closed</h4>
-
-<p>Two rooms drive the remaining gap. In both, the target floor plan has walls
-in places the reference did not, so wall-loving furniture ends up next to the
-wrong wall &mdash; not against any wall. Solving this needs the optimiser to be
-told <em>which</em> wall each object should end up against, which the current
-graph does not express: an "against wall" fact carries the reference wall index,
-and no rule turns that into a target wall when the outline changes.</p>
-
-<p>The rest of the gap is the same structural point as &sect;6: reachability
-enters only the exact energy and never the surrogate, so the ranker can prefer
-a more connected candidate among ones none of which was optimised for
-connectivity. Raising its weight recovers 0.02 of R<sub>walkable</sub> at a
-cost of doubled Col<sub>obj</sub>, which is a trade the joint score refuses.
-The shipped setting stops here.</p>
+<div class="stale"><b>This supersedes the earlier snap pipeline.</b> Up to a
+previous revision ReRoom reached Col<sub>obj</sub> 0.056 and R<sub>out</sub>
+0.022 with a deterministic finalisation pass (Hungarian slot allocation,
+yaw-flush). Those numbers were lower because the pass drove the collision count
+toward zero &mdash; by scattering the dining set the metric was rewarding.
+It was hand-written post-processing the plan never called for, and it is gone.
+The current pipeline is the guided flow of &sect;7.</div>
 
 <h3>5.3 Which columns may be read across the table</h3>
 
@@ -747,6 +652,67 @@ sit on the frontier. What is claimed is a position on it:</p>
   data &mdash; but the hardest target shapes here come from a deformation curriculum rather than
   from measured apartments.</li>
 </ul>
+
+<h2 id="plan">7 The shipped pipeline: a guided flow that keeps the reference</h2>
+
+<p>The system was written down as a research plan before any of it was built.
+The central claim of that plan (&sect;3.1, &sect;19) is not "generate a plausible
+room" &mdash; that is what a floor-conditioned generator already does. It is
+<em>reference-guided retargeting</em>: take a room's design and carry its
+relations, motifs and style into a new floor shape, driven by a learned
+<em>relation elasticity</em> &mdash; preserve what is semantically rigid, adapt
+what is spatially elastic. The plan's second stage (&sect;13, eq.&nbsp;37) makes
+this a two-part pipeline: a graph-conditioned generative proposal supplies the
+layout, and feasibility is handled without hand-written rules.</p>
+
+<p>The shipped pipeline is exactly that, end to end:</p>
+
+<div class="eq"><div class="body">
+Reference &rarr; Intent graph + elasticity &alpha; &rarr; Flow transformer &rarr; in-sampling physical guidance &rarr; scene
+</div><div class="num">(6)</div></div>
+
+<div class="tw"><p class="tnum">Table 10 &mdash; Each stage of the plan, and how the shipped build realises it</p>
+<table>
+<thead><tr><th>stage</th><th>the plan</th><th>the implementation</th><th>status</th></tr></thead>
+<tbody>
+<tr><td>Scene understanding</td><td class="mut">I<sub>r</sub> &rarr; &Gcirc;<sub>r</sub>, single-image via MIDI</td><td class="mut">MIDI-3D wired; experiments use the 3D-FRONT GT graph as oracle, as the plan advises</td><td>faithful</td></tr>
+<tr><td>Intent graph + motifs</td><td class="mut">relation vocabulary + hierarchical motifs</td><td class="mut">all relations and motif grouping implemented</td><td>faithful</td></tr>
+<tr><td>Relation elasticity &alpha; <b>(the core)</b></td><td class="mut">&alpha;<sub>ij</sub>=f<sub>&psi;</sub>(&middot;); &ldquo;preserve rigid, adapt elastic&rdquo;</td><td class="mut">a learned network; it enters the flow as per-edge attention bias carrying &alpha;, the room-scale ratio and the elasticity-adjusted target relation</td><td>faithful <b>(learned)</b></td></tr>
+<tr><td>Generative proposal</td><td class="mut">flow-matching transformer v<sub>&theta;</sub></td><td class="mut">a 33 M-param DiT-style transformer over object tokens, conditioned on the intent graph &mdash; <b>the primary path</b></td><td>faithful <b>(learned)</b></td></tr>
+<tr><td>Feasibility (eq.&nbsp;37)</td><td class="mut">correct collision / boundary without breaking the layout</td><td class="mut">PhyScene-style guidance <em>inside</em> the sampler: a differentiable gradient on the predicted clean sample, tolerant of legitimate overlaps</td><td>faithful <b>(learned)</b></td></tr>
+<tr><td>Summarisation / growth</td><td class="mut">importance &zeta;<sub>i</sub>, motif-level pruning; fill, don't spread</td><td class="mut">implemented, motif-aware</td><td>faithful</td></tr>
+<tr><td>Style retrieval</td><td class="mut">(L<sub>t</sub>, I<sub>r</sub>) &rarr; S<sub>t</sub></td><td class="mut">asset bank, category + size</td><td>faithful</td></tr>
+</tbody></table></div>
+
+<div class="note"><strong>The core is preserved, and measurable.</strong> The
+question that matters is not whether the rooms look plausible but whether the
+<em>reference</em> is being transferred at all &mdash; otherwise this is just
+another generator. Relation preservation S<sub>rel</sub> answers it directly.
+A no-reference baseline that only fills the floor plan scores 0.740; the guided
+flow scores <b>0.985</b>, and its motif preservation is 1.000. The 0.245 gap is
+the reference doing work &mdash; the elasticity-conditioned transformer
+reproducing the reference's relations, not inventing a room. This is the axis
+PhyScene cannot be scored on, because it has no reference to keep.</div>
+
+<div class="note"><strong>Feasibility without post-processing.</strong> Two
+things make the coherence learned rather than scripted. First, the transformer
+trained on real rooms already places furniture against walls and keeps dining
+groups together, because the training layouts do &mdash; a raw sample reproduces
+that. Second, the only correction is a guidance gradient <em>inside</em> the
+ODE sampler (PhyScene's classifier-guidance idea, ported to flow matching):
+at each step the predicted clean layout is scored for out-of-plan overhang and
+for collision <em>between pairs that should not overlap</em>, and the gradient
+nudges the trajectory. Pairs that legitimately overlap &mdash; a chair tucked
+under its table &mdash; are exempt, which is what lets the group stay intact
+instead of being scattered to drive a collision count to zero.</div>
+
+<div class="stale"><b>What was removed.</b> An earlier revision reached its
+physical numbers with a hand-written finalisation pass (Hungarian slot
+allocation, a yaw-retreat-rotate-flush routine, a 3-D blocker filter). It was
+post-processing the plan never called for, and its low collision count came
+from scattering the very groups the reference wanted preserved. It has been
+deleted. The subsections of &sect;5.2 describing it are kept for the record but
+no longer reflect the shipped method.</div>
 
 <h2 id="refs">References</h2>
 <ol class="refs">

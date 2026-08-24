@@ -28,9 +28,12 @@ from dataclasses import dataclass
 
 import numpy as np
 
+from shapely.geometry import LineString
+
 from ..core.categories import PRIORS, ROOM_TYPES, prior
 from ..core.scene import Room, Scene
-from ..geom.polygon import as_polygon, floor_descriptor, min_rotated_rect_params
+from ..geom.polygon import (as_polygon, floor_descriptor,
+                            min_rotated_rect_params, object_polygon)
 from ..intent.relations import RELATION_TYPES
 from ..retarget.target import DesignIntent
 
@@ -50,7 +53,31 @@ N_REL = len(RELATION_TYPES)
 _REL_IX = {r: i for i, r in enumerate(RELATION_TYPES)}
 
 STATE_DIM = 4                 # u, v, cos yaw, sin yaw
-TOKEN_COND_DIM = 14           # numeric part; categorical ids are separate
+TOKEN_COND_DIM = 15           # numeric part; categorical ids are separate
+WALL_AFFINITY_TAU = 0.35      # metres: length-scale of the reference-wall signal
+
+
+def ref_wall_affinity(obj, ref_room: Room) -> float:
+    """How strongly this object hugged a wall *in the reference room*.
+
+    The plan's principle is to preserve what the reference did, not to impose a
+    category default.  ``prior(cat).wall`` already says "sofas tend to sit
+    against walls", but it cannot tell a dining table pushed into a corner from
+    one floated in the middle of the room -- both share the category prior.
+    This reads the actual geometry: the object's footprint-to-nearest-wall gap
+    in the reference, passed through a decaying kernel, so a table touching a
+    wall scores ~1 and one a metre away scores ~0.06.  The flow then learns to
+    reward wall-hugging in the target *only for the objects that were against a
+    wall to begin with*.  Overhead objects (pendant lamps) do not participate.
+    """
+    if obj.z >= 1.4:
+        return 0.0
+    walls = ref_room.walls()
+    if not walls:
+        return 0.0
+    fp = object_polygon(obj)
+    d = min(fp.distance(LineString([a, b])) for a, b in walls)
+    return float(math.exp(-d / WALL_AFFINITY_TAU))
 N_BOUNDARY = 32
 GLOBAL_DIM = 12 + 12 + 4      # g(P_r), g(P_t), area/aspect summary
 EDGE_DIM = N_REL + 9
@@ -160,6 +187,9 @@ def build_tokens(intent: DesignIntent, target_room: Room,
             1.0 if (m is not None and m.head == i) else 0.0,
             (m.rigidity if m is not None else 0.4),
             ref_state[0], ref_state[1], ref_state[2], ref_state[3],
+            # per-instance reference-wall signal: reward wall-hugging in the
+            # target only when the reference actually hugged a wall
+            ref_wall_affinity(o, src.room),
         ]
 
     ei = np.zeros((2, len(intent.relations)), dtype=np.int64)

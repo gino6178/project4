@@ -32,6 +32,8 @@ from reroom.intent.relations import build_scene_graph
 from reroom.render.topdown import draw_scene
 from reroom.retarget.baselines import run_baseline
 from reroom.retarget.optimizer import RetargetConfig, retarget
+from reroom.generative.sample import generative_retarget, load_flow
+from reroom.intent.elasticity import load_elasticity
 
 
 def _common_box(scenes, pad=0.4):
@@ -80,10 +82,21 @@ def main():
     ap.add_argument("--corpus", required=True)
     ap.add_argument("--out", required=True)
     ap.add_argument("--bank", default="outputs/priors/assets_future.pkl")
+    ap.add_argument("--flow", default="outputs/flow_wall/flow.pt")
+    ap.add_argument("--elasticity", default="outputs/elasticity/neural.pt")
     ap.add_argument("--seed", type=int, default=6)
     a = ap.parse_args()
     os.makedirs(a.out, exist_ok=True)
     bank = AssetBank.load(a.bank) if os.path.exists(a.bank) else None
+    flow = load_flow(a.flow, device="cpu")
+    el = load_elasticity(a.elasticity) if os.path.exists(a.elasticity) else None
+
+    # ReRoom's main path: the graph-conditioned flow proposal with in-sampling
+    # physical guidance -- learned coherence, feasibility inside the generative
+    # loop, no post-hoc snapping (section 13, eq. 37).
+    def reroom(graph, room):
+        return generative_retarget(flow, graph, room, elasticity=el, bank=bank,
+                                   cfg=cfg, k=16).scene
 
     scenes = [s for s in iter_scenes(a.corpus, limit=None, min_objects=6)
               if s.room.room_type in ("bedroom", "living_room")]
@@ -101,14 +114,14 @@ def main():
              f"{sum(1 for o in src.objects if o.keep)} objects")]
     for lvl, name in ((2, "narrower"), (4, "a corner removed"), (5, "a slanted wall")):
         room = deform_room(src.room, lvl, np.random.default_rng(a.seed + lvl)).room
-        out = retarget(g, room, bank=bank, cfg=cfg).scene
+        out = reroom(g, room)
         hero.append((name, out, cap(evaluate(g, out))))
     sheet(hero, os.path.join(a.out, "hero.png"), cols=2, per=3.7, fs=7.6)
 
     # ---- the comparison, two large panels on the hardest target ----
     room = deform_room(src.room, 4, np.random.default_rng(a.seed + 4)).room
     ds = run_baseline("direct_scaling", g, room, cfg=cfg)
-    rr = retarget(g, room, bank=bank, cfg=cfg).scene
+    rr = reroom(g, room)
     sheet([("normalised-coordinate scaling", ds, cap(evaluate(g, ds))),
            ("ReRoom", rr, cap(evaluate(g, rr)))],
           os.path.join(a.out, "compare.png"), cols=2, per=3.9, fs=8.0)
@@ -117,7 +130,7 @@ def main():
     lv = [("reference", src, "")]
     for lvl, name in ((1, "uniform"), (2, "aspect"), (3, "slanted"), (4, "corner cut")):
         room = deform_room(src.room, lvl, np.random.default_rng(a.seed + lvl)).room
-        out = retarget(g, room, bank=bank, cfg=cfg).scene
+        out = reroom(g, room)
         lv.append((name, out, ""))
     sheet(lv, os.path.join(a.out, "levels.png"), cols=5, per=2.5, fs=5.4)
 

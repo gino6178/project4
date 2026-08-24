@@ -68,6 +68,11 @@ class EnergyWeights:
     # saturating term as well: past a few centimetres the cost is nearly flat,
     # which leaves closing the gap as the only way out.
     wall_flush: float = 1.0
+    wall_parallel: float = 0.0   # sin^2(2*theta): penalise anything not
+                                 # exactly parallel or perpendicular to the
+                                 # wall.  A person notices a 2-degree tilt
+                                 # instantly; the quadratic on cos(theta) does
+                                 # not, so this replaces the missing sharpness.
     func_front: float = 1.0
     func_door: float = 1.0
     func_support: float = 2.0
@@ -237,6 +242,14 @@ def exact_energy(scene: Scene, intent: DesignIntent,
         # normalise so it is O(1) per anchor regardless of ring size
         e_sym += (abs(pos_side - neg_side) / max(len(ring), 1)) ** 2
 
+    # NB: an explicit per-pair mirror term for `symmetric` relations was
+    # tested here and rolled back.  Forcing nightstand-nightstand and
+    # sconce-sconce pairs to satisfy an exact side-projection constraint
+    # fought their against-wall targets and cost 0.07 of R_walkable on the
+    # bench.  The surrounds-based sum above already covers the case a viewer
+    # notices (chairs symmetrically ringing a table); pair mirroring below
+    # that count is left to the finalise snap on a case-by-case basis.
+
     # ---- E_func ----
     e_wall = 0.0
     tgt_walls = scene.room.walls()
@@ -264,8 +277,12 @@ def exact_energy(scene: Scene, intent: DesignIntent,
         back_mid = o.xy - o.forward * o.half[1]
         dist = float(np.dot(back_mid - a, n))
         off = max(dist - wt.gap, 0.0)
+        cos_t = float(np.dot(o.forward, n))
+        # sin^2(2*theta) = 4*cos^2*sin^2 = 4*cos^2*(1-cos^2)
+        skew_exact = 4.0 * cos_t * cos_t * (1.0 - cos_t * cos_t)
         e_wall += wt.strength * ((dist - wt.gap) ** 2
-                                 + 0.5 * (1.0 - float(np.dot(o.forward, n))))
+                                 + 0.5 * (1.0 - cos_t)
+                                 + w.wall_parallel * skew_exact)
         if w.wall_flush > 0.0:
             e_wall += wt.strength * w.wall_flush * float(
                 1.0 / (1.0 + math.exp(-(off - 0.04) / 0.03)))
@@ -554,6 +571,10 @@ class TorchProblem:
             self.sym_j = t(arr[:, 1], torch.long)
             self.sym_axis_fwd = t(arr[:, 2], torch.float32)  # 0 or 1
 
+        # (an explicit per-pair mirror term was tested here for the
+        # `symmetric` relations and rolled back -- see exact_energy note.)
+        self._mirror = []
+
         # wall targets, resolved to target-room segments
         wts = []
         tw = scene.room.walls()
@@ -772,9 +793,11 @@ class TorchProblem:
             if self.w.wall_flush > 0.0:
                 off = torch.relu(dist - self.w_gap[None])
                 flush = self.w.wall_flush * torch.sigmoid((off - 0.04) / 0.03)
+            skew = 4.0 * ang * ang * (1.0 - ang * ang)  # sin^2(2*theta), 0 when parallel or perp
             e_wall = (self.w_str[None] * (
                 (dist - self.w_gap[None]) ** 2
                 + 0.5 * (1.0 - ang)
+                + self.w.wall_parallel * skew
                 + 0.15 * (par - self.w_par[None]) ** 2
                 + flush)
                 * keep[:, idx]).sum(-1)
@@ -849,6 +872,7 @@ class TorchProblem:
             e_sym = ((sums / counts_safe[None]) ** 2).sum(-1)
         else:
             e_sym = torch.zeros(R, device=self.device)
+
 
 
         # ---- C_t ----

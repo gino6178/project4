@@ -42,6 +42,10 @@ class DesiredRelation:
     gamma: float
     rigid: bool = False            # alpha ~ 0: never let this one stretch
     stiffness: float = 1.0         # how hard to insist on phi_des
+    # for `symmetric` relations, the anchor object index in the reference
+    # scene; carried through from the source SceneGraph so E_sym can find the
+    # axis of symmetry without re-scanning the graph.
+    anchor: int | None = None
 
     @property
     def effective_weight(self) -> float:
@@ -199,11 +203,13 @@ def build_design_intent(graph: SceneGraph, target_room: Room,
         phi_des[1] *= s                            # dp_y
         phi_des[4] = max(phi_ref[4] * s, 0.0)      # gap
         phi_des[5] = desired_distance(float(phi_ref[5]), float(alpha), gamma)
+        anchor = r.meta.get("anchor") if isinstance(r.meta, dict) else None
         desired.append(DesiredRelation(
             i=r.i, j=r.j, kind=r.kind, weight=r.weight, phi_ref=phi_ref,
             phi_des=phi_des, alpha=float(alpha), gamma=gamma,
             rigid=bool(alpha <= rigid_alpha),
-            stiffness=1.0 + stiffness_kappa * (1.0 - float(alpha))))
+            stiffness=1.0 + stiffness_kappa * (1.0 - float(alpha)),
+            anchor=int(anchor) if anchor is not None else None))
 
     # Normalise the stiffnesses to mean 1.  Elasticity should *redistribute*
     # weight between rigid and elastic relations, not inflate ``E_rel`` as a

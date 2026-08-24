@@ -41,21 +41,42 @@ def load_flow(path: str, device: str = "cpu", use_ema: bool = True) -> FlowModel
 @torch.no_grad()
 def sample_layouts(model: FlowModel, intent: DesignIntent, target_room: Room,
                    k: int = 8, steps: int = 50, device: str = "cpu",
-                   temperature: float = 1.0, seed: int = 0) -> np.ndarray:
+                   temperature: float = 1.0, seed: int = 0,
+                   guidance=None) -> np.ndarray:
     """Integrate the probability-flow ODE to draw ``k`` candidate layouts.
 
     Returns ``(k, N, 2)`` positions and ``(k, N)`` yaws, already mapped back
     from the room frame into metres.
+
+    ``guidance`` (a :class:`GuidanceConfig`) turns on PhyScene-style in-sampling
+    physical guidance: at every ODE step the predicted clean endpoint is scored
+    for feasibility (out-of-floor, non-nestable collision) and its gradient
+    nudges the trajectory.  This replaces the post-hoc constraint projection --
+    feasibility stays inside the generative loop, and legitimate overlaps
+    (a chair under its table) are left intact.
     """
+    from .guidance import feasibility_grad
     item = build_tokens(intent, target_room, None)
     batch = collate([item] * k, device=device)
+    frames = [item.meta["frame_tgt"]] * k
     g = torch.Generator(device="cpu").manual_seed(seed)
     x = torch.randn(batch["state"].shape, generator=g).to(device) * temperature
     dt = 1.0 / steps
     for s in range(steps):
-        tau = torch.full((x.shape[0],), s * dt, device=device)
-        v = model(x, tau, batch)
+        t = s * dt
+        tau = torch.full((x.shape[0],), t, device=device)
+        with torch.no_grad():
+            v = model(x, tau, batch)
         x = x + dt * v
+        if guidance is not None and t >= guidance.start:
+            # ramp the step in over the tail of the trajectory
+            ramp = (t - guidance.start) / max(1.0 - guidance.start, 1e-6)
+            x1_hat = x + (1.0 - t) * v
+            # this function runs under @torch.no_grad(); the guidance needs the
+            # graph, so re-enable it just for the feasibility gradient
+            with torch.enable_grad():
+                grad = feasibility_grad(x1_hat, batch, frames, guidance)
+            x = x - dt * ramp * grad
     x = x.cpu().numpy()
     fr = item.meta["frame_tgt"]
     n = len(item.cat)
@@ -75,8 +96,18 @@ def generative_retarget(model: FlowModel, graph: SceneGraph, target_room: Room,
                         cfg: RetargetConfig | None = None,
                         k: int = 12, steps: int = 50,
                         temperature: float = 1.0,
-                        project: bool = True) -> RetargetResult:
-    """Stage-two pipeline: propose with ``p_theta``, then project (37)."""
+                        project: bool = False,
+                        guidance="default") -> RetargetResult:
+    """Stage-two pipeline: propose with ``p_theta``, guided in-sampling (37).
+
+    The default path is PhyScene-style: no post-hoc projection, feasibility is a
+    guidance gradient inside the sampler (``guidance``).  Pass ``project=True``
+    for the old constraint-projection behaviour, or ``guidance=None`` to sample
+    the raw proposal with no feasibility correction at all.
+    """
+    from .guidance import GuidanceConfig
+    if guidance == "default":
+        guidance = GuidanceConfig()
     cfg = cfg or RetargetConfig()
     rng = np.random.default_rng(cfg.seed)
     src = graph.scene
@@ -91,19 +122,29 @@ def generative_retarget(model: FlowModel, graph: SceneGraph, target_room: Room,
 
     xy, yaw = sample_layouts(model, intent, target_room, k=k, steps=steps,
                              device=cfg.device, temperature=temperature,
-                             seed=cfg.seed)
+                             seed=cfg.seed, guidance=guidance)
     info: dict = {"k": k, "steps": steps, "summarization": sm.log,
-                  "projected": bool(project)}
+                  "projected": bool(project),
+                  "guided": guidance is not None}
 
     if project:
         problem = TorchProblem(out, intent, cfg.weights, device=cfg.device)
-        xy, yaw, e, _ = refine_continuous(problem, xy, yaw, cfg.grad_steps, cfg.lr)
+        # freeze_yaw: keep the proposal's orientation and correct only
+        # positions.  The flow prior orients furniture the way real rooms do
+        # (measured: 89 % of wall objects within 0.5 deg of parallel, median
+        # skew 0.58 deg); letting the surrogate re-optimise yaw during
+        # projection collapses that back to the optimiser's few-degree local
+        # minimum.  This is the eq. (37) division of labour made literal --
+        # the transformer owns orientation, the projection owns feasibility.
+        xy, yaw, e, _ = refine_continuous(problem, xy, yaw, cfg.grad_steps,
+                                          cfg.lr, freeze_yaw=True)
         # escalating projection: the proposal is a good layout prior but knows
         # nothing about hard constraints, so feasibility weights are raised
         # until the best candidate is actually legal (37)
         for scale in (cfg.projection_scale, cfg.projection_scale * 4.0):
             xy, yaw, e, _ = refine_continuous(problem, xy, yaw, cfg.proj_steps,
-                                              cfg.lr * 0.35, scale)
+                                              cfg.lr * 0.35, scale,
+                                              freeze_yaw=True)
             best_c = int(np.argmin(e))
             _write_back(out, xy[best_c], yaw[best_c])
             _apply_supports(out, intent)

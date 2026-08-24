@@ -74,6 +74,12 @@ class TrainConfig:
     out: str = "outputs/flow"
     log_every: int = 50
     seed: int = 0
+    wall_aux: float = 3.0        # weight of the reference-conditioned
+                                 # wall-hugging auxiliary loss (0 disables)
+    init_from: str = ""          # warm-start checkpoint; layers whose shape
+                                 # still matches are copied, the rest are left
+                                 # at their fresh init (e.g. the input
+                                 # projection when TOKEN_COND_DIM changed)
 
 
 class RetargetPairs(Dataset):
@@ -131,6 +137,20 @@ def train_flow(scenes: list[Scene], val_scenes: list[Scene] | None = None,
                             collate_fn=_collate_fn)
 
     model = FlowModel(cfg.d_model, cfg.depth, cfg.heads).to(dev)
+    if cfg.init_from and os.path.exists(cfg.init_from):
+        ck = torch.load(cfg.init_from, map_location=dev, weights_only=False)
+        src_sd = ck.get("ema", ck.get("model", ck))
+        msd = model.state_dict()
+        copied, skipped = 0, []
+        for k, v in src_sd.items():
+            if k in msd and msd[k].shape == v.shape:
+                msd[k] = v
+                copied += 1
+            else:
+                skipped.append(k)
+        model.load_state_dict(msd)
+        print(f"[flow] warm-start from {cfg.init_from}: copied {copied} "
+              f"tensors, reinit {skipped}", flush=True)
     ema = FlowModel(cfg.d_model, cfg.depth, cfg.heads).to(dev)
     ema.load_state_dict(model.state_dict())
     for p in ema.parameters():
@@ -146,6 +166,7 @@ def train_flow(scenes: list[Scene], val_scenes: list[Scene] | None = None,
     for ep in range(cfg.epochs):
         model.train()
         tot, cnt = 0.0, 0
+        tot_w = 0.0
         for batch in dl:
             batch = {k: v.to(dev, non_blocking=True) for k, v in batch.items()}
             x1 = batch["state"]
@@ -155,7 +176,38 @@ def train_flow(scenes: list[Scene], val_scenes: list[Scene] | None = None,
             v_target = x1 - x0
             v = model(xt, tau, batch)
             m = batch["mask"][..., None].float()
-            loss = ((v - v_target) ** 2 * m).sum() / m.sum().clamp(min=1)
+            fm_loss = ((v - v_target) ** 2 * m).sum() / m.sum().clamp(min=1)
+
+            # reference-conditioned wall-hugging auxiliary loss.  The predicted
+            # endpoint is recoverable from the velocity: x1_hat = xt + (1-tau)v.
+            # Distance is measured against the *actual* room boundary, which the
+            # batch already carries as sampled points (concave walls included),
+            # not against the normalised MRR edge -- the flow already matches
+            # the MRR coordinates, yet wall objects still land ~24 cm off,
+            # because the MRR rectangle is not the real wall.  So: for each
+            # object, take its distance to the nearest boundary sample, and
+            # penalise the prediction for sitting *farther* from the boundary
+            # than the true layout does, weighted by the reference-wall
+            # affinity (cond feature -1).  True wall objects sit on the
+            # boundary, so this pulls exactly those objects tight to the wall
+            # they hugged in the reference; free objects (affinity ~0) are
+            # untouched.
+            if cfg.wall_aux > 0.0:
+                x1_hat = xt + (1 - tau)[:, None, None] * v
+                pp = x1_hat[..., :2]                             # (B, N, 2)
+                pt = x1[..., :2]
+                bnd = batch["boundary"][..., :2]                # (B, Nb, 2)
+                aff = batch["cond"][..., -1]                    # (B, N)
+                dp = torch.cdist(pp, bnd).min(-1).values        # (B, N) pred
+                dt = torch.cdist(pt, bnd).min(-1).values        # (B, N) true
+                pen = aff * (dp - dt).clamp(min=0.0) ** 2
+                mm = batch["mask"].float()
+                # normalise by participating (reference-wall-hugging) objects
+                part = ((aff > 0.3).float() * mm).sum().clamp(min=1)
+                wall_loss = (pen * mm).sum() / part
+            else:
+                wall_loss = torch.zeros((), device=dev)
+            loss = fm_loss + cfg.wall_aux * wall_loss
             opt.zero_grad(set_to_none=True)
             loss.backward()
             torch.nn.utils.clip_grad_norm_(model.parameters(), cfg.grad_clip)
@@ -166,13 +218,16 @@ def train_flow(scenes: list[Scene], val_scenes: list[Scene] | None = None,
                     pe.mul_(cfg.ema).add_(pm, alpha=1 - cfg.ema)
                 for be, bm in zip(ema.buffers(), model.buffers()):
                     be.copy_(bm)
-            tot += float(loss) * int(m.sum())
+            tot += float(fm_loss) * int(m.sum())
+            tot_w += float(wall_loss) * int(m.sum())
             cnt += int(m.sum())
             step += 1
             if step % cfg.log_every == 0:
-                print(f"  ep {ep} step {step}/{steps} loss {tot / max(cnt, 1):.4f}",
+                print(f"  ep {ep} step {step}/{steps} "
+                      f"fm {tot / max(cnt, 1):.4f} wall {tot_w / max(cnt, 1):.4f}",
                       flush=True)
-        row = {"epoch": ep, "train_loss": tot / max(cnt, 1)}
+        row = {"epoch": ep, "train_loss": tot / max(cnt, 1),
+               "wall_loss": tot_w / max(cnt, 1)}
         if val_dl is not None:
             row["val_loss"] = _validate(ema, val_dl, dev)
         history.append(row)
