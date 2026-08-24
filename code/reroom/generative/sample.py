@@ -165,6 +165,38 @@ def generative_retarget(model: FlowModel, graph: SceneGraph, target_room: Room,
             best, best_ex = int(c), ex
     _write_back(out, xy[best], yaw[best])
     _apply_supports(out, intent)
+
+    # ---- growth (section 10) and substitution (section 11) --------------
+    # The transformer can only place the objects it has tokens for -- the
+    # reference set.  The remaining two-thirds of eq. (18), "selection +
+    # substitution", are handled around it, exactly as in the optimiser path:
+    #   * population proposes furniture to fill a room that grew, placed by the
+    #     planner relative to the surviving motifs (the flow cannot invent
+    #     tokens for objects with no reference relations);
+    #   * substitution swaps each asset for the closest-fitting real one in the
+    #     bank, so a reference sofa too large for the target becomes a smaller
+    #     sofa of similar style rather than a non-physically shrunk one;
+    #   * a feasibility gate then admits each addition only while it costs the
+    #     layout nothing -- filling a bigger room is the right instinct, doing
+    #     it for free is not.
+    from ..retarget.optimizer import _add_wall_targets, _vet_additions
+    from ..retarget.retrieval import substitute_assets
+    if cfg.allow_addition:
+        pop = plan_population(intent, target_room,
+                              np.array([o.keep for o in out.objects], dtype=bool),
+                              cooc, bank, rng)
+        if pop is not None and pop.additions:
+            n_ref = len(out.objects)
+            for o in pop.additions:
+                a = o.copy()
+                a.meta = dict(a.meta or {}); a.meta["added"] = True
+                out.objects.append(a)
+            _add_wall_targets(intent, out, n_ref, target_room)
+    if cfg.allow_substitution and bank is not None and len(bank):
+        substitute_assets(out, intent, bank, rng=rng, **cfg.retrieval)
+    if cfg.allow_addition and any(o.meta.get("added") for o in out.objects):
+        _vet_additions(out, intent, cfg)
+
     out.objects = [o for o in out.objects if o.keep]
     return RetargetResult(scene=out, intent=intent,
                           energy=exact_energy(out, intent, cfg.weights),
