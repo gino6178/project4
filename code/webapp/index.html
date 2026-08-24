@@ -1,0 +1,487 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>ReRoom bench</title>
+<style>
+:root{
+  --paper:#F5F7F4; --panel:#fff; --ink:#171B19; --ink2:#3E4744; --mute:#6C7671;
+  --line:#DDE3DD; --line2:#EDF1EC; --accent:#26596E; --soft:#E3EDF1;
+  --good:#3C7A56; --bad:#9E4438; --warn:#9C6B22;
+}
+@media (prefers-color-scheme:dark){:root{
+  --paper:#101413; --panel:#171C1A; --ink:#E7EDE8; --ink2:#BFC9C3; --mute:#8B958F;
+  --line:#28302D; --line2:#1E2422; --accent:#7FBBD4; --soft:#17282F;
+  --good:#77C093; --bad:#DE8A7C; --warn:#D6A45E;}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:15px/1.55 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+header{padding:14px 20px;border-bottom:1px solid var(--line);background:var(--panel);
+  display:flex;align-items:baseline;gap:16px;flex-wrap:wrap;position:sticky;top:0;z-index:9}
+h1{font:500 17px/1.2 ui-sans-serif,system-ui;margin:0;letter-spacing:-.01em}
+.sub{color:var(--mute);font-size:13px}
+main{display:grid;grid-template-columns:308px 1fr;gap:0;min-height:calc(100vh - 52px)}
+aside{border-right:1px solid var(--line);background:var(--panel);padding:16px;
+  overflow-y:auto;max-height:calc(100vh - 52px)}
+section{padding:18px 20px 60px;overflow-x:hidden}
+h2{font:500 13px/1.3 ui-sans-serif;letter-spacing:.07em;text-transform:uppercase;
+  color:var(--mute);margin:0 0 9px}
+h2:not(:first-child){margin-top:22px}
+.cases{display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;
+  border:1px solid var(--line);border-radius:8px;padding:6px;background:var(--paper)}
+.case{padding:7px 9px;border-radius:6px;cursor:pointer;border:1px solid transparent;
+  font-size:13px;line-height:1.35}
+.case:hover{background:var(--line2)}
+.case.on{background:var(--soft);border-color:var(--accent)}
+.case b{font-weight:500}
+.case span{color:var(--mute);font-size:11.5px;display:block;
+  font-variant-numeric:tabular-nums}
+.presets{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+button{font:inherit;padding:7px 10px;border-radius:7px;border:1px solid var(--line);
+  background:var(--paper);color:var(--ink);cursor:pointer;font-size:13px}
+button:hover{border-color:var(--accent)}
+button.on{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+button.go{width:100%;padding:11px;margin-top:14px;background:var(--accent);
+  color:var(--panel);border-color:var(--accent);font-size:14px}
+button.go:disabled{opacity:.5;cursor:default}
+label.row{display:flex;align-items:center;gap:9px;font-size:13px;margin:9px 0;
+  color:var(--ink2)}
+label.row input[type=range]{flex:1;accent-color:var(--accent)}
+label.row .v{width:44px;text-align:right;font-variant-numeric:tabular-nums;
+  color:var(--mute);font-size:12px}
+label.chk{display:flex;align-items:center;gap:8px;font-size:13px;margin:7px 0;
+  color:var(--ink2)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;
+  overflow:hidden}
+.card h3{margin:0;padding:9px 12px;font:500 13px/1.3 ui-sans-serif;
+  border-bottom:1px solid var(--line2);display:flex;justify-content:space-between;
+  align-items:baseline;gap:8px}
+.card h3 em{font-style:normal;color:var(--mute);font-size:11.5px;
+  font-variant-numeric:tabular-nums}
+.card img{width:100%;display:block;background:#fff}
+.tabs{display:flex;gap:0;border-bottom:1px solid var(--line2)}
+.tabs button{border:none;border-radius:0;background:none;padding:7px 12px;
+  font-size:12.5px;color:var(--mute);border-bottom:2px solid transparent}
+.tabs button.on{color:var(--ink);border-bottom-color:var(--accent)}
+.mt{display:grid;grid-template-columns:repeat(auto-fit,minmax(88px,1fr));gap:1px;
+  background:var(--line2);border-top:1px solid var(--line2)}
+.mt div{background:var(--panel);padding:7px 9px}
+.mt .k{font-size:10.5px;color:var(--mute);letter-spacing:.03em}
+.mt .n{font-size:14px;font-variant-numeric:tabular-nums;margin-top:1px}
+.n.good{color:var(--good)} .n.bad{color:var(--bad)}
+.judge{margin-top:20px;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:14px 16px}
+.judge p{margin:0 0 8px;font-size:14px}
+.judge .q{margin-bottom:14px}
+.judge .opts{display:flex;gap:7px;flex-wrap:wrap}
+.note{color:var(--mute);font-size:12.5px;margin-top:10px}
+.empty{color:var(--mute);padding:60px 20px;text-align:center}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid var(--line);
+  border-top-color:var(--accent);border-radius:50%;animation:s .8s linear infinite;
+  vertical-align:-2px;margin-right:7px}
+@keyframes s{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation:none}}
+.zonewrap{margin-top:8px}
+.zonewrap canvas{width:100%;max-width:230px;aspect-ratio:1/1;display:block;
+  border:1px solid var(--line2);border-radius:8px;cursor:crosshair;
+  background:var(--card)}
+.chips{display:flex;gap:5px;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:11px;padding:2px 7px;border-radius:99px;background:var(--line2);
+  color:var(--ink2)}
+.edit{margin-top:16px;background:var(--panel);border:1px solid var(--line);
+  border-radius:10px;padding:13px 15px}
+.edit h4{margin:0 0 9px;font:500 13px/1.3 ui-sans-serif;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--mute)}
+.objs{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:11px}
+.obj{font-size:12px;padding:4px 9px;border-radius:6px;border:1px solid var(--line);
+  background:var(--paper);cursor:pointer}
+.obj.on{background:var(--accent);color:var(--panel);border-color:var(--accent)}
+.obj.off{opacity:.42;text-decoration:line-through}
+.pad{display:grid;grid-template-columns:repeat(3,34px);gap:4px;justify-content:start}
+.pad button{padding:6px 0;font-size:13px}
+.erow{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:9px}
+.hint{color:var(--mute);font-size:12px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+</style>
+
+<header>
+  <h1>ReRoom bench</h1>
+  <div class="sub">pick a reference room, shape a target floor, judge the result</div>
+  <div class="sub" id="votes" style="margin-left:auto"></div>
+</header>
+
+<main>
+<aside>
+  <h2>Reference room</h2>
+  <div class="cases" id="cases"></div>
+
+  <h2>Target floor</h2>
+  <div class="presets" id="presets"></div>
+
+  <h2>Or shape it yourself</h2>
+  <label class="row">width<input type="range" id="sx" min="0.5" max="1.8" step="0.05" value="1"><span class="v" id="sxv">1.00</span></label>
+  <label class="row">depth<input type="range" id="sy" min="0.5" max="1.8" step="0.05" value="1"><span class="v" id="syv">1.00</span></label>
+  <label class="row">corner cut<input type="range" id="cc" min="0" max="0.6" step="0.02" value="0"><span class="v" id="ccv">0.00</span></label>
+  <label class="row">slanted wall<input type="range" id="sl" min="-0.4" max="0.4" step="0.02" value="0"><span class="v" id="slv">0.00</span></label>
+
+  <h2>Keep this floor clear</h2>
+  <div class="note">Drag on the plan to mark floor the solver may not use —
+    a rug, a walkway, the space a door swings through. Nothing with a footprint
+    will be placed inside a marked area.</div>
+  <div class="zonewrap"><canvas id="zc" width="460" height="460"></canvas></div>
+  <div class="erow" style="margin-top:6px">
+    <button id="zclear">clear zones</button>
+    <span class="hint" id="zmsg"></span>
+  </div>
+
+  <h2>What the solver may do</h2>
+  <label class="chk"><input type="checkbox" id="rm" checked> remove furniture that will not fit</label>
+  <label class="chk"><input type="checkbox" id="ad" checked> add furniture when the room grows</label>
+  <label class="chk"><input type="checkbox" id="sb" checked> swap in similar, better-sized assets</label>
+  <label class="chk"><input type="checkbox" id="bl" checked> show the direct-scaling baseline</label>
+  <label class="chk"><input type="checkbox" id="rd" checked> render with the real assets</label>
+  <label class="chk"><input type="checkbox" id="qq"> higher quality (about 2x slower)</label>
+
+  <button class="go" id="go" disabled>Retarget</button>
+  <div class="note" id="status"></div>
+</aside>
+
+<section id="out"><div class="empty">Choose a reference room on the left.</div></section>
+</main>
+
+<script>
+const PRESETS = [["original","same shape"],["smaller70","70% area"],
+  ["narrow","narrow"],["wide","wide"],["l_shaped","L-shaped"],["slanted","slanted wall"]];
+let cases=[], cur=null, mode="custom", lastResult=null, ref=null;
+// C_t (plan section 1): what the person fixes before the solver runs
+const PINNED = new Set();
+let ZONES = [], OUTLINE = null;
+const KEY = new URLSearchParams(location.search).get("k") || "";
+const SESSION = "s" + Math.random().toString(36).slice(2, 10);
+const HDR = KEY ? {"Content-Type":"application/json","X-ReRoom-Token":KEY}
+                : {"Content-Type":"application/json"};
+const api = (p,o) => fetch(p + (KEY ? (p.includes("?")?"&":"?")+"k="+encodeURIComponent(KEY) : ""),
+                           o ? Object.assign({headers:HDR}, o) : {headers:HDR});
+
+const $ = s => document.querySelector(s);
+const el = (t,c,x) => { const e=document.createElement(t); if(c)e.className=c;
+  if(x!==undefined)e.textContent=x; return e; };
+
+function paintPresets(){
+  const box=$("#presets"); box.innerHTML="";
+  PRESETS.forEach(([k,lab])=>{
+    const b=el("button",mode===k?"on":"",lab);
+    b.onclick=()=>{mode=k;paintPresets();refreshOutline();};
+    box.appendChild(b);
+  });
+}
+["sx","sy","cc","sl"].forEach(id=>{
+  const r=$("#"+id);
+  r.addEventListener("input",()=>{ $("#"+id+"v").textContent=(+r.value).toFixed(2);
+    mode="custom"; paintPresets(); refreshOutline(); });
+});
+
+async function loadCases(){
+  cases = await (await api("/api/cases")).json();
+  const box=$("#cases");
+  cases.forEach(c=>{
+    const d=el("div","case");
+    d.appendChild(el("b",null,c.room_type));
+    d.appendChild(el("span",null,`${c.area} m² · ${c.n_objects} objects · ${c.n_vertices} walls`));
+    d.onclick=()=>selectCase(c.id,d);
+    d.dataset.id=c.id; box.appendChild(d);
+  });
+  refreshVotes();
+}
+
+async function selectCase(id,node){
+  document.querySelectorAll(".case").forEach(n=>n.classList.toggle("on",n===node));
+  cur=id; $("#go").disabled=true;
+  // a new reference means new objects, so old pins and zones are meaningless
+  PINNED.clear(); ZONES=[]; OUTLINE=null; drawZones();
+  $("#status").innerHTML='<span class="spin"></span>loading reference…';
+  ref = await (await api("/api/reference/"+encodeURIComponent(id))).json();
+  $("#status").textContent="";
+  $("#go").disabled=false;
+  refreshOutline();
+  render();
+}
+
+function imgCard(title, meta, imgs, metrics, extra){
+  const c=el("div","card");
+  const h=el("h3"); h.appendChild(el("span",null,title));
+  if(meta) h.appendChild(el("em",null,meta));
+  c.appendChild(h);
+  const keys=Object.keys(imgs).filter(k=>imgs[k]);
+  if(keys.length>1){
+    const tabs=el("div","tabs");
+    keys.forEach((k,i)=>{ const b=el("button",i===0?"on":"",k);
+      b.onclick=()=>{ tabs.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+        b.classList.add("on"); img.src=imgs[k]; };
+      tabs.appendChild(b); });
+    c.appendChild(tabs);
+  }
+  const img=el("img"); img.alt=title;
+  img.src=imgs[keys[0]];
+  c.appendChild(img);
+  if(metrics){
+    const m=el("div","mt");
+    const spec=[["outside","R_OOB",true],["overlap","R_col",true],
+      ["clearance","clearance_violation_ratio",true],["reach","reachable_ratio",false],
+      ["S_rel","S_rel",false],["S_motif","S_motif",false]];
+    spec.forEach(([lab,key,lower])=>{
+      const v=metrics[key]; const d=el("div");
+      d.appendChild(el("div","k",lab));
+      const pct = key.startsWith("R_")||key.indexOf("ratio")>0;
+      const n=el("div","n",pct?(v*100).toFixed(1)+"%":v.toFixed(3));
+      // classList.add throws on an empty token, so only add when there is one
+      const cls = lower ? (v<0.02?"good":(v>0.08?"bad":""))
+                        : (v>0.85?"good":(v<0.6?"bad":""));
+      if(cls) n.classList.add(cls);
+      d.appendChild(n); m.appendChild(d);
+    });
+    c.appendChild(m);
+  }
+  if(extra) c.appendChild(extra);
+  return c;
+}
+
+function render(result){
+  const out=$("#out"); out.innerHTML="";
+  if(!ref) return;
+  const g=el("div","grid");
+  const rimgs={};
+  if(ref.render) rimgs["3D"]=ref.render;
+  if(ref.photo) rimgs["photo"]=ref.photo;
+  rimgs["plan"]=ref.topdown;
+  const chips=el("div","chips");
+  (ref.motifs||[]).forEach(m=>chips.appendChild(
+    el("span","chip",m.name+" ("+m.members.length+")")));
+  const wrap=el("div"); wrap.style.padding="9px 12px"; wrap.appendChild(chips);
+  g.appendChild(imgCard("Reference room",
+    `${ref.area} m² · ${ref.n_objects} objects`, rimgs, null, wrap));
+
+  if(result){
+    const mk=(k,t)=>{ if(!result[k]) return;
+      const im={}; if(result[k].render) im["3D"]=result[k].render;
+      im["plan"]=result[k].topdown;
+      let ex=null;
+      if(result[k].log && result[k].log.length){
+        ex=el("div"); ex.style.cssText="padding:8px 12px;font-size:11.5px;color:var(--mute)";
+        result[k].log.slice(0,4).forEach(l=>ex.appendChild(el("div",null,"· "+l)));
+      }
+      g.appendChild(imgCard(t,
+        `${result.target_area} m² · ${result[k].n_objects} objects`,
+        im, result[k].metrics, ex)); };
+    mk("ours","ReRoom");
+    mk("baseline","Direct scaling");
+  }
+  out.appendChild(g);
+  if(result){ out.appendChild(editBox()); out.appendChild(judgeBox()); }
+}
+
+let sel=null;
+function editBox(){
+  const b=el("div","edit");
+  b.appendChild(el("h4",null,"Edit the result"));
+  b.appendChild(el("div","hint",
+    "Every object is still a separate instance with its own pose and asset — "+
+    "pick one and overrule the solver. The numbers update as you go."));
+  const list=el("div","objs"); list.style.marginTop="10px";
+  const objs=(lastResult.ours.objects)||[];
+  objs.forEach(o=>{
+    if(o.locked) PINNED.add(o.oid);
+    const t=el("button","obj",(PINNED.has(o.oid)?"📌 ":"")
+      +o.category.replace(/_/g," "));
+    t.onclick=()=>{ sel=o.oid;
+      list.querySelectorAll(".obj").forEach(x=>x.classList.remove("on"));
+      t.classList.add("on"); };
+    t.dataset.oid=o.oid; list.appendChild(t);
+  });
+  b.appendChild(list);
+
+  const step=el("input"); step.type="range"; step.min="0.05"; step.max="0.5";
+  step.step="0.05"; step.value="0.15"; step.style.width="110px";
+  const pad=el("div","pad");
+  const mk=(lab,dx,dy,dyaw)=>{ const q=el("button",null,lab);
+    q.onclick=()=>send({op:"nudge",oid:sel,dx:dx*(+step.value),
+      dy:dy*(+step.value),dyaw:dyaw||0}); return q; };
+  [["",0,0,0],["↑",0,1,0],["",0,0,0],["←",-1,0,0],["·",0,0,0],["→",1,0,0],
+   ["",0,0,0],["↓",0,-1,0],["",0,0,0]].forEach(([l,a,c,d])=>{
+     if(!l){ pad.appendChild(el("div")); return; }
+     if(l==="·"){ const q=el("button",null,"·"); q.disabled=true; pad.appendChild(q); return; }
+     pad.appendChild(mk(l,a,c,d)); });
+  b.appendChild(pad);
+
+  const row=el("div","erow");
+  const rl=el("button",null,"turn ⟲"); rl.onclick=()=>send({op:"nudge",oid:sel,dyaw:-Math.PI/12});
+  const rr=el("button",null,"turn ⟳"); rr.onclick=()=>send({op:"nudge",oid:sel,dyaw:Math.PI/12});
+  const q90=el("button",null,"turn 90°"); q90.onclick=()=>send({op:"nudge",oid:sel,dyaw:Math.PI/2});
+  const del=el("button",null,"remove"); del.onclick=()=>send({op:"delete",oid:sel});
+  const pin=el("button",null,"📌 pin / unpin");
+  pin.title="A pinned object keeps its exact pose the next time you solve, "
+    +"and can never be dropped by summarisation.";
+  pin.onclick=()=>{ if(!sel){ emsg.textContent="Pick an object first."; return; }
+    const on=!PINNED.has(sel);
+    if(on) PINNED.add(sel); else PINNED.delete(sel);
+    send({op:"pin",oid:sel,value:on}); };
+  row.append(rl,rr,q90,pin,del,el("span","hint","step"),step);
+  b.appendChild(row);
+
+  const row2=el("div","erow");
+  const dl=el("button",null,"Download scene JSON");
+  dl.onclick=()=>{ const u="/api/export?session="+encodeURIComponent(SESSION)
+      +(KEY?"&k="+encodeURIComponent(KEY):""); window.open(u,"_blank"); };
+  row2.appendChild(dl);
+  const emsg=el("span","hint"); row2.appendChild(emsg);
+  b.appendChild(row2);
+
+  async function send(edit){
+    if(!sel){ emsg.textContent="Pick an object first."; return; }
+    emsg.textContent="applying…";
+    const r=await api("/api/edit",{method:"POST",
+      body:JSON.stringify({session:SESSION,edits:[edit],render:$("#rd").checked})});
+    const j=await r.json();
+    if(j.error){ emsg.textContent=j.error; return; }
+    lastResult.ours.topdown=j.topdown;
+    lastResult.ours.metrics=j.metrics;
+    lastResult.ours.objects=j.objects;
+    lastResult.ours.n_objects=j.n_objects;
+    if(j.render) lastResult.ours.render=j.render;
+    emsg.textContent="";
+    render(lastResult);
+    const again=document.querySelector(".edit .obj[data-oid='"+CSS.escape(sel)+"']");
+    if(again) again.classList.add("on");
+  }
+  return b;
+}
+
+function judgeBox(){
+  const b=el("div","judge");
+  const mk=(id,text)=>{
+    const q=el("div","q"); q.appendChild(el("p",null,text));
+    const o=el("div","opts");
+    [["reroom","ReRoom"],["baseline","Direct scaling"],["tie","No difference"]]
+      .forEach(([v,lab])=>{ const bt=el("button",null,lab);
+        bt.dataset.q=id; bt.dataset.v=v;
+        bt.onclick=()=>{ o.querySelectorAll("button").forEach(x=>x.classList.remove("on"));
+          bt.classList.add("on"); b.dataset[id]=v; };
+        o.appendChild(bt); });
+    q.appendChild(o); return q;
+  };
+  b.appendChild(mk("q1","Q1 — which one better keeps the reference room's arrangement and style?"));
+  b.appendChild(mk("q2","Q2 — which one better suits the target room, as somewhere to live?"));
+  const save=el("button",null,"Record my judgement");
+  save.onclick=async()=>{
+    if(!b.dataset.q1||!b.dataset.q2){ msg.textContent="Answer both questions first."; return; }
+    const r=await api("/api/vote",{method:"POST",
+      body:JSON.stringify({case:cur,target:lastResult.label,
+        q1:b.dataset.q1,q2:b.dataset.q2,
+        metrics_ours:lastResult.ours.metrics,
+        metrics_baseline:lastResult.baseline?lastResult.baseline.metrics:null})});
+    const j=await r.json();
+    msg.textContent=`Recorded — ${j.n_votes} judgement${j.n_votes===1?"":"s"} so far.`;
+    refreshVotes();
+  };
+  b.appendChild(save);
+  const msg=el("span","note"); msg.style.marginLeft="10px"; b.appendChild(msg);
+  b.appendChild(el("div","note",
+    "The two questions are deliberately separate: a result can look like the reference and still be a bad room."));
+  return b;
+}
+
+async function refreshVotes(){
+  try{ const v=await (await api("/api/votes")).json();
+    $("#votes").textContent = v.n ? `${v.n} judgements recorded` : ""; }catch(e){}
+}
+
+const targetSpec = () => mode==="custom"
+  ? {mode:"custom",scale_x:+$("#sx").value,scale_y:+$("#sy").value,
+     corner_cut:+$("#cc").value,slant:+$("#sl").value}
+  : {mode};
+
+$("#go").onclick=async()=>{
+  if(!cur) return;
+  $("#go").disabled=true;
+  $("#status").innerHTML='<span class="spin"></span>retargeting…';
+  const target = targetSpec();
+  try{
+    const r=await api("/api/retarget",{method:"POST",
+      body:JSON.stringify({case:cur,target,session:SESSION,
+        allow_removal:$("#rm").checked,allow_addition:$("#ad").checked,
+        allow_substitution:$("#sb").checked,baseline:$("#bl").checked,
+        render:$("#rd").checked,quality:$("#qq").checked?"good":"fast",
+        pinned:[...PINNED],keepout:ZONES})});
+    lastResult=await r.json();
+    if(lastResult.error){ $("#status").textContent=lastResult.error; return; }
+    $("#status").textContent=`${lastResult.label} · ${lastResult.target_area} m² · ${lastResult.seconds}s`;
+    render(lastResult);
+  }catch(e){ $("#status").textContent="failed: "+e; }
+  $("#go").disabled=false;
+};
+
+// ---- no-go zone painter (C_t, plan section 1) --------------------------
+const zc=$("#zc"), zx=zc.getContext("2d");
+let drag=null;
+function drawZones(){
+  const W=zc.width, H=zc.height;
+  zx.clearRect(0,0,W,H);
+  const css=getComputedStyle(document.body);
+  zx.fillStyle=css.getPropertyValue("--card")||"#fff";
+  zx.fillRect(0,0,W,H);
+  // the floor plan itself, y up
+  const P=OUTLINE;
+  if(P&&P.length>2){
+    zx.beginPath();
+    P.forEach(([x,y],i)=>{ const px=8+x*(W-16), py=H-8-y*(H-16);
+      i?zx.lineTo(px,py):zx.moveTo(px,py); });
+    zx.closePath();
+    zx.fillStyle="rgba(120,150,190,.13)"; zx.fill();
+    zx.strokeStyle="#7b8ba3"; zx.lineWidth=2; zx.stroke();
+  }else{
+    zx.strokeStyle="#c9d2de"; zx.lineWidth=2;
+    zx.strokeRect(8,8,W-16,H-16);
+  }
+  const box=z=>{ const x0=8+Math.min(z.x0,z.x1)*(W-16),
+      x1=8+Math.max(z.x0,z.x1)*(W-16),
+      y0=H-8-Math.max(z.y0,z.y1)*(H-16), y1=H-8-Math.min(z.y0,z.y1)*(H-16);
+    zx.fillStyle="rgba(217,72,72,.22)"; zx.fillRect(x0,y0,x1-x0,y1-y0);
+    zx.strokeStyle="#a02020"; zx.lineWidth=1.5;
+    zx.strokeRect(x0,y0,x1-x0,y1-y0); };
+  ZONES.forEach(box);
+  if(drag) box(drag);
+}
+function zpt(ev){
+  const r=zc.getBoundingClientRect();
+  const t=ev.touches?ev.touches[0]:ev;
+  return {x:Math.max(0,Math.min(1,((t.clientX-r.left)/r.width*zc.width-8)/(zc.width-16))),
+          y:Math.max(0,Math.min(1,1-((t.clientY-r.top)/r.height*zc.height-8)/(zc.height-16)))};
+}
+function zstart(ev){ ev.preventDefault(); const p=zpt(ev);
+  drag={x0:p.x,y0:p.y,x1:p.x,y1:p.y}; drawZones(); }
+function zmove(ev){ if(!drag) return; ev.preventDefault();
+  const p=zpt(ev); drag.x1=p.x; drag.y1=p.y; drawZones(); }
+function zend(){ if(!drag) return;
+  if(Math.abs(drag.x1-drag.x0)>0.03&&Math.abs(drag.y1-drag.y0)>0.03) ZONES.push(drag);
+  drag=null; drawZones();
+  $("#zmsg").textContent=ZONES.length?ZONES.length+" zone(s)":""; }
+zc.addEventListener("mousedown",zstart); zc.addEventListener("touchstart",zstart);
+window.addEventListener("mousemove",zmove); zc.addEventListener("touchmove",zmove);
+window.addEventListener("mouseup",zend); zc.addEventListener("touchend",zend);
+$("#zclear").onclick=()=>{ ZONES=[]; drawZones(); $("#zmsg").textContent=""; };
+
+let outlineTimer=null;
+function refreshOutline(){
+  if(!cur) return;
+  clearTimeout(outlineTimer);
+  outlineTimer=setTimeout(async()=>{
+    try{
+      const r=await api("/api/outline",{method:"POST",
+        body:JSON.stringify({case:cur,target:targetSpec()})});
+      const j=await r.json();
+      if(!j.error){ OUTLINE=j.polygon; drawZones(); }
+    }catch(e){}
+  },220);
+}
+
+paintPresets(); loadCases(); drawZones();
+</script>

@@ -1,0 +1,385 @@
+{
+ "correlation": 0.221032173191028,
+ "correlation_weighted": 0.30486191794416745,
+ "correlation_cross_motif": 0.5466694553817765,
+ "correlation_cross_motif_weighted": 0.6558878315833757,
+ "n_buckets": 47,
+ "rows": [
+  {
+   "bucket": "double_bed|wardrobe|aligned",
+   "alpha": 1.0,
+   "n_fit": 44,
+   "both_wall_backed": 0.8616780045351474,
+   "cross_motif": 1.0,
+   "n_obs": 441
+  },
+  {
+   "bucket": "double_bed|pendant_lamp|near",
+   "alpha": 1.0,
+   "n_fit": 4559,
+   "both_wall_backed": 0.12698412698412698,
+   "cross_motif": 0.9947089947089947,
+   "n_obs": 567
+  },
+  {
+   "bucket": "double_bed|pendant_lamp|facing",
+   "alpha": 1.0,
+   "n_fit": 2866,
+   "both_wall_backed": 0.0,
+   "cross_motif": 1.0,
+   "n_obs": 320
+  },
+  {
+   "bucket": "double_bed|pendant_lamp|centered_with",
+   "alpha": 1.0,
+   "n_fit": 2302,
+   "both_wall_backed": 0.004739336492890996,
+   "cross_motif": 1.0,
+   "n_obs": 211
+  },
+  {
+   "bucket": "wardrobe|wardrobe|aligned",
+   "alpha": 0.7128705625187713,
+   "n_fit": 1316,
+   "both_wall_backed": 0.9662162162162162,
+   "cross_motif": 1.0,
+   "n_obs": 296
+  },
+  {
+   "bucket": "pendant_lamp|wardrobe|facing",
+   "alpha": 0.6790170620001611,
+   "n_fit": 3687,
+   "both_wall_backed": 0.0890909090909091,
+   "cross_motif": 1.0,
+   "n_obs": 550
+  },
+  {
+   "bucket": "coffee_table|dining_chair|facing",
+   "alpha": 0.6540895938029094,
+   "n_fit": 1710,
+   "both_wall_backed": 0.0049504950495049506,
+   "cross_motif": 0.9801980198019802,
+   "n_obs": 202
+  },
+  {
+   "bucket": "wardrobe|wardrobe|near",
+   "alpha": 0.6451269728559128,
+   "n_fit": 1743,
+   "both_wall_backed": 0.926923076923077,
+   "cross_motif": 1.0,
+   "n_obs": 260
+  },
+  {
+   "bucket": "double_bed|wardrobe|facing",
+   "alpha": 0.6256377546103388,
+   "n_fit": 4990,
+   "both_wall_backed": 0.8711538461538462,
+   "cross_motif": 1.0,
+   "n_obs": 520
+  },
+  {
+   "bucket": "desk|wardrobe|facing",
+   "alpha": 0.5731763065511407,
+   "n_fit": 1602,
+   "both_wall_backed": 0.37209302325581395,
+   "cross_motif": 1.0,
+   "n_obs": 215
+  },
+  {
+   "bucket": "double_bed|tv_stand|facing",
+   "alpha": 0.5583063667767652,
+   "n_fit": 2691,
+   "both_wall_backed": 0.827922077922078,
+   "cross_motif": 1.0,
+   "n_obs": 308
+  },
+  {
+   "bucket": "dining_chair|wardrobe|facing",
+   "alpha": 0.440518049822028,
+   "n_fit": 1947,
+   "both_wall_backed": 0.15714285714285714,
+   "cross_motif": 1.0,
+   "n_obs": 280
+  },
+  {
+   "bucket": "nightstand|wardrobe|facing",
+   "alpha": 0.4367895541783888,
+   "n_fit": 3750,
+   "both_wall_backed": 0.9214285714285714,
+   "cross_motif": 1.0,
+   "n_obs": 420
+  },
+  {
+   "bucket": "double_bed|wardrobe|centered_with",
+   "alpha": 0.3938789890261873,
+   "n_fit": 2426,
+   "both_wall_backed": 0.908695652173913,
+   "cross_motif": 1.0,
+   "n_obs": 230
+  },
+  {
+   "bucket": "pendant_lamp|tv_stand|facing",
+   "alpha": 0.3842153400695878,
+   "n_fit": 3556,
+   "both_wall_backed": 0.011086474501108648,
+   "cross_motif": 1.0,
+   "n_obs": 451
+  },
+  {
+   "bucket": "dining_chair|pendant_lamp|facing",
+   "alpha": 0.35689242621164524,
+   "n_fit": 8387,
+   "both_wall_backed": 0.011904761904761904,
+   "cross_motif": 0.12179487179487179,
+   "n_obs": 1092
+  },
+  {
+   "bucket": "double_bed|wardrobe|near",
+   "alpha": 0.3142508008997406,
+   "n_fit": 2902,
+   "both_wall_backed": 0.6797583081570997,
+   "cross_motif": 1.0,
+   "n_obs": 331
+  },
+  {
+   "bucket": "coffee_table|tv_stand|facing",
+   "alpha": 0.3007982948644306,
+   "n_fit": 3028,
+   "both_wall_backed": 0.005420054200542005,
+   "cross_motif": 1.0,
+   "n_obs": 369
+  },
+  {
+   "bucket": "pendant_lamp|sofa|facing",
+   "alpha": 0.2648273015552459,
+   "n_fit": 2033,
+   "both_wall_backed": 0.0,
+   "cross_motif": 1.0,
+   "n_obs": 256
+  },
+  {
+   "bucket": "nightstand|nightstand|aligned",
+   "alpha": 0.25961474261433587,
+   "n_fit": 4052,
+   "both_wall_backed": 0.9537712895377128,
+   "cross_motif": 0.0851581508515815,
+   "n_obs": 411
+  },
+  {
+   "bucket": "pendant_lamp|tv_stand|centered_with",
+   "alpha": 0.25954131994993535,
+   "n_fit": 2271,
+   "both_wall_backed": 0.0,
+   "cross_motif": 1.0,
+   "n_obs": 251
+  },
+  {
+   "bucket": "nightstand|nightstand|symmetric",
+   "alpha": 0.24163304946662567,
+   "n_fit": 3998,
+   "both_wall_backed": 0.9306930693069307,
+   "cross_motif": 0.0594059405940594,
+   "n_obs": 404
+  },
+  {
+   "bucket": "coffee_table|tv_stand|centered_with",
+   "alpha": 0.2350870135511129,
+   "n_fit": 1825,
+   "both_wall_backed": 0.0,
+   "cross_motif": 1.0,
+   "n_obs": 205
+  },
+  {
+   "bucket": "sofa|tv_stand|face_to_face",
+   "alpha": 0.2235688766136241,
+   "n_fit": 2018,
+   "both_wall_backed": 0.9230769230769231,
+   "cross_motif": 1.0,
+   "n_obs": 247
+  },
+  {
+   "bucket": "sofa|tv_stand|facing",
+   "alpha": 0.22263070985677277,
+   "n_fit": 4039,
+   "both_wall_backed": 0.9315352697095436,
+   "cross_motif": 1.0,
+   "n_obs": 482
+  },
+  {
+   "bucket": "armchair|coffee_table|facing",
+   "alpha": 0.2031150401859245,
+   "n_fit": 1843,
+   "both_wall_backed": 0.004739336492890996,
+   "cross_motif": 0.24170616113744076,
+   "n_obs": 211
+  },
+  {
+   "bucket": "dining_chair|sideboard|facing",
+   "alpha": 0.19372063026117994,
+   "n_fit": 3121,
+   "both_wall_backed": 0.16009280742459397,
+   "cross_motif": 1.0,
+   "n_obs": 431
+  },
+  {
+   "bucket": "double_bed|nightstand|near",
+   "alpha": 0.17135878843298746,
+   "n_fit": 7866,
+   "both_wall_backed": 0.893368010403121,
+   "cross_motif": 0.02600780234070221,
+   "n_obs": 769
+  },
+  {
+   "bucket": "dining_chair|dining_chair|symmetric",
+   "alpha": 0.1678286048768616,
+   "n_fit": 7239,
+   "both_wall_backed": 0.17054263565891473,
+   "cross_motif": 0.0009689922480620155,
+   "n_obs": 1032
+  },
+  {
+   "bucket": "armchair|pendant_lamp|facing",
+   "alpha": 0.15064873704306744,
+   "n_fit": 1787,
+   "both_wall_backed": 0.01990049751243781,
+   "cross_motif": 0.9552238805970149,
+   "n_obs": 201
+  },
+  {
+   "bucket": "dining_chair|dining_table|facing",
+   "alpha": 0.14660114223903767,
+   "n_fit": 2310,
+   "both_wall_backed": 0.03873239436619718,
+   "cross_motif": 0.0528169014084507,
+   "n_obs": 284
+  },
+  {
+   "bucket": "coffee_table|sofa|facing",
+   "alpha": 0.12869719283262518,
+   "n_fit": 2490,
+   "both_wall_backed": 0.0,
+   "cross_motif": 0.04377104377104377,
+   "n_obs": 297
+  },
+  {
+   "bucket": "nightstand|wardrobe|near",
+   "alpha": 0.12676082605178338,
+   "n_fit": 3278,
+   "both_wall_backed": 0.9161490683229814,
+   "cross_motif": 1.0,
+   "n_obs": 322
+  },
+  {
+   "bucket": "dining_chair|dining_chair|centered_with",
+   "alpha": 0.11784184364618348,
+   "n_fit": 4082,
+   "both_wall_backed": 0.08092485549132948,
+   "cross_motif": 0.025048169556840076,
+   "n_obs": 519
+  },
+  {
+   "bucket": "dining_chair|dining_chair|facing",
+   "alpha": 0.11467639434050973,
+   "n_fit": 14412,
+   "both_wall_backed": 0.058091286307053944,
+   "cross_motif": 0.0254149377593361,
+   "n_obs": 1928
+  },
+  {
+   "bucket": "side_table|sofa|near",
+   "alpha": 0.11388963043967677,
+   "n_fit": 1815,
+   "both_wall_backed": 0.41784037558685444,
+   "cross_motif": 0.03286384976525822,
+   "n_obs": 213
+  },
+  {
+   "bucket": "dining_chair|pendant_lamp|near",
+   "alpha": 0.1108140493071667,
+   "n_fit": 8503,
+   "both_wall_backed": 0.018787361229718188,
+   "cross_motif": 0.032450896669513236,
+   "n_obs": 1171
+  },
+  {
+   "bucket": "nightstand|pendant_lamp|near",
+   "alpha": 0.09916398572318597,
+   "n_fit": 1381,
+   "both_wall_backed": 0.22707423580786026,
+   "cross_motif": 0.9301310043668122,
+   "n_obs": 229
+  },
+  {
+   "bucket": "coffee_table|pendant_lamp|near",
+   "alpha": 0.09006217797090378,
+   "n_fit": 3326,
+   "both_wall_backed": 0.0,
+   "cross_motif": 0.9198966408268734,
+   "n_obs": 387
+  },
+  {
+   "bucket": "dining_chair|pendant_lamp|centered_with",
+   "alpha": 0.08680753918749486,
+   "n_fit": 1972,
+   "both_wall_backed": 0.011764705882352941,
+   "cross_motif": 0.00392156862745098,
+   "n_obs": 255
+  },
+  {
+   "bucket": "dining_chair|dining_chair|near",
+   "alpha": 0.08601339048303462,
+   "n_fit": 4753,
+   "both_wall_backed": 0.1806020066889632,
+   "cross_motif": 0.0033444816053511705,
+   "n_obs": 598
+  },
+  {
+   "bucket": "pendant_lamp|wardrobe|near",
+   "alpha": 0.08297651016809258,
+   "n_fit": 1315,
+   "both_wall_backed": 0.13551401869158877,
+   "cross_motif": 1.0,
+   "n_obs": 214
+  },
+  {
+   "bucket": "dining_chair|dining_chair|face_to_face",
+   "alpha": 0.07751246331335139,
+   "n_fit": 8202,
+   "both_wall_backed": 0.05371530886302596,
+   "cross_motif": 0.018800358102059087,
+   "n_obs": 1117
+  },
+  {
+   "bucket": "dining_chair|dining_table|near",
+   "alpha": 0.061284777148026895,
+   "n_fit": 11747,
+   "both_wall_backed": 0.030529172320217096,
+   "cross_motif": 0.015603799185888738,
+   "n_obs": 1474
+  },
+  {
+   "bucket": "misc|pendant_lamp|near",
+   "alpha": 0.060270641258316875,
+   "n_fit": 507,
+   "both_wall_backed": 0.01,
+   "cross_motif": 0.815,
+   "n_obs": 200
+  },
+  {
+   "bucket": "dining_chair|dining_table|surrounds",
+   "alpha": 0.04724774864259082,
+   "n_fit": 13239,
+   "both_wall_backed": 0.022413793103448276,
+   "cross_motif": 0.022413793103448276,
+   "n_obs": 1740
+  },
+  {
+   "bucket": "dining_table|pendant_lamp|near",
+   "alpha": 0.0,
+   "n_fit": 2933,
+   "both_wall_backed": 0.027842227378190254,
+   "cross_motif": 0.16473317865429235,
+   "n_obs": 431
+  }
+ ]
+}

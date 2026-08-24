@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReRoom: Reference-Guided Retargeting of Interior Design into New Floor Geometry</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+      integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\(',right:'\)',display:false}],throwOnError:false});"></script>
+<style>
+  :root{ --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a; --panel:#f7f7f7; }
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#fff;color:var(--ink);
+       font:17px/1.7 "Charter","Georgia","Times New Roman",serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:820px;margin:0 auto;padding:0 22px}
+  .stale{border-left:3px solid #b45309;background:#fffbeb;padding:.55em .8em;margin:0 0 8px;
+    font-size:.86em;line-height:1.45;color:#78350f;border-radius:0 3px 3px 0}
+  .stale b{font-weight:600}
+  .cutstrip{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 26px}
+  .cutstrip img,.cutstrip video{height:170px;width:auto;border-radius:3px}
+  @media(max-width:900px){.cutstrip img,.cutstrip video{height:112px}}
+  .eq{display:flex;align-items:center;gap:14px;margin:20px 0}
+  .eq .body{flex:1;overflow-x:auto;overflow-y:hidden;text-align:center}
+  .eq .num{color:var(--mut);font-size:14px;flex:none}
+  .katex{font-size:1.02em}
+  header{padding:56px 0 30px;text-align:center;border-bottom:1px solid var(--line)}
+  h1{font-size:clamp(27px,4.4vw,40px);line-height:1.22;margin:0 0 10px;font-weight:600;
+     letter-spacing:-.01em}
+  .sub{color:var(--mut);font-size:clamp(15px,2.2vw,19px);margin:0 0 6px;font-style:italic}
+  .authors{font-size:17px;margin:14px 0 2px}
+  .venue{color:var(--mut);font-size:15px;margin:0 0 20px}
+  .links{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;font-size:16px}
+  .links a{color:var(--acc);text-decoration:none;border-bottom:1px solid rgba(168,65,42,.35);
+           padding-bottom:1px}
+  .links a:hover{border-bottom-color:var(--acc)}
+  h2{font-size:25px;margin:52px 0 10px;font-weight:600;letter-spacing:-.01em;text-align:left}
+  h3{font-size:19px;margin:34px 0 8px;font-weight:600}
+  h4{font-size:16.5px;margin:24px 0 6px;font-weight:600;color:#2a2a2a}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0}
+  .grid3 figure{margin:0}
+  .grid3 video{width:100%;display:block;border-radius:3px;background:#fff}
+  .grid3 .cap{color:var(--mut);font-size:13.5px;margin-top:5px;text-align:center}
+  @media (max-width:640px){ .grid3{grid-template-columns:1fr} }
+  .algo{border:1px solid var(--line);border-radius:3px;margin:18px 0;overflow:hidden}
+  .algo-h{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 12px;
+          font-weight:600;font-size:14.5px}
+  .algo pre{margin:0;padding:11px 12px;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;
+            overflow-x:auto}
+  .algo-f{border-top:1px solid var(--line);padding:7px 12px;font-size:13px;color:var(--mut)}
+  h5{font-size:15px;margin:22px 0 6px;color:var(--mut);font-weight:600;
+     letter-spacing:.2px}
+  .flow{margin:26px 0} .flow svg{width:100%;height:auto;display:block}
+  nav.toc{display:flex;flex-wrap:wrap;gap:0 18px;justify-content:center;padding:14px 0 2px;
+          border-bottom:1px solid var(--line);font-size:14.5px}
+  nav.toc a{color:var(--mut);text-decoration:none}
+  nav.toc a:hover{color:var(--acc)}
+  p{margin:0 0 16px;text-align:left}
+  .lead{font-size:17.5px}
+  figure{margin:26px 0}
+  figure video{width:100%;display:block;border-radius:3px;background:#fff}
+  figure img{width:100%;display:block;border-radius:3px;background:#fff}
+  figcaption{color:var(--mut);font-size:14.5px;margin-top:10px;line-height:1.6;text-align:left}
+  .tnum,.fnum{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
+  .tw{overflow-x:auto;margin:20px 0}
+  td.mut{color:var(--mut)}
+  table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px;
+        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
+  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-weight:600;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+  .win{font-weight:700}
+  .note{background:var(--panel);border-left:3px solid var(--acc);padding:14px 18px;
+        border-radius:0 3px 3px 0;font-size:16px;margin:22px 0;color:#3c3c3c}
+  .note strong{color:var(--ink)}
+  pre{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px;
+      overflow-x:auto;font-size:13.5px;line-height:1.5;
+      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
+  footer{margin:60px 0 48px;padding-top:22px;border-top:1px solid var(--line);
+         color:var(--mut);font-size:14.5px}
+  ul{margin:0 0 16px;padding-left:24px} li{margin-bottom:7px}
+  ol.refs{padding-left:30px;font-size:14.5px;line-height:1.55;color:#333}
+  ol.refs li{margin-bottom:9px}
+  ol.refs a{color:var(--acc);text-decoration:none;border-bottom:1px solid rgba(168,65,42,.3)}
+  @media (max-width:640px){ body{font-size:16px} }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <h1>ReRoom: Reference-Guided Retargeting of Interior Design into New Floor Geometry</h1>
+  <p class="sub">The identity of a room is a hierarchy of relations with different physical rigidity, not a set of coordinates &mdash; so a design is transferred by deciding what to preserve, what to stretch, and what to give up</p>
+  <p class="authors">Anonymous</p>
+  <p class="venue">Preprint</p>
+  <div class="links">
+    <a href="experiments.html">Every experiment</a>
+    <a href="#limits">What is not claimed</a>
+    <a href="https://github.com/gino6178/project4">Code</a>
+  </div>
+</header>
+
+<nav class="toc">
+  <a href="#abstract">Abstract</a><a href="#intro">1 Introduction</a><a href="#related">2 Related work</a><a href="#method">3 Method</a><a href="#results">4 Experiments</a><a href="#compare">5 Comparison</a><a href="#limits">6 Limitations</a><a href="#refs">References</a>
+</nav>
+
+<h2 id="abstract">Abstract</h2>
+<p class="lead">Given photographs of a room somebody likes and a target floor plan of a different
+size, aspect ratio or shape, we produce an editable 3D furniture arrangement that is physically
+placeable in the target and preserves the reference's furniture composition, spatial relations,
+design motifs and visual style. The working hypothesis is that a room's identity does not live in
+absolute coordinates but in a hierarchy of relations with different physical rigidity: a nightstand
+beside a bed is fixed by the human body, a sofa facing a television may stretch with the room. The
+system therefore treats retargeting as joint <em>placement, selection and substitution</em> under
+hard geometric constraints, rather than as an affine map of the source layout.</p>
+
+<p>Across 1&nbsp;000 held-out retargetings, normalised-coordinate scaling leaves 8.8&nbsp;% of
+furniture area outside the target room and 5.8&nbsp;% in collision; ReRoom leaves 0.38&nbsp;% and
+0.57&nbsp;%. Combined physical legality rises from 0.636 to 0.880. When the target is
+<em>smaller</em> than the reference &mdash; the case the method exists for &mdash; the coordinate
+map collapses to 0.472 legality while ReRoom holds 0.858. Running a released floor-plan-conditioned
+generator (PhyScene, CVPR&nbsp;2024) on the same rooms and scoring both with one evaluator, ReRoom
+has 3.5&times; fewer colliding objects and 5&times; fewer objects outside the floor plan at the same
+object count &mdash; and loses on free-space connectivity, which we diagnose rather than tune away.</p>
+
+<figure>
+  <img src="assets/retarget_0.png" alt="A reference room and the same design retargeted into differently shaped floor plans">
+  <figcaption>One reference design carried into target floor plans of different size, aspect ratio
+  and outline. The motif structure &mdash; which objects belong together, and which relations are
+  load-bearing &mdash; is what survives; absolute positions are not.</figcaption>
+</figure>
+
+<h2 id="intro">1 Introduction</h2>
+
+<p>Somebody sees a room they like in a photograph and wants it in their own apartment. Their
+apartment is not that room: it is narrower, or L-shaped, or has a wall at an angle. What should
+happen to the design?</p>
+
+<p>The naive answer &mdash; normalise the source coordinates by the source bounding box and paste
+them into the target &mdash; is what a coordinate map does, and it fails in a specific, measurable
+way. It preserves every relation perfectly, including the relation between a wardrobe and a wall
+that is no longer there. Measured over 1&nbsp;000 retargetings it puts 8.8&nbsp;% of the furniture
+area outside the room. It is not a weak baseline for lack of effort; it is the strongest possible
+method on relation preservation, and that is exactly why it is unusable.</p>
+
+<p>The opposite answer &mdash; ignore the reference and synthesise a layout for the floor plan
+&mdash; is physically excellent and semantically empty. In our experiments it reaches the best
+legality of any method (0.919) and the worst motif preservation of any method that looks at the
+reference at all (0.859 against 0.942).</p>
+
+<div class="note"><strong>The task is a trade, not an optimisation with a single answer.</strong>
+Every method sits on a Pareto frontier between physical feasibility and design preservation, and
+across eight core metrics no method in our study dominates another. What can be claimed is a
+position on that frontier: ReRoom is the only method that stays within 6&nbsp;% of the best achieved
+value on <em>both</em> axes at once. The next best compromise gives up 10&nbsp;%; the extremes give
+up 14&nbsp;% and 31&nbsp;%.</div>
+
+<h3>Contributions</h3>
+<ul>
+  <li><b>A formulation.</b> Reference-guided scene retargeting as joint placement, selection and
+  substitution under hard geometry, with the reference entering as soft relational targets rather
+  than as coordinates.</li>
+  <li><b>A design-intent representation.</b> Hierarchical motifs plus a fitted <em>relation
+  elasticity</em> that separates relations held by the human body from relations that may stretch
+  with the room.</li>
+  <li><b>An evaluation that reports its own trade.</b> Feasibility, functionality, motif
+  preservation and appearance are measured separately, with the reference in its own room as the
+  preservation ceiling and the real dataset's own violation rate as the feasibility floor.</li>
+</ul>
+
+<h2 id="related">2 Related work</h2>
+
+<p>Four groups of work sit near this problem, and each is missing one of its pieces.
+<em>Scene retargeting</em> moves a complete 3D exemplar into a differently sized room, but takes the
+source as given 3D geometry and does not read design intent from photographs. <em>Image-to-3D scene
+reconstruction</em> (MIDI&nbsp;[5], GenRecon&nbsp;[4]) recovers compositional 3D instances from
+images, but reconstructs the room it was shown rather than adapting it to new floor geometry.
+<em>Floor-plan-conditioned generation</em> (PhyScene&nbsp;[11], CHOrD&nbsp;[7]) produces plausible
+layouts for a given outline, but from a learned prior rather than from a particular reference room.
+<em>Reference- or instruction-conditioned generation</em> (SAGE&nbsp;[3], InstructScene&nbsp;[9],
+Holodeck&nbsp;[10]) conditions on a reference or a description, but targets semantic coherence
+rather than preservation of a specific spatial design.</p>
+
+<div class="eq"><div class="body">
+$$\text{Reference image(s)} \;+\; \text{new floor geometry} \;\longrightarrow\;
+\text{retargeted editable 3D scene}$$
+</div><div class="num">(1)</div></div>
+
+<p>The gap is the composition: no prior system takes photographs of a room and a differently shaped
+floor plan and returns an editable arrangement that preserves the first inside the second.</p>
+
+<h2 id="method">3 Method</h2>
+
+<h3>3.1 Design intent, not coordinates</h3>
+
+<p>The reference room is parsed into a graph whose nodes are object instances and whose edges are
+spatial and functional relations &mdash; <em>near</em>, <em>facing</em>, <em>aligned</em>,
+<em>support</em>, <em>against-wall</em>, <em>symmetric</em>, <em>grouped-with</em>. Objects are then
+clustered into <b>motifs</b>: a bed with its two nightstands, a dining table with its chairs, a sofa
+with a coffee table and a television. The motif layer exists because deleting a dining table and
+leaving six chairs is geometrically legal and semantically absurd; selection has to happen at the
+level of the functional group.</p>
+
+<p>Each relation carries an <b>elasticity</b> \(\alpha_r \in [0,1]\) governing how its target
+distance responds when the room rescales by \(\gamma\):</p>
+
+<div class="eq"><div class="body">
+$$\tilde d_{ij} \;=\; (1-\alpha_{ij})\, d_{ij} \;+\; \alpha_{ij}\, \gamma\, d_{ij},
+\qquad
+\alpha_{ij} = f_\psi\bigl(c_i, c_j, \rho_{ij}, m(i), m(j), g(P_r), g(P_t)\bigr)$$
+</div><div class="num">(2)</div></div>
+
+<p>with \(c\) the categories, \(\rho\) the relation type, \(m(\cdot)\) the motif membership and
+\(g(P)\) a floor-geometry descriptor. Fitted on 524&nbsp;000 relations harvested from the corpus,
+\(f_\psi\) recovers the expected ordering without being told it: chair&ndash;table 0.05
+(pinned by the human body), bed&ndash;wardrobe 0.63&ndash;0.87 (free to move apart).</p>
+
+<h3>3.2 Retargeting as a constrained decision</h3>
+
+<p>Every object gets a decision variable \(y_i = (k_i, a_i, x_i, y_i, \theta_i, s_i)\): whether it
+is kept, which asset realises it, where it sits, how it is turned, and a bounded footprint trim.
+Retargeting therefore contains <em>placement + selection + substitution</em> at once, and minimises</p>
+
+<div class="eq"><div class="body">
+$$E(Y) = \lambda_{\text{rel}} E_{\text{rel}} + \lambda_{\text{bound}} E_{\text{bound}}
++ \lambda_{\text{col}} E_{\text{col}} + \lambda_{\text{clear}} E_{\text{clear}}
++ \lambda_{\text{func}} E_{\text{func}} + \lambda_{\text{style}} E_{\text{style}}
++ \lambda_{\text{edit}} E_{\text{edit}}$$
+</div><div class="num">(3)</div></div>
+
+<p>The objective is implemented twice. An <b>exact</b> form computes areas with real polygon
+intersection and decides the winner; a <b>differentiable surrogate</b> &mdash; a floor signed
+distance field sampled by <code>grid_sample</code>, separating-axis penetration depth for oriented
+boxes &mdash; is optimised by batched Adam over random restarts. The surrogate proposes; the exact
+energy disposes. Non-differentiable quantities such as free-space connectivity can therefore still
+enter the selection, which turns out to matter and to be insufficient (&sect;6).</p>
+
+<h3>3.3 Shrinking, growing, and the user</h3>
+
+<p>When the target is smaller, capacity planning drops whole motifs or prunes structurally within
+them (six dining chairs become four) rather than deleting objects by score. When the target is
+larger, the plan's own principle is that a bigger room is filled by <em>adding</em> furniture, not
+by stretching what is there &mdash; and enforcing that principle turned out to require two fixes
+that the measurements found for us (&sect;4.3).</p>
+
+<p>User constraints \(C_t\) are hard: an object the user pins keeps its pose exactly and can never
+be dropped, and floor the user marks as no-go is punched out of the signed distance field the
+boundary term reads, so a no-go zone has a wall's gradient.</p>
+
+<figure>
+  <img src="assets/geometry_levels.png" alt="Target floor plans at five deformation levels">
+  <figcaption>The geometry curriculum. Targets are produced by five levels of deformation of a real
+  floor plan &mdash; uniform scale, aspect change, a slanted wall, a corner cut, a concave
+  perturbation &mdash; because irregular rooms are rare in the corpus and we did not want the method
+  tuned on the few that exist.</figcaption>
+</figure>
+
+<h2 id="results">4 Experiments</h2>
+
+<p>All numbers are measured on held-out 3D-FRONT rooms under one protocol on one machine. Two rows
+are anchors rather than methods: <em>source reference</em> is the design scored in its own room, the
+ceiling for preservation; it is also the floor for feasibility, because professionally designed
+rooms are not collision-free either.</p>
+
+<div class="tw"><p class="tnum">Table 1 &mdash; Oracle retargeting, 200 held-out rooms &times; 5 deformation levels (n = 1000)</p>
+<table>
+<thead><tr><th>method</th><th>R<sub>OOB</sub> &darr;</th><th>R<sub>col</sub> &darr;</th>
+<th>clearance &darr;</th><th>S<sub>rel</sub> &uarr;</th><th>S<sub>motif</sub> &uarr;</th>
+<th>legality &uarr;</th><th>score &uarr;</th></tr></thead>
+<tbody>
+<tr><td>source reference <span class="mut">(anchor)</span></td><td class="mut">0.0222</td><td class="mut">0.0597</td><td class="mut">0.2690</td><td class="mut">1.0000</td><td class="mut">1.0000</td><td class="mut">0.6888</td><td class="mut">0.8135</td></tr>
+<tr><td>reference, copied rigidly</td><td>0.1193</td><td>0.0597</td><td>0.2984</td><td class="win">1.0000</td><td class="win">1.0000</td><td>0.6048</td><td>0.7544</td></tr>
+<tr><td>normalised-coordinate scaling</td><td>0.0877</td><td>0.0578</td><td>0.2865</td><td>0.9637</td><td class="win">1.0000</td><td>0.6360</td><td>0.7703</td></tr>
+<tr><td>best-fit affine</td><td>0.1107</td><td>0.0573</td><td>0.2956</td><td>0.9646</td><td class="win">1.0000</td><td>0.6142</td><td>0.7567</td></tr>
+<tr><td>floor plan only, reference ignored</td><td class="win">0.0030</td><td class="win">0.0017</td><td class="win">0.0781</td><td>0.7122</td><td>0.8586</td><td class="win">0.9186</td><td>0.8419</td></tr>
+<tr><td>relation-aware only</td><td>0.0075</td><td>0.0134</td><td>0.1587</td><td>0.8775</td><td>0.9848</td><td>0.8299</td><td>0.8679</td></tr>
+<tr><td>+ motif summarisation and population</td><td>0.0043</td><td>0.0059</td><td>0.1281</td><td>0.8098</td><td>0.9400</td><td>0.8650</td><td>0.8630</td></tr>
+<tr><td><b>ReRoom, full</b></td><td>0.0038</td><td>0.0057</td><td>0.1138</td><td>0.8110</td><td>0.9417</td><td>0.8796</td><td class="win">0.8705</td></tr>
+</tbody></table></div>
+
+<p>Read the two extremes first. The coordinate maps score near-perfectly on relation preservation
+<em>because</em> they preserve every relation, including into walls. The floor-plan-only synthesiser
+is the most physically legal method there is <em>because</em> it owes the reference nothing. Neither
+is a strawman; each is the best possible method on one axis and the worst on the other.</p>
+
+<div class="tw"><p class="tnum">Table 2 &mdash; Where the trade actually bites: by target/source area ratio</p>
+<table>
+<thead><tr><th>method</th><th colspan="3">target smaller (&lt; 0.9&times;)</th><th colspan="3">target larger (&gt; 1.1&times;)</th></tr>
+<tr><th></th><th>legality</th><th>S<sub>rel</sub></th><th>S<sub>motif</sub></th><th>legality</th><th>S<sub>rel</sub></th><th>S<sub>motif</sub></th></tr></thead>
+<tbody>
+<tr><td>normalised-coordinate scaling</td><td class="win">0.472</td><td>0.972</td><td>1.000</td><td>0.760</td><td>0.934</td><td>1.000</td></tr>
+<tr><td><b>ReRoom, full</b></td><td><b>0.858</b></td><td>0.685</td><td>0.865</td><td><b>0.917</b></td><td>0.867</td><td>0.983</td></tr>
+</tbody></table></div>
+
+<div class="note"><strong>Shrinking is the case the method exists for, and it is where the
+coordinate map collapses.</strong> At 0.472 legality more than half of the feasibility budget is
+gone: furniture through walls, furniture through furniture. This single cell is the largest gap in
+the study and it is the comparison the problem formulation names as the central one.</div>
+
+<h3>4.1 Ablations</h3>
+
+<div class="tw"><p class="tnum">Table 3 &mdash; Removing one component at a time (150 rooms &times; 5 levels)</p>
+<table>
+<thead><tr><th>variant</th><th>legality &uarr;</th><th>S<sub>rel</sub> &uarr;</th><th>S<sub>motif</sub> &uarr;</th><th>score &uarr;</th></tr></thead>
+<tbody>
+<tr><td><b>ReRoom, full</b></td><td>0.8858</td><td>0.8136</td><td>0.9405</td><td class="win">0.8737</td></tr>
+<tr><td>no relation elasticity (&alpha; := 0)</td><td>0.8892</td><td>0.8126</td><td>0.9355</td><td>0.8731</td></tr>
+<tr><td>hand-specified &alpha;</td><td>0.8844</td><td>0.8136</td><td>0.9413</td><td>0.8731</td></tr>
+<tr><td>no motif-rigid initialisation</td><td>0.8769</td><td>0.8276</td><td>0.9385</td><td>0.8717</td></tr>
+<tr><td>substitution by size alone</td><td>0.8877</td><td>0.8135</td><td>0.9408</td><td>0.8745</td></tr>
+<tr><td>no feasibility projection</td><td>0.8574</td><td>0.8285</td><td>0.9399</td><td>0.8627</td></tr>
+<tr><td><b>no motif layer at all</b></td><td>0.9006</td><td><b>0.7781</b></td><td><b>0.9037</b></td><td><b>0.8559</b></td></tr>
+<tr><td>flow-matching proposal, projected</td><td>0.8038</td><td>0.8277</td><td>0.9480</td><td>0.8347</td></tr>
+<tr><td>flow-matching proposal, unprojected</td><td class="mut">0.6271</td><td class="mut">0.9026</td><td class="mut">0.9589</td><td class="mut">0.7496</td></tr>
+</tbody></table></div>
+
+<p><b>Deleting the motif layer costs more than deleting anything else.</b> Not the motif-rigid
+initialisation &mdash; the layer itself: no groups, no motif-to-motif relations, no
+<code>grouped-with</code> edges, no motif-level selection, while still being <em>scored</em> against
+the intact reference graph. Its legality is the best in the table, which is not a contradiction but
+the trade priced: a solver with no obligation to keep a dining set together has more freedom to
+satisfy geometry. Keeping the group is what that freedom is spent on.</p>
+
+<p><b>Relation elasticity is a well-supported description that is nearly inert as a lever.</b> On the
+full grid it is worth +0.0006 of the joint score. Isolating the regime where it can bite &mdash;
+strong uniform rescalings &mdash; it moves the score from 0.7069 to 0.7103 and cuts the error on the
+elastic relations it targets from 0.142 to 0.130. The reason it cannot do more is structural: the
+objective is dominated by preservation versus feasibility, and &alpha; only redistributes weight
+<em>inside</em> the preservation half. We report it as a finding about how designed rooms scale
+rather than as the engine of the method, and the engine is the motif layer.</p>
+
+<h3>4.2 Perception is where the design is lost, not the room</h3>
+
+<p>The formulation's front end is a photograph, so the pipeline was measured with a real parser in
+place of the ground-truth graph. MIDI-3D&nbsp;[5] reconstructs compositional instances from one
+image; GenRecon&nbsp;[4] reconstructs whole scene geometry from many. Both were run here, on the
+same 14 rooms, with every simulated noise level recomputed over that same sample.</p>
+
+<div class="tw"><p class="tnum">Table 4 &mdash; Retargeting quality against source-perception quality (n = 42 per row)</p>
+<table>
+<thead><tr><th>source</th><th>S<sub>rel</sub> &uarr;</th><th>S<sub>motif</sub> &uarr;</th><th>legality &uarr;</th><th>score &uarr;</th></tr></thead>
+<tbody>
+<tr><td>ground-truth graph</td><td class="win">0.8449</td><td class="win">0.9483</td><td>0.8668</td><td class="win">0.8785</td></tr>
+<tr><td>simulated noise, light</td><td>0.7815</td><td>0.9114</td><td>0.8567</td><td>0.8454</td></tr>
+<tr><td>simulated noise, medium</td><td>0.7147</td><td>0.8552</td><td>0.8605</td><td>0.8123</td></tr>
+<tr><td>simulated noise, heavy</td><td>0.5251</td><td>0.8165</td><td>0.8708</td><td>0.7548</td></tr>
+<tr><td>simulated noise, severe</td><td>0.3098</td><td>0.5543</td><td>0.8749</td><td>0.5898</td></tr>
+<tr><td><b>GenRecon, 24 views</b></td><td>0.4488</td><td>0.6955</td><td>0.8527</td><td>0.6592</td></tr>
+<tr><td><b>MIDI-3D, 1 view</b></td><td>0.2505</td><td>0.4521</td><td>0.8744</td><td>0.5242</td></tr>
+</tbody></table></div>
+
+<div class="note"><strong>Perception error and retargeting error come apart cleanly.</strong>
+Degrading the source costs design preservation catastrophically &mdash; S<sub>rel</sub> from 0.845
+to 0.251 &mdash; while physical legality stays flat at 0.85&ndash;0.87 across the entire range. A
+worse reading of the reference gives a worse <em>design</em>, not a broken room. Twenty-four views
+land where one does not: around the heavy-to-severe end of the sweep, where a single-image parser
+sits past it. Object-centre error falls from 0.47&nbsp;m to 0.18&nbsp;m.</div>
+
+<p>The same parses paired with the coordinate map instead separate the two stages completely: at
+the oracle, direct scaling reaches S<sub>rel</sub> 0.955 with legality 0.589; with MIDI it reaches
+0.358 with legality 0.411 &mdash; the worst cell in the study. Perception quality drives
+preservation and barely touches legality; the layout stage drives legality and cannot invent
+fidelity the parser threw away.</p>
+
+<h3>4.3 Two defects the ablations exposed</h3>
+
+<p>An ablation that does <em>less</em> should not beat the full system, and for a while one did.
+Auditing why produced two fixes, both of the same shape &mdash; a stage that fired without checking
+that it helped.</p>
+
+<p><b>Population had no acceptance test.</b> Summarisation is checked by the repair loop and
+substitution by its own size-gain test; whatever the population planner proposed was simply
+appended. Over 180 (scene, level) pairs it cost 0.020 of the joint score and 0.014 of legality
+wherever it fired, while buying no feasibility at all. Additions are now re-admitted one at a time,
+largest first, and only while they cost nothing in \(E_{\text{bound}}+E_{\text{col}}+E_{\text{clear}}\):
+6.0 proposed becomes 3.2 kept.</p>
+
+<p><b>Substitution was upsizing when the room grew.</b> The requested asset size scaled with the
+square root of the area ratio, up to 1.4&times;, which is the same mistake as spreading furniture
+apart: in rooms above 1.3&times; it cost 0.041 of legality and pushed clearance violation from 0.058
+to 0.098, because larger furniture eats exactly the circulation space the extra floor was supposed
+to provide.</p>
+
+<p>Together the two moved the full system from 0.8641 to 0.8737 against the reduced variant's
+0.8721, and <b>every metric improved at once</b> &mdash; out-of-bounds, collision, clearance, door
+blockage, reachability, S<sub>rel</sub>, S<sub>motif</sub> and retention. Eight up and none down is
+the signature of removing a defect rather than re-tuning a trade-off.</p>
+
+<h3>4.4 User constraints</h3>
+
+<div class="tw"><p class="tnum">Table 5 &mdash; What obeying the user costs (60 rooms, level-3 deformation)</p>
+<table>
+<thead><tr><th>setting</th><th>obeyed</th><th>legality &uarr;</th><th>S<sub>rel</sub> &uarr;</th><th>score &uarr;</th></tr></thead>
+<tbody>
+<tr><td>unconstrained</td><td class="mut">&mdash;</td><td>0.8504</td><td>0.8688</td><td>0.8820</td></tr>
+<tr><td>one pinned object</td><td><b>100 %</b> exact</td><td>0.8140</td><td>0.8334</td><td>0.8464</td></tr>
+<tr><td>a forbidden quarter of the floor</td><td><b>93 %</b> of intrusion removed</td><td>0.7581</td><td>0.7813</td><td>0.7964</td></tr>
+</tbody></table></div>
+
+<p>Getting to 100&nbsp;% took four fixes, all the same shape as the two above: a hard constraint
+that some <em>other</em> code path quietly re-randomised &mdash; the affine restart candidate, the
+jitter that re-seeds restarts after a repair, wall snapping, the clamp into the room. The gradient
+freeze holds a pinned object where it starts, so anything that moved its starting point defeated it.</p>
+
+<h2 id="compare">5 Against a released system</h2>
+
+<p>Of the neighbouring systems, one could be run here end to end. PhyScene&nbsp;[11] is
+floor-plan-conditioned generation on the same dataset and reports physical-plausibility metrics that
+overlap ours. Its released weights and sampler were used to generate 256 living rooms; its outputs
+were converted into our scene representation; and three things were then held fixed so that the
+comparison is a comparison: <b>the rooms</b> (the same test-split floor plans it generated into),
+<b>the object vocabulary</b> (our reference scenes rebuilt from the same cached boxes it trains on),
+and <b>the evaluator</b> (one implementation scores both sides).</p>
+
+<div class="tw"><p class="tnum">Table 6 &mdash; Same rooms, same vocabulary, one evaluator (n = 256)</p>
+<table>
+<thead><tr><th>method</th><th>Col<sub>obj</sub> &darr;</th><th>Col<sub>scene</sub> &darr;</th>
+<th>R<sub>out</sub> &darr;</th><th>R<sub>walkable</sub> &uarr;</th><th>R<sub>reach</sub> &uarr;</th><th>objects</th></tr></thead>
+<tbody>
+<tr><td>3D-FRONT, real rooms <span class="mut">(anchor)</span></td><td class="mut">0.366</td><td class="mut">0.793</td><td class="mut">0.063</td><td class="mut">0.970</td><td class="mut">0.889</td><td class="mut">11.4</td></tr>
+<tr><td>PhyScene</td><td>0.391</td><td>0.840</td><td>0.119</td><td class="win">0.961</td><td>0.872</td><td>11.6</td></tr>
+<tr><td><b>ReRoom</b></td><td><b>0.113</b></td><td><b>0.336</b></td><td><b>0.024</b></td><td>0.905</td><td>0.889</td><td>11.4</td></tr>
+<tr><td><b>ReRoom</b>, reference from a <em>different</em> room</td><td class="win">0.030</td><td class="win">0.154</td><td>0.039</td><td>0.870</td><td>0.865</td><td>13.2</td></tr>
+<tr><td>ReRoom, reference ignored</td><td class="mut">0.001</td><td class="mut">0.008</td><td class="mut">0.016</td><td class="mut">0.908</td><td class="mut">0.932</td><td class="mut">11.4</td></tr>
+</tbody></table></div>
+
+<p>Colliding objects fall from 0.391 to 0.113 and objects outside the floor plan from 0.119 to
+0.024, at the same object count. PhyScene is not a weak comparison here: it sits about where the
+real 3D-FRONT rooms sit, which is what a generative prior trained on them should do. The fourth row
+exists because the obvious version of this table is unfair &mdash; giving ReRoom the reference of
+the very room it is furnishing is an information advantage the generator does not have, so that row
+transfers a <em>different</em> living room's design into the floor plan, which is also the actual
+use case.</p>
+
+<h3>5.1 Which columns may be read across the table</h3>
+
+<p>The chain from their published numbers to ours has two links and only one is tight. Their
+generator re-run here and scored by <em>their</em> script gives R<sub>out</sub> 0.130 against a
+published 0.219, R<sub>walkable</sub> 0.831 against 0.815, R<sub>reach</sub> 0.821 against 0.771
+&mdash; the right neighbourhood, the gaps explained by 200 generated scenes rather than 1&nbsp;000.
+Those same scenes scored by our evaluator give R<sub>out</sub> 0.119 against their 0.130, which is
+tight, but R<sub>walkable</sub> 0.961 against 0.831, which is not.</p>
+
+<div class="note"><strong>So Col<sub>obj</sub>, Col<sub>scene</sub> and R<sub>out</sub> are safe to
+read across the table; R<sub>walkable</sub> and R<sub>reach</sub> are safe only <em>within</em> it,
+where both sides go through one evaluator.</strong> Their absolute values sit above what PhyScene's
+own rasterisation reports and should not be compared to the published column.</div>
+
+<h3>5.2 The comparison that could not be made, and why</h3>
+
+<p>InstructScene&nbsp;[9] reports FID, KID and SCA on Blender renders and ships the real reference
+images, so those columns look comparable. They are not, and the reason is measurable rather than
+rhetorical. Rendering our scenes through their pipeline needed four fixes &mdash; the scene must
+stay in 3D-FRONT's native y-up frame, the floor is part of the scene, trimesh does not attach the
+texture when it parses 3D-FUTURE's material, and their own texture-renaming step misses whenever the
+asset's material already has a name, which for 3D-FUTURE is always. With all four fixed the renders
+are of the same character as theirs. Then:</p>
+
+<div class="tw"><p class="tnum">Table 7 &mdash; Why the FID columns cannot be compared</p>
+<table>
+<thead><tr><th>comparison</th><th>FID</th></tr></thead>
+<tbody>
+<tr><td>their real renders, half A against half B <span class="mut">(pure sampling noise)</span></td><td>13.29</td></tr>
+<tr><td><b>identical real scenes through our pipeline, against theirs</b></td><td><b>46.36</b></td></tr>
+<tr><td>ours, retargeting into the room's own floor plan</td><td>45.37</td></tr>
+<tr><td>ours, retargeting into a deformed floor plan</td><td>43.67</td></tr>
+</tbody></table></div>
+
+<p>Identical scene content, different renderer, 46.4 &mdash; three and a half times the sampling
+noise floor. The spread between our three sets is 2.7, a fifth of that floor. The layout signal is
+buried by a residual we could not remove without their exact Blender version, sample count, view
+count and per-room-type image counts, none of which are in the repository. Under a single renderer
+the metric does discriminate (3.93 against 10.66 for the two settings); against their published
+table it does not, and we report that rather than a number that looks like a comparison.</p>
+
+<figure>
+  <div class="grid3" style="grid-template-columns:1fr 1fr">
+    <figure style="margin:0"><img src="assets/render_ours.png" alt="Our scene through their renderer"><p class="cap">ours, their renderer</p></figure>
+    <figure style="margin:0"><img src="assets/render_theirs.png" alt="Their shipped reference render"><p class="cap">their shipped reference</p></figure>
+  </div>
+  <figcaption>After the four fixes the pipelines agree in character &mdash; textures, floor,
+  lighting, camera. They still differ by 46 FID on identical content, which is the number that
+  decides whether the columns may be compared.</figcaption>
+</figure>
+
+<h2 id="limits">6 Limitations, and what is not claimed</h2>
+
+<h3>6.1 Free-space connectivity is worse, and reweighting will not fix it</h3>
+
+<p>ReRoom reaches R<sub>walkable</sub> 0.905 against PhyScene's 0.961 and the real rooms' 0.970.
+Placing furniture legally is not the same as leaving the floor connected. Two attempts were made and
+both are reported because the second explains the first.</p>
+
+<p>The gap was first read as <em>pinches</em>, gaps too narrow to walk through, and ReRoom does have
+more of them (11.2 per room against 9.2 and 9.4). Giving the clearance shortfall a saturating rather
+than quadratic shape &mdash; a 0.30&nbsp;m gap and a 0.05&nbsp;m gap are equally unwalkable when
+0.45&nbsp;m is needed &mdash; moved R<sub>walkable</sub> from 0.896 to 0.901 and left the gap count
+higher. The diagnosis was wrong: the count included same-motif pairs, which are supposed to be close
+and are not charged, and the correlation behind it explained 8&nbsp;% of the variance.</p>
+
+<div class="tw"><p class="tnum">Table 8 &mdash; Weighting the term that <em>is</em> responsible</p>
+<table>
+<thead><tr><th>&lambda;<sub>func-reach</sub></th><th>R<sub>walkable</sub> &uarr;</th><th>Col<sub>obj</sub> &darr;</th><th>legality &uarr;</th><th>score &uarr;</th></tr></thead>
+<tbody>
+<tr><td>2 <span class="mut">(shipped)</span></td><td>0.897</td><td class="win">0.097</td><td class="win">0.821</td><td class="win">0.881</td></tr>
+<tr><td>20</td><td>0.923</td><td>0.177</td><td>0.695</td><td>0.804</td></tr>
+<tr><td>80</td><td>0.925</td><td>0.198</td><td>0.647</td><td>0.772</td></tr>
+</tbody></table></div>
+
+<p>Walkability rises to 0.925 and stops, well short of 0.972, while collisions double. The reason is
+structural: reachability enters only the <em>exact</em> energy, which ranks already-refined
+candidates, and never the differentiable surrogate that produces them. Raising its weight makes the
+ranker prefer a better-connected layout among candidates none of which was optimised for
+connectivity &mdash; it selects, it does not optimise. Closing this needs a differentiable
+connectivity surrogate, and connectivity is global and not differentiable as stated. That is a piece
+of research, not a tuning pass, and the shipped setting is left where the joint score is highest.</p>
+
+<h3>6.2 No method dominates, including ours</h3>
+
+<p>Across the eight core metrics of Table&nbsp;1, no method Pareto-dominates any other; all seven
+sit on the frontier. What is claimed is a position on it:</p>
+
+<div class="tw"><p class="tnum">Table 9 &mdash; Distance from the best achieved value on each axis</p>
+<table>
+<thead><tr><th>method</th><th>legality</th><th>S<sub>motif</sub></th><th>worse axis, as % of best</th></tr></thead>
+<tbody>
+<tr><td><b>ReRoom, full</b></td><td>0.880</td><td>0.942</td><td class="win"><b>94.2 %</b></td></tr>
+<tr><td>+ summarisation, no substitution</td><td>0.865</td><td>0.940</td><td>94.0 %</td></tr>
+<tr><td>relation-aware only</td><td>0.830</td><td>0.985</td><td>90.3 %</td></tr>
+<tr><td>floor plan only</td><td>0.919</td><td>0.859</td><td>85.9 %</td></tr>
+<tr><td>normalised-coordinate scaling</td><td>0.636</td><td>1.000</td><td>69.2 %</td></tr>
+</tbody></table></div>
+
+<h3>6.3 The rest</h3>
+<ul>
+  <li><b>No human study responses.</b> The two-question protocol &mdash; <em>which better preserves
+  the reference</em> and <em>which is the better room to live in</em> &mdash; is implemented and
+  deployed, and is the only instrument that can adjudicate the trade this paper is about. It has no
+  participants yet. Until it does, the headline score is a composite we chose, and a different
+  weighting reorders the middle of Table&nbsp;1.</li>
+  <li><b>The closest prior method could not be obtained.</b> Size-aware indoor scene retargeting
+  with generalised summarisation&nbsp;[6] shares this task's shape almost exactly, differing chiefly
+  in taking a complete 3D exemplar instead of photographs. It is paywalled with no preprint, no code
+  and no public abstract. We have no numbers against the one system that most threatens the novelty
+  claim, and the component that distinguishes us from it &mdash; the image front end &mdash; is
+  measurably the lossiest stage in the pipeline (Table&nbsp;4).</li>
+  <li><b>The composite score is ours.</b> It is the geometric mean of legality and preservation with
+  equal weight, chosen before the experiments and not tuned afterwards, but it is a choice.</li>
+  <li><b>Irregular rooms are synthetic.</b> 54.2&nbsp;% of the corpus's rooms have a reflex vertex
+  &mdash; the common claim that 3D-FRONT is rectangular is an artefact of preprocessing, not of the
+  data &mdash; but the hardest target shapes here come from a deformation curriculum rather than
+  from measured apartments.</li>
+</ul>
+
+<h2 id="refs">References</h2>
+<ol class="refs">
+  <li>H. Fu et&nbsp;al. <em>3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics.</em> ICCV 2021.
+      <a href="https://arxiv.org/abs/2011.09127">arXiv:2011.09127</a></li>
+  <li>NVIDIA. <em>SAGE-10k Dataset.</em>
+      <a href="https://huggingface.co/datasets/nvidia/SAGE-10k">huggingface.co/datasets/nvidia/SAGE-10k</a></li>
+  <li>H. Xia et&nbsp;al. <em>SAGE: Scalable Agentic 3D Scene Generation for Embodied AI.</em> CVPR 2026.</li>
+  <li><em>GenRecon.</em> <a href="https://kasothaphie.github.io/GenRecon/">kasothaphie.github.io/GenRecon</a></li>
+  <li>H. Huang et&nbsp;al. <em>MIDI: Multi-Instance Diffusion for Single Image to 3D Scene
+      Generation.</em> CVPR 2025. <a href="https://huanngzh.github.io/MIDI-Page/">project page</a></li>
+  <li>Y. Cheng, W. Chen, Y. Gu, Y. Sun, Y. Zhai, X. Cheng and J. Lin. <em>Size-aware indoor scene
+      retargeting with generalized summarization.</em> Computers &amp; Graphics 132:104315, 2025.</li>
+  <li>C. Su et&nbsp;al. <em>CHOrD: Generation of Collision-Free, House-Scale, and Organized Digital
+      Twins for 3D Indoor Scenes with Controllable Floor Plans and Optimal Layouts.</em>
+      <a href="https://arxiv.org/abs/2503.11958">arXiv:2503.11958</a></li>
+  <li><em>DeBaRA: Denoising-Based 3D Room Arrangement.</em>
+      <a href="https://openreview.net/pdf?id=rajRJ6WKj2">OpenReview</a></li>
+  <li>G. Lin et&nbsp;al. <em>InstructScene: Instruction-Driven 3D Indoor Scene Synthesis with
+      Semantic Graph Prior.</em> ICLR 2024.
+      <a href="https://chenguolin.github.io/projects/InstructScene/">project page</a></li>
+  <li>Y. Yang et&nbsp;al. <em>Holodeck: Language Guided Generation of 3D Embodied AI
+      Environments.</em> CVPR 2024.</li>
+  <li>Y. Yang et&nbsp;al. <em>PhyScene: Physically Interactable 3D Scene Synthesis for Embodied
+      AI.</em> CVPR 2024. <a href="https://physcene.github.io/">project page</a></li>
+  <li>D. Paschalidou et&nbsp;al. <em>ATISS: Autoregressive Transformers for Indoor Scene
+      Synthesis.</em> NeurIPS 2021.</li>
+  <li>J. Tang et&nbsp;al. <em>DiffuScene: Denoising Diffusion Models for Generative Indoor Scene
+      Synthesis.</em> CVPR 2024.</li>
+</ol>
+
+<footer>
+  Every number on this page was produced by the code in
+  <a href="https://github.com/gino6178/project4">this repository</a>, on one machine, under one
+  protocol, and includes the results that did not work. Where a comparison could not honestly be
+  made, the measurement showing why is reported in its place.
+</footer>
+
+</div>
+</body>
+</html>

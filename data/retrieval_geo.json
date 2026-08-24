@@ -1,0 +1,34 @@
+{
+ "n_queries": 7036,
+ "no_substitution_size_err": 0.24885701310821973,
+ "settings": {
+  "balanced": {
+   "size_err": 0.10425997158388256,
+   "clip_sim": 0.8269614741060332,
+   "shape_err": 0.21255501695925685,
+   "n": 7036,
+   "misses": 0
+  },
+  "size_only": {
+   "size_err": 0.05263690590487335,
+   "clip_sim": 0.6969534168981433,
+   "shape_err": 0.2678906986569091,
+   "n": 7036,
+   "misses": 0
+  },
+  "appearance_only": {
+   "size_err": 0.32203777029600655,
+   "clip_sim": 0.8744049663398671,
+   "shape_err": 0.19083438051405038,
+   "n": 7036,
+   "misses": 0
+  },
+  "balanced+geo": {
+   "size_err": 0.12555225172153517,
+   "clip_sim": 0.8298941946398706,
+   "shape_err": 0.1521158518949526,
+   "n": 7036,
+   "misses": 0
+  }
+ }
+}

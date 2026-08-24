@@ -1,0 +1,660 @@
+[
+ {
+  "n_geometric": 28,
+  "n_vlm": 15,
+  "n_overlap": 9,
+  "agreement": 0.4444444444444444,
+  "precision": 0.6,
+  "recall": 0.32142857142857145,
+  "scene": "01655258-a4b1-45ff-b16d-bae0ffb189c7__DiningRoom-45089",
+  "n_visible": 8,
+  "by_kind": {
+   "grouped_with": 10,
+   "symmetric": 5
+  }
+ },
+ {
+  "n_geometric": 0,
+  "n_vlm": 2,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": NaN,
+  "scene": "01655258-a4b1-45ff-b16d-bae0ffb189c7__SecondBedroom-45058",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 2,
+  "n_overlap": 1,
+  "agreement": 1.0,
+  "precision": 0.5,
+  "recall": 0.3333333333333333,
+  "scene": "01805656-e66f-44b1-8bc1-5e722fff3fff__Bedroom-3450",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 3,
+  "n_overlap": 1,
+  "agreement": 0.0,
+  "precision": 0.3333333333333333,
+  "recall": 0.3333333333333333,
+  "scene": "04546af5-acd6-43b1-981a-3e976e01adce__MasterBedroom-108890",
+  "n_visible": 5,
+  "by_kind": {
+   "symmetric": 1,
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 1,
+  "n_vlm": 3,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "064f1b33-9354-41b4-b22c-71a583c5a6ad__MasterBedroom-7164",
+  "n_visible": 6,
+  "by_kind": {
+   "grouped_with": 3
+  }
+ },
+ {
+  "n_geometric": 11,
+  "n_vlm": 4,
+  "n_overlap": 1,
+  "agreement": 0.0,
+  "precision": 0.25,
+  "recall": 0.09090909090909091,
+  "scene": "071527d1-4cb5-47a9-abd0-b1d83bd3e286__LivingDiningRoom-28784",
+  "n_visible": 7,
+  "by_kind": {
+   "grouped_with": 3,
+   "symmetric": 1
+  }
+ },
+ {
+  "n_geometric": 21,
+  "n_vlm": 4,
+  "n_overlap": 4,
+  "agreement": 0.75,
+  "precision": 1.0,
+  "recall": 0.19047619047619047,
+  "scene": "0878fcd8-0934-4298-87a2-9813bd4c19c2__DiningRoom-26805",
+  "n_visible": 4,
+  "by_kind": {
+   "symmetric": 1,
+   "grouped_with": 3
+  }
+ },
+ {
+  "n_geometric": 4,
+  "n_vlm": 2,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "0878fcd8-0934-4298-87a2-9813bd4c19c2__MasterBedroom-26777",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 1,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "09cbb7d2-3005-4bbe-bf52-b05214df88ce__ElderlyRoom-13132",
+  "n_visible": 6,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 21,
+  "n_vlm": 7,
+  "n_overlap": 6,
+  "agreement": 0.6666666666666666,
+  "precision": 0.8571428571428571,
+  "recall": 0.2857142857142857,
+  "scene": "09defafb-4bb8-44ed-bd94-cd9359b14bb2__DiningRoom-77736",
+  "n_visible": 9,
+  "by_kind": {
+   "grouped_with": 5,
+   "symmetric": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 2,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "0a761819-05d1-4647-889b-a726747201b1__MasterBedroom-24539",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 15,
+  "n_vlm": 6,
+  "n_overlap": 5,
+  "agreement": 0.2,
+  "precision": 0.8333333333333334,
+  "recall": 0.3333333333333333,
+  "scene": "0f13029f-8c56-47d0-b23d-639738301ca0__DiningRoom-135699",
+  "n_visible": 7,
+  "by_kind": {
+   "symmetric": 4,
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 6,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "0fe98155-1d97-4fbd-a752-a03cc9c34816__DiningRoom-259909",
+  "n_visible": 7,
+  "by_kind": {
+   "grouped_with": 6
+  }
+ },
+ {
+  "n_geometric": 1,
+  "n_vlm": 3,
+  "n_overlap": 1,
+  "agreement": 1.0,
+  "precision": 0.3333333333333333,
+  "recall": 1.0,
+  "scene": "104baa17-42f8-4735-9ba4-5d59a8eb2b46__MasterBedroom-10994",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 3
+  }
+ },
+ {
+  "n_geometric": 4,
+  "n_vlm": 1,
+  "n_overlap": 1,
+  "agreement": 1.0,
+  "precision": 1.0,
+  "recall": 0.25,
+  "scene": "105a0ab1-bc85-4f18-961c-a745382f89fb__SecondBedroom-3228",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 4,
+  "n_vlm": 2,
+  "n_overlap": 2,
+  "agreement": 0.5,
+  "precision": 1.0,
+  "recall": 0.5,
+  "scene": "109a8e42-f7d7-4893-8262-f2030072b760__SecondBedroom-38244",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 4,
+  "n_vlm": 2,
+  "n_overlap": 1,
+  "agreement": 0.0,
+  "precision": 0.5,
+  "recall": 0.25,
+  "scene": "120e3c35-05c5-40a7-b92b-1abbd5592026__Bedroom-33921",
+  "n_visible": 6,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 23,
+  "n_vlm": 7,
+  "n_overlap": 2,
+  "agreement": 1.0,
+  "precision": 0.2857142857142857,
+  "recall": 0.08695652173913043,
+  "scene": "136a94ad-aa9b-477e-a170-5357e3e1b160__LivingRoom-124947",
+  "n_visible": 8,
+  "by_kind": {
+   "symmetric": 1,
+   "grouped_with": 6
+  }
+ },
+ {
+  "n_geometric": 34,
+  "n_vlm": 9,
+  "n_overlap": 5,
+  "agreement": 0.8,
+  "precision": 0.5555555555555556,
+  "recall": 0.14705882352941177,
+  "scene": "13a2bf30-781b-4328-aa2e-47a78ffedfc8__LivingDiningRoom-8606",
+  "n_visible": 11,
+  "by_kind": {
+   "grouped_with": 8,
+   "symmetric": 1
+  }
+ },
+ {
+  "n_geometric": 12,
+  "n_vlm": 3,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "1448feb3-c86d-40d5-9259-32835abb85c6__LivingDiningRoom-18266",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 3
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 0,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": NaN,
+  "recall": 0.0,
+  "scene": "18713f46-41c9-4638-8c60-6784961a282b__ElderlyRoom-100534",
+  "n_visible": 4,
+  "by_kind": {}
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 2,
+  "n_overlap": 1,
+  "agreement": 1.0,
+  "precision": 0.5,
+  "recall": 0.3333333333333333,
+  "scene": "18e61c1d-d0e2-440b-a095-79acffaeebe4__SecondBedroom-15353",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 3,
+  "n_overlap": 2,
+  "agreement": 0.5,
+  "precision": 0.6666666666666666,
+  "recall": 0.6666666666666666,
+  "scene": "19a05e67-93fc-433e-a836-9c511da3c741__MasterBedroom-20523",
+  "n_visible": 5,
+  "by_kind": {
+   "symmetric": 1,
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 1,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "1ba9ae7f-5074-4b11-9b38-43ea7e5ff693__MasterBedroom-38133",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 4,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "1bc22c85-3159-417c-a8cb-4e3788a0a0eb__MasterBedroom-58737",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 4
+  }
+ },
+ {
+  "n_geometric": 1,
+  "n_vlm": 2,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "1c1fca70-5f24-43b2-8a84-1f61b8f2a13a__MasterBedroom-13713",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 2,
+  "n_vlm": 1,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "1d7907ee-aa5a-4cdf-ab8b-1f4bcfc43901__Bedroom-1188",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 6,
+  "n_vlm": 4,
+  "n_overlap": 2,
+  "agreement": 1.0,
+  "precision": 0.5,
+  "recall": 0.3333333333333333,
+  "scene": "1d7907ee-aa5a-4cdf-ab8b-1f4bcfc43901__Bedroom-4122",
+  "n_visible": 6,
+  "by_kind": {
+   "grouped_with": 4
+  }
+ },
+ {
+  "n_geometric": 6,
+  "n_vlm": 7,
+  "n_overlap": 2,
+  "agreement": 0.0,
+  "precision": 0.2857142857142857,
+  "recall": 0.3333333333333333,
+  "scene": "1d9c5481-9854-4074-aeff-b772a01a474d__MasterBedroom-16012",
+  "n_visible": 8,
+  "by_kind": {
+   "symmetric": 1,
+   "grouped_with": 6
+  }
+ },
+ {
+  "n_geometric": 4,
+  "n_vlm": 1,
+  "n_overlap": 1,
+  "agreement": 1.0,
+  "precision": 1.0,
+  "recall": 0.25,
+  "scene": "1e7966ed-1b5b-426b-aaef-395475df7dcd__LivingRoom-151420",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 60,
+  "n_vlm": 5,
+  "n_overlap": 1,
+  "agreement": 1.0,
+  "precision": 0.2,
+  "recall": 0.016666666666666666,
+  "scene": "1f2d812e-3af3-46f3-92c8-78f93a87862f__LivingDiningRoom-7655",
+  "n_visible": 8,
+  "by_kind": {
+   "grouped_with": 5
+  }
+ },
+ {
+  "n_geometric": 47,
+  "n_vlm": 14,
+  "n_overlap": 8,
+  "agreement": 1.0,
+  "precision": 0.5714285714285714,
+  "recall": 0.1702127659574468,
+  "scene": "1f5d59ce-7227-4643-9540-21f8d90618a2__LivingDiningRoom-1554",
+  "n_visible": 11,
+  "by_kind": {
+   "grouped_with": 14
+  }
+ },
+ {
+  "n_geometric": 6,
+  "n_vlm": 1,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "22843330-f141-4cb6-8ce6-8b32b56388ba__MasterBedroom-23676",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 3,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "245f332a-ca6e-43e4-9d9f-fb3e03598b4e__LivingRoom-61164",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 3
+  }
+ },
+ {
+  "n_geometric": 22,
+  "n_vlm": 11,
+  "n_overlap": 4,
+  "agreement": 0.25,
+  "precision": 0.36363636363636365,
+  "recall": 0.18181818181818182,
+  "scene": "28b6d4f9-d046-4b60-9b0d-094bc1e39646__LivingDiningRoom-33986",
+  "n_visible": 10,
+  "by_kind": {
+   "symmetric": 3,
+   "grouped_with": 8
+  }
+ },
+ {
+  "n_geometric": 1,
+  "n_vlm": 3,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "2d38c33c-6311-4497-b68e-018b544912a2__KidsRoom-10802",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 3
+  }
+ },
+ {
+  "n_geometric": 11,
+  "n_vlm": 0,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": NaN,
+  "recall": 0.0,
+  "scene": "2d50e51d-fb9f-4464-836c-f9f2b269cbea__LivingDiningRoom-14743",
+  "n_visible": 4,
+  "by_kind": {}
+ },
+ {
+  "n_geometric": 23,
+  "n_vlm": 11,
+  "n_overlap": 2,
+  "agreement": 1.0,
+  "precision": 0.18181818181818182,
+  "recall": 0.08695652173913043,
+  "scene": "2f02d9e6-8490-47a6-bcdb-2f2f99ac8294__LivingDiningRoom-5682",
+  "n_visible": 11,
+  "by_kind": {
+   "grouped_with": 11
+  }
+ },
+ {
+  "n_geometric": 4,
+  "n_vlm": 2,
+  "n_overlap": 1,
+  "agreement": 0.0,
+  "precision": 0.5,
+  "recall": 0.25,
+  "scene": "2fee88c4-7d23-4a57-ac24-ad3c1eefb992__SecondBedroom-4082",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 2,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "30b4457b-420a-4c1b-b951-b589e741229c__MasterBedroom-27377",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 1,
+  "n_vlm": 1,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "31eee7bd-f7d4-4326-a68e-bd9016bdce33__Bedroom-18439",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 21,
+  "n_vlm": 18,
+  "n_overlap": 9,
+  "agreement": 0.4444444444444444,
+  "precision": 0.5,
+  "recall": 0.42857142857142855,
+  "scene": "320753f3-80d9-4237-9f59-38c4201a2782__DiningRoom-5417",
+  "n_visible": 9,
+  "by_kind": {
+   "grouped_with": 13,
+   "symmetric": 5
+  }
+ },
+ {
+  "n_geometric": 16,
+  "n_vlm": 6,
+  "n_overlap": 2,
+  "agreement": 1.0,
+  "precision": 0.3333333333333333,
+  "recall": 0.125,
+  "scene": "35069402-d79f-47f6-99a4-3e77fbf443e0__LivingDiningRoom-5618",
+  "n_visible": 9,
+  "by_kind": {
+   "grouped_with": 6
+  }
+ },
+ {
+  "n_geometric": 4,
+  "n_vlm": 1,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "359821fc-7594-4482-91c6-51a89cefe2b6__MasterBedroom-20582",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 16,
+  "n_vlm": 9,
+  "n_overlap": 3,
+  "agreement": 0.6666666666666666,
+  "precision": 0.3333333333333333,
+  "recall": 0.1875,
+  "scene": "36a85283-c600-43fe-8d24-1a3987cc6f98__LivingDiningRoom-54456",
+  "n_visible": 8,
+  "by_kind": {
+   "grouped_with": 8,
+   "symmetric": 1
+  }
+ },
+ {
+  "n_geometric": 2,
+  "n_vlm": 1,
+  "n_overlap": 1,
+  "agreement": 1.0,
+  "precision": 1.0,
+  "recall": 0.5,
+  "scene": "36a85283-c600-43fe-8d24-1a3987cc6f98__MasterBedroom-57489",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 2,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "3740868d-5ec9-4831-bd4b-4d033ac9576f__MasterBedroom-44190",
+  "n_visible": 4,
+  "by_kind": {
+   "grouped_with": 2
+  }
+ },
+ {
+  "n_geometric": 3,
+  "n_vlm": 1,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": 0.0,
+  "recall": 0.0,
+  "scene": "38f7a792-0862-498f-91cb-23216c08146f__MasterBedroom-3256",
+  "n_visible": 5,
+  "by_kind": {
+   "grouped_with": 1
+  }
+ },
+ {
+  "n_geometric": 2,
+  "n_vlm": 0,
+  "n_overlap": 0,
+  "agreement": NaN,
+  "precision": NaN,
+  "recall": 0.0,
+  "scene": "402de23a-6681-4cb5-9d8a-7db57aba4a3c__Bedroom-1311",
+  "n_visible": 4,
+  "by_kind": {}
+ },
+ {
+  "n_geometric": 21,
+  "n_vlm": 8,
+  "n_overlap": 8,
+  "agreement": 0.625,
+  "precision": 1.0,
+  "recall": 0.38095238095238093,
+  "scene": "43362117-720e-48f6-bab0-d3cd0f0ccdff__DiningRoom-17793",
+  "n_visible": 6,
+  "by_kind": {
+   "grouped_with": 5,
+   "symmetric": 3
+  }
+ }
+]

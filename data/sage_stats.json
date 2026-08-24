@@ -1,0 +1,103 @@
+{
+ "n_scenes": 402,
+ "room_types": {
+  "other": 288,
+  "dining_room": 27,
+  "library": 27,
+  "bedroom": 27,
+  "living_room": 33
+ },
+ "axis_aligned_rectangle_fraction": 1.0,
+ "vertex_count_hist": {
+  "4": 402
+ },
+ "median_convexity": 1.0,
+ "fraction_convexity_below_0.99": 0.0,
+ "mean_objects": 67.55970149253731,
+ "mean_area": 39.57912686567165,
+ "mean_density": 0.3883043248121734,
+ "distinct_categories": 37,
+ "top_categories": [
+  [
+   "decoration",
+   10098
+  ],
+  [
+   "misc",
+   5788
+  ],
+  [
+   "plant",
+   2357
+  ],
+  [
+   "wall_art",
+   2336
+  ],
+  [
+   "shelf",
+   1066
+  ],
+  [
+   "cabinet",
+   808
+  ],
+  [
+   "lounge_chair",
+   671
+  ],
+  [
+   "bookcase",
+   603
+  ],
+  [
+   "floor_lamp",
+   521
+  ],
+  [
+   "dining_table",
+   354
+  ],
+  [
+   "dining_chair",
+   246
+  ],
+  [
+   "desk",
+   233
+  ],
+  [
+   "pendant_lamp",
+   208
+  ],
+  [
+   "tv",
+   205
+  ],
+  [
+   "stool",
+   199
+  ],
+  [
+   "nightstand",
+   171
+  ],
+  [
+   "sideboard",
+   154
+  ],
+  [
+   "bench",
+   150
+  ],
+  [
+   "mirror",
+   150
+  ],
+  [
+   "armchair",
+   130
+  ]
+ ],
+ "verdict": "SAGE supplies object and appearance diversity; its floor plans are rectangles, so it cannot serve as irregular-room ground truth \u2014 matching the plan's assessment."
+}

@@ -1,0 +1,22 @@
+{
+ "n_scenes": 400,
+ "n_objects": 3330,
+ "base_assets": 11970,
+ "augmented_assets": 12674,
+ "base_coverage": 0.9402402402402402,
+ "augmented_coverage": 1.0,
+ "new_categories": [
+  "bench",
+  "bookcase",
+  "fireplace",
+  "mirror",
+  "misc",
+  "piano",
+  "plant",
+  "rug",
+  "stool",
+  "tv",
+  "wall_art"
+ ],
+ "still_missing": {}
+}
