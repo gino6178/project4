@@ -486,8 +486,8 @@ the picks are deterministic, and once frozen they were not changed.</div>
 <tbody>
 <tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.374</b></td><td class="mut">better; both tolerate tuck-in</td></tr>
 <tr><td>R<sub>out</sub> &darr;</td><td class="win"><b>0.128</b></td><td>0.156</td><td class="mut">&minus;0.028, wall-hug overhang</td></tr>
-<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td class="win"><b>0.965</b></td><td class="mut">tied</td></tr>
-<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.954</b></td><td class="mut">+0.011</td></tr>
+<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td class="win"><b>0.972</b></td><td class="mut">better</td></tr>
+<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.962</b></td><td class="mut">+0.019</td></tr>
 <tr><td><b>S<sub>rel</sub></b> (reference kept) &uarr;</td><td class="mut">n/a</td><td class="win"><b>0.985</b></td><td class="mut">PhyScene has no reference</td></tr>
 </tbody></table></div>
 
@@ -502,7 +502,7 @@ the picks are deterministic, and once frozen they were not changed.</div>
 </figure>
 
 <p>On the physical axes ReRoom is now level with PhyScene rather than gaming
-them: collision is lower, walkability is tied, and out-of-plan area is a shade
+them: collision is lower, walkability now edges ahead, and out-of-plan area is a shade
 higher because a wall-hugging object always leaves a sliver past the wall line
 &mdash; the same reason PhyScene's own R<sub>out</sub> is 0.13, not zero. The
 decisive column is the last one. S<sub>rel</sub> measures how much of the
@@ -679,7 +679,7 @@ Reference &rarr; Intent graph + elasticity &alpha; &rarr; Flow transformer &rarr
 <tr><td>Intent graph + motifs</td><td class="mut">relation vocabulary + hierarchical motifs</td><td class="mut">all relations and motif grouping implemented</td><td>faithful</td></tr>
 <tr><td>Relation elasticity &alpha; <b>(the core)</b></td><td class="mut">&alpha;<sub>ij</sub>=f<sub>&psi;</sub>(&middot;); &ldquo;preserve rigid, adapt elastic&rdquo;</td><td class="mut">a learned network; it enters the flow as per-edge attention bias carrying &alpha;, the room-scale ratio and the elasticity-adjusted target relation</td><td>faithful <b>(learned)</b></td></tr>
 <tr><td>Generative proposal</td><td class="mut">flow-matching transformer v<sub>&theta;</sub></td><td class="mut">a 33 M-param DiT-style transformer over object tokens, conditioned on the intent graph &mdash; <b>the primary path</b></td><td>faithful <b>(learned)</b></td></tr>
-<tr><td>Feasibility (eq.&nbsp;37)</td><td class="mut">correct collision / boundary without breaking the layout</td><td class="mut">PhyScene-style guidance <em>inside</em> the sampler: a differentiable gradient on the predicted clean sample, tolerant of legitimate overlaps</td><td>faithful <b>(learned)</b></td></tr>
+<tr><td>Feasibility (eq.&nbsp;37)</td><td class="mut">correct collision / boundary / clearance without breaking the layout</td><td class="mut">PhyScene-style guidance <em>inside</em> the sampler carrying the E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub> terms as active priors: a differentiable gradient on the predicted clean sample, tolerant of legitimate overlaps</td><td>faithful <b>(learned)</b></td></tr>
 <tr><td>Summarisation / growth</td><td class="mut">importance &zeta;<sub>i</sub>, motif-level pruning; fill, don't spread</td><td class="mut">implemented, motif-aware</td><td>faithful</td></tr>
 <tr><td>Style retrieval</td><td class="mut">(L<sub>t</sub>, I<sub>r</sub>) &rarr; S<sub>t</sub></td><td class="mut">asset bank, category + size</td><td>faithful</td></tr>
 </tbody></table></div>
@@ -700,8 +700,9 @@ trained on real rooms already places furniture against walls and keeps dining
 groups together, because the training layouts do &mdash; a raw sample reproduces
 that. Second, the only correction is a guidance gradient <em>inside</em> the
 ODE sampler (PhyScene's classifier-guidance idea, ported to flow matching):
-at each step the predicted clean layout is scored for out-of-plan overhang and
-for collision <em>between pairs that should not overlap</em>, and the gradient
+at each step the predicted clean layout is scored for out-of-plan overhang, for
+collision <em>between pairs that should not overlap</em>, and for a walkable
+corridor between different functional groups, and the gradient
 nudges the trajectory. Pairs that legitimately overlap &mdash; a chair tucked
 under its table &mdash; are exempt, which is what lets the group stay intact
 instead of being scattered to drive a collision count to zero.</div>

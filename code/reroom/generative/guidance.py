@@ -8,16 +8,19 @@ loop as a guidance gradient on the predicted clean sample, and it *tolerates*
 the legitimate overlaps of a real layout (chairs tucked under a table) rather
 than eliminating them.
 
-This module is the flow-matching analogue of PhyScene's eq. (6)-(8): at each ODE
-step the predicted endpoint ``x1_hat = x + (1-tau) v`` is scored by a
-differentiable feasibility objective, and its gradient nudges the state.  Two
-terms, both in world metres:
+This module is the flow-matching analogue of PhyScene's eq. (6)-(8), and it
+also carries the section-8 energy's boundary/collision/clearance terms as
+active priors during sampling: at each ODE step the predicted endpoint
+``x1_hat = x + (1-tau) v`` is scored by a differentiable feasibility objective,
+and its gradient nudges the state.  Three terms, all in world metres:
 
-* ``phi_bound`` -- footprint outside the floor polygon, via the boundary
-  samples the batch already carries (concave rooms included);
-* ``phi_coll`` -- pairwise overlap, but *only* between category pairs that
-  should not overlap.  Nestable pairs (a chair and its table, a nightstand and
-  its bed) are exempt, which is what lets the proposal keep its groups intact.
+* ``phi_bound`` (E_bound) -- footprint outside the floor polygon, via the
+  boundary samples the batch already carries (concave rooms included);
+* ``phi_coll`` (E_col) -- pairwise overlap, but *only* between category pairs
+  that should not overlap.  Nestable pairs (a chair and its table, a nightstand
+  and its bed) are exempt, which lets the proposal keep its groups intact;
+* ``phi_clear`` (E_clear) -- a walkable corridor between objects in *different*
+  functional motifs, without spreading a single group apart.
 
 No hand-written marching, no post-hoc snapping: the whole correction is a
 gradient inside the sampler.
@@ -57,8 +60,15 @@ class GuidanceConfig:
     """Strength and schedule of the in-sampling guidance."""
 
     def __init__(self, bound: float = 3.0, coll: float = 1.0,
+                 clear: float = 0.2, corridor: float = 0.25,
                  start: float = 0.5, nestable_slack: float = 0.6,
                  bound_margin: float = 0.12):
+        # E_clear (section 8): objects from *different* functional groups need a
+        # gap a person can pass through.  ``corridor`` is that gap in metres;
+        # ``clear`` weights it.  Only cross-motif pairs are pushed -- objects
+        # within one motif (a sofa and its coffee table) are meant to be close.
+        self.clear = clear
+        self.corridor = corridor
         # a corner may hang up to ``bound_margin`` metres past the wall before
         # the bound term acts, so a wall-hugging object (edge on the wall) is
         # left alone and only a gross overhang is pulled in
@@ -185,6 +195,20 @@ def feasibility_grad(x1_hat: torch.Tensor, batch: dict, frames: list,
                       pen)
     pen = pen * valid.float()
     phi = phi + cfg.coll * (pen ** 2).sum() * 0.5
+
+    # ---- phi_clear (E_clear, section 8): a walkable corridor between groups --
+    # Require a passable gap between objects in *different* functional motifs.
+    # Same-motif pairs (a sofa and its coffee table) and objects with no motif
+    # are left alone, so this buys walkability without spreading a group apart
+    # or scattering loose clutter.
+    if cfg.clear > 0.0:
+        motif = batch["motif"]                                   # (B, N) ids
+        mi = motif[:, :, None]; mj = motif[:, None, :]
+        cross = (mi != mj) & (mi > 0) & (mj > 0)                 # different real motifs
+        gap = dw - rr                                            # footprint gap proxy
+        clear_pen = (torch.relu(cfg.corridor - gap)
+                     * cross.float() * valid.float() * (~exempt).float())
+        phi = phi + cfg.clear * (clear_pen ** 2).sum() * 0.5
 
     # degenerate case: a fully feasible predicted layout makes phi structurally
     # zero, with no gradient to take -- the correction is legitimately nothing.
