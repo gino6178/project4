@@ -130,10 +130,12 @@ has 3.5&times; fewer colliding objects and 5&times; fewer objects outside the fl
 object count &mdash; and loses on free-space connectivity, which we diagnose rather than tune away.</p>
 
 <figure>
-  <img src="assets/retarget_0.png" alt="A reference room and the same design retargeted into differently shaped floor plans">
-  <figcaption>One reference design carried into target floor plans of different size, aspect ratio
-  and outline. The motif structure &mdash; which objects belong together, and which relations are
-  load-bearing &mdash; is what survives; absolute positions are not.</figcaption>
+  <img src="assets/hero.png" alt="A reference room and the same design retargeted into three differently shaped floor plans">
+  <figcaption>One reference living room (top left) carried into three target floor plans &mdash;
+  narrower, a corner removed, a slanted wall. Every object lands inside the room and the motifs
+  survive: the dining table keeps its chairs, the sofa keeps its coffee table and television.
+  Overhead objects such as the pendant lamp are drawn as dashed outlines because they overlap
+  furniture in plan while sitting metres above it. Numbers are measured on each panel.</figcaption>
 </figure>
 
 <h2 id="intro">1 Introduction</h2>
@@ -254,11 +256,11 @@ be dropped, and floor the user marks as no-go is punched out of the signed dista
 boundary term reads, so a no-go zone has a wall's gradient.</p>
 
 <figure>
-  <img src="assets/geometry_levels.png" alt="Target floor plans at five deformation levels">
+  <img src="assets/levels.png" alt="One design retargeted across the deformation curriculum">
   <figcaption>The geometry curriculum. Targets are produced by five levels of deformation of a real
   floor plan &mdash; uniform scale, aspect change, a slanted wall, a corner cut, a concave
   perturbation &mdash; because irregular rooms are rare in the corpus and we did not want the method
-  tuned on the few that exist.</figcaption>
+  tuned on the few that exist. The same reference is shown retargeted into the first four.</figcaption>
 </figure>
 
 <h2 id="results">4 Experiments</h2>
@@ -302,6 +304,15 @@ is a strawman; each is the best possible method on one axis and the worst on the
 coordinate map collapses.</strong> At 0.472 legality more than half of the feasibility budget is
 gone: furniture through walls, furniture through furniture. This single cell is the largest gap in
 the study and it is the comparison the problem formulation names as the central one.</div>
+
+<figure>
+  <img src="assets/compare.png" alt="Direct scaling versus ReRoom on a corner-cut target">
+  <figcaption>The same reference into a corner-cut target. Normalised-coordinate scaling (left)
+  keeps every relation perfectly &mdash; S<sub>rel</sub> 1.00 &mdash; by pushing the dining set and
+  the sofa past the walls and into each other: 6.9&nbsp;% of area out of bounds, 10.5&nbsp;% in
+  collision. ReRoom (right) gives up some relation fidelity to fit, and turns the sofa to follow the
+  cut corner.</figcaption>
+</figure>
 
 <h3>4.1 Ablations</h3>
 
@@ -513,13 +524,28 @@ and are not charged, and the correlation behind it explained 8&nbsp;% of the var
 <tr><td>80</td><td>0.925</td><td>0.198</td><td>0.647</td><td>0.772</td></tr>
 </tbody></table></div>
 
-<p>Walkability rises to 0.925 and stops, well short of 0.972, while collisions double. The reason is
-structural: reachability enters only the <em>exact</em> energy, which ranks already-refined
-candidates, and never the differentiable surrogate that produces them. Raising its weight makes the
-ranker prefer a better-connected layout among candidates none of which was optimised for
-connectivity &mdash; it selects, it does not optimise. Closing this needs a differentiable
-connectivity surrogate, and connectivity is global and not differentiable as stated. That is a piece
-of research, not a tuning pass, and the shipped setting is left where the joint score is highest.</p>
+<p>Walkability rises to 0.925 and stops, well short of 0.972, while collisions double. Raising its
+weight makes the ranker prefer a better-connected layout among candidates none of which was
+optimised for connectivity &mdash; it selects, it does not optimise.</p>
+
+<p>A second diagnosis reached deeper and is the more useful one. The narrow gaps that disconnect the
+floor are mostly between furniture and <em>walls</em>, not between pieces of furniture: 29.7&nbsp;%
+of wall-seeking objects end up flush against a wall against 75.0&nbsp;% in the real rooms, with the
+rest stranded at a median 0.19&nbsp;m. The cause is that only 31.2&nbsp;% of them receive a wall
+term at all &mdash; the detector requires an object's <em>back</em> face to point at the wall within
+35&deg;, which rejects a bookshelf standing side-on, a sofa at an angle, or anything whose front
+axis the parser got wrong. Widening it to a footprint-touches-wall test raises coverage to
+93.6&nbsp;% and, with a saturating flush term, takes wall-hugging to 79.2&nbsp;% and the median gap
+to 0.04&nbsp;m &mdash; both matching the real rooms, and R<sub>walkable</sub> to 0.901.</p>
+
+<p>It is not the shipped path, and the reason is measured: <code>E_wall</code> scores the distance
+from an object's <em>rear-face midpoint</em> to the wall, which is not a meaningful quantity for an
+object standing side-on, so the target gap is wrong and the optimiser drives the object through the
+wall &mdash; out-of-plan area triples. The fix and the connectivity gap share one root: several
+energy terms are defined for the back-against-wall case and degrade on everything else. Rewriting
+<code>E_wall</code> in terms of footprint-to-wall distance, differentiably, is the concrete next
+step both point to. Both knobs ship off, documented, and the setting stays where the joint score is
+highest.</p>
 
 <h3>6.2 No method dominates, including ours</h3>
 

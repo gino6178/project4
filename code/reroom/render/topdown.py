@@ -37,7 +37,8 @@ def _color(cat: str) -> str:
 def draw_scene(ax, scene: Scene, title: str | None = None,
                labels: bool = True, show_openings: bool = True,
                show_front: bool = True, alpha: float = 0.85,
-               highlight: Sequence[str] = (), fontsize: float = 6.5) -> None:
+               highlight: Sequence[str] = (), fontsize: float = 6.5,
+               min_label_size: float = 0.0) -> None:
     poly = as_polygon(scene.room)
     ext = np.asarray(poly.exterior.coords)
     ax.add_patch(MplPolygon(ext[:-1], closed=True, facecolor="#F7F7F5",
@@ -49,6 +50,14 @@ def draw_scene(ax, scene: Scene, title: str | None = None,
             ax.plot([op.p0[0], op.p1[0]], [op.p0[1], op.p1[1]],
                     color=c, linewidth=4.5, solid_capstyle="butt", zorder=3)
 
+    # anything mounted or hanging above standing furniture -- a pendant lamp, a
+    # ceiling light, a rug underfoot -- overlaps a footprint in plan while being
+    # metres apart in z.  Drawing it as a solid box reads as a collision it is
+    # not, so overhead and floor-mat objects are drawn as a light hatched
+    # outline instead of a filled box.
+    def _overhead(o):
+        return o.category in ("pendant_lamp", "ceiling_lamp", "rug") or o.z >= 1.4
+
     for o in scene.objects:
         if not o.keep:
             continue
@@ -56,9 +65,14 @@ def draw_scene(ax, scene: Scene, title: str | None = None,
         col = _color(o.category)
         lw = 2.0 if o.oid in highlight else 0.9
         edge = "#111111" if o.oid in highlight else "#3A3A3A"
-        ax.add_patch(MplPolygon(corners, closed=True, facecolor=col,
-                                edgecolor=edge, linewidth=lw, alpha=alpha,
-                                zorder=2 + (1 if o.category in CORE_CATEGORIES else 0)))
+        if _overhead(o):
+            ax.add_patch(MplPolygon(corners, closed=True, facecolor="none",
+                                    edgecolor=col, linewidth=1.1, alpha=0.9,
+                                    linestyle=(0, (3, 2)), zorder=1.5))
+        else:
+            ax.add_patch(MplPolygon(corners, closed=True, facecolor=col,
+                                    edgecolor=edge, linewidth=lw, alpha=alpha,
+                                    zorder=2 + (1 if o.category in CORE_CATEGORIES else 0)))
         if show_front and o.category not in ("rug", "pendant_lamp", "ceiling_lamp"):
             c = o.xy
             f = o.forward * (o.half[1] * 0.75 + 0.12)
@@ -66,9 +80,28 @@ def draw_scene(ax, scene: Scene, title: str | None = None,
                      head_length=0.09, fc="#111111", ec="#111111",
                      linewidth=0.6, zorder=5, length_includes_head=True)
         if labels:
-            ax.text(o.xy[0], o.xy[1], o.category.replace("_", "\n"),
-                    ha="center", va="center", fontsize=fontsize, zorder=6,
-                    color="#111111")
+            # A label wider than the object it names reads as a mistake --
+            # "wardrobe" spilling out of a 0.5 m box and colliding with the
+            # facing arrow is what a small panel on a web page produces.  So a
+            # label is only drawn when the box can hold it, and the shorthand
+            # is used when the full word cannot fit.
+            word = o.category.replace("_", " ")
+            nlines = 1
+            longest = len(word)
+            need_w = longest * fontsize * 0.019        # metres at this size
+            need_h = nlines * fontsize * 0.032
+            avail_w = float(corners[:, 0].max() - corners[:, 0].min())
+            avail_h = float(corners[:, 1].max() - corners[:, 1].min())
+            fits = avail_w >= need_w and avail_h >= need_h
+            short = word.split()[0][:4]
+            need_s = len(short) * fontsize * 0.019
+            if min_label_size <= 0 or fits:
+                ax.text(o.xy[0], o.xy[1], word.replace(" ", "\n"),
+                        ha="center", va="center", fontsize=fontsize,
+                        linespacing=0.9, zorder=6, color="#111111")
+            elif avail_w >= need_s and avail_h >= need_h:
+                ax.text(o.xy[0], o.xy[1], short, ha="center", va="center",
+                        fontsize=fontsize * 0.9, zorder=6, color="#111111")
 
     b = poly.bounds
     pad = 0.35

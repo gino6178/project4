@@ -146,8 +146,8 @@ def erode(room_poly: Polygon, r: float) -> Polygon:
 # --------------------------------------------------------------------------
 # walls
 # --------------------------------------------------------------------------
-def wall_of(obj: ObjectInstance, room: Room, max_dist: float = 0.45
-            ) -> tuple[int, float, float] | None:
+def wall_of(obj: ObjectInstance, room: Room, max_dist: float = 0.45,
+            flush_dist: float = 0.0) -> tuple[int, float, float] | None:
     """Assign the object to the wall it is backed against.
 
     Returns ``(wall_index, gap, angle_error)`` or ``None``.  The object's
@@ -157,6 +157,32 @@ def wall_of(obj: ObjectInstance, room: Room, max_dist: float = 0.45
     walls = room.walls()
     back = -obj.forward
     best = None
+    # `flush_dist > 0` widens detection: a footprint that touches a wall counts
+    # as against it whatever it faces, so facing decides *which* wall rather
+    # than *whether*.  Gating on the back face at 35 degrees rejects two thirds
+    # of the objects that are genuinely flush in the reference -- a bookshelf
+    # standing side-on, a sofa at a slight angle, anything whose front axis the
+    # parser got wrong -- and an object with no wall target is never told to
+    # stay on a wall.
+    #
+    # It is **off by default**, and the reason is measured rather than
+    # cautious.  Turning it on raises detection coverage from 31.2 % to 93.6 %
+    # and, with the flush term, takes wall-hugging from 29.7 % to 79.2 % and
+    # the median wall gap from 0.19 m to 0.04 m -- both matching the real
+    # rooms.  It also triples out-of-plan area, from 0.029 to 0.091, because
+    # `E_wall` measures the distance from the object's *rear-face midpoint* to
+    # the wall, which is not a meaningful quantity for an object standing
+    # side-on: the target gap is then wrong and the optimiser drives the object
+    # through the wall.  Generalising it needs `E_wall` rewritten in terms of
+    # footprint-to-wall distance, differentiably.  Until then this stays a
+    # documented knob and not the shipped path.
+    fp = None
+    try:
+        from shapely.geometry import LineString
+        from .polygon import object_polygon as _op
+        fp = _op(obj)
+    except Exception:
+        fp = None
     for k, (a, b) in enumerate(walls):
         d = b - a
         L = np.linalg.norm(d)
@@ -171,11 +197,19 @@ def wall_of(obj: ObjectInstance, room: Room, max_dist: float = 0.45
         if not (-0.25 * L <= s <= 1.25 * L):
             continue
         gap = float(np.dot(rel, n_in))
-        if gap < -0.35 or gap > max_dist:
-            continue
         ang = float(np.arccos(np.clip(np.dot(back, -n_in), -1.0, 1.0)))
-        if ang > math.radians(35):
-            continue
+        touching = False
+        if fp is not None and flush_dist > 0.0:
+            from shapely.geometry import LineString
+            fd = float(fp.distance(LineString([a, b])))
+            touching = fd <= flush_dist
+            if touching:
+                gap = min(gap, fd) if gap > -0.35 else fd
+        if not touching:
+            if gap < -0.35 or gap > max_dist:
+                continue
+            if ang > math.radians(35):
+                continue
         score = gap + 0.5 * ang
         if best is None or score < best[0]:
             best = (score, k, gap, ang)

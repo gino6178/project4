@@ -58,6 +58,15 @@ class EnergyWeights:
     edit: float = 1.0
     # sub-weights inside E_func
     func_wall: float = 1.0
+    # Being 19 cm off the wall is not "nearly against it".  A quadratic on the
+    # wall gap says it is -- the penalty there is 0.036, which at the shipped
+    # weights is nothing -- and the measurement agrees that this is where the
+    # method drifts: 29.7 % of wall-seeking objects end up flush against a wall
+    # against 75.0 % in the real rooms, with 54.4 % stranded in the 5-40 cm band.
+    # That band is also what disconnects the floor.  So the gap carries a
+    # saturating term as well: past a few centimetres the cost is nearly flat,
+    # which leaves closing the gap as the only way out.
+    wall_flush: float = 0.0
     func_front: float = 1.0
     func_door: float = 1.0
     func_support: float = 2.0
@@ -217,8 +226,12 @@ def exact_energy(scene: Scene, intent: DesignIntent,
         n = np.array([-t[1], t[0]])
         back_mid = o.xy - o.forward * o.half[1]
         dist = float(np.dot(back_mid - a, n))
+        off = max(dist - wt.gap, 0.0)
         e_wall += wt.strength * ((dist - wt.gap) ** 2
                                  + 0.5 * (1.0 - float(np.dot(o.forward, n))))
+        if w.wall_flush > 0.0:
+            e_wall += wt.strength * w.wall_flush * float(
+                1.0 / (1.0 + math.exp(-(off - 0.04) / 0.03)))
 
     e_front = 0.0
     kept_polys = [object_polygon(o) for o in kept]
@@ -694,10 +707,15 @@ class TorchProblem:
             dist = ((back_mid - self.w_a[None]) * self.w_n[None]).sum(-1)
             ang = (o_u[..., 1, :] * self.w_n[None]).sum(-1)
             par = ((o_xy - self.w_a[None]) * self.w_t[None]).sum(-1) / self.w_len[None]
+            flush = 0.0
+            if self.w.wall_flush > 0.0:
+                off = torch.relu(dist - self.w_gap[None])
+                flush = self.w.wall_flush * torch.sigmoid((off - 0.04) / 0.03)
             e_wall = (self.w_str[None] * (
                 (dist - self.w_gap[None]) ** 2
                 + 0.5 * (1.0 - ang)
-                + 0.15 * (par - self.w_par[None]) ** 2)
+                + 0.15 * (par - self.w_par[None]) ** 2
+                + flush)
                 * keep[:, idx]).sum(-1)
         else:
             e_wall = torch.zeros(R, device=self.device)
