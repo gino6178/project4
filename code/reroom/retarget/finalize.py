@@ -61,6 +61,27 @@ def _try_move(o, target_xy, room_poly, blockers, step=STEP,
     return not np.allclose(best, start)
 
 
+def _slots_around(anchor, n_slots):
+    """Evenly-spaced slots on the anchor's four sides, at its own extents."""
+    fwd = anchor.forward
+    side = np.array([-fwd[1], fwd[0]])
+    hx, hy = float(anchor.half[0]), float(anchor.half[1])
+    r_long = hy + 0.32
+    r_short = hx + 0.32
+    long_slots = max(2, n_slots // 3)
+    short_slots = max(1, n_slots // 4)
+    slots = []
+    for sign in (+1, -1):
+        for k in range(long_slots):
+            u = -0.75 + 1.5 * (k + 0.5) / long_slots
+            slots.append(anchor.xy + sign * fwd * r_long + u * side * hx)
+    for sign in (+1, -1):
+        for k in range(short_slots):
+            u = -0.55 + 1.1 * (k + 0.5) / short_slots
+            slots.append(anchor.xy + sign * side * r_short + u * fwd * hy)
+    return slots
+
+
 def snap_functional(scene: Scene) -> Scene:
     """Companion-snap and wall-flush, both under hard constraints.
 
@@ -77,24 +98,32 @@ def snap_functional(scene: Scene) -> Scene:
     for o in kept:
         by_cat.setdefault(o.category, []).append(o)
 
-    # ---- companion snap: pull each satellite toward its nearest partner ----
+    # ---- companion snap: satellites take slots around their anchor ----
     if not (before.get("companion") is not None and before["companion"] >= 0.995):
      for sat, anchors, dmax in COMPANION_RULES:
-        for o in by_cat.get(sat, []):
+        pool = by_cat.get(sat, [])
+        if not pool:
+            continue
+        groups = {}
+        for o in pool:
             partners = [a for c in anchors for a in by_cat.get(c, [])]
             if not partners:
                 continue
             anchor = min(partners, key=lambda a: np.linalg.norm(o.xy - a.xy))
-            d = float(np.linalg.norm(o.xy - anchor.xy))
-            if d <= dmax * 0.55:
+            groups.setdefault(id(anchor), [anchor, []])[1].append(o)
+        for anchor, sats in groups.values():
+            need = [s for s in sats
+                    if float(np.linalg.norm(s.xy - anchor.xy)) > dmax * 0.55]
+            if not need:
                 continue
-            # aim just outside the anchor's footprint, on the line from the
-            # anchor to the object -- this keeps chairs pointing at the table
-            # rather than lining up on one side
-            outward = (o.xy - anchor.xy) / max(d, 1e-6)
-            want = np.asarray(anchor.xy) + outward * (
-                float(anchor.half.max()) + float(o.half.max()) + 0.10)
-            _try_move(o, want, poly, _blockers(scene, o))
+            slots = _slots_around(anchor, len(sats) + 1)
+            free = list(range(len(slots)))
+            for s in sorted(need, key=lambda x: -float(np.linalg.norm(x.xy - anchor.xy))):
+                if not free:
+                    break
+                k = min(free, key=lambda i: float(np.linalg.norm(s.xy - slots[i])))
+                free.remove(k)
+                _try_move(s, slots[k], poly, _blockers(scene, s))
 
     # ---- wall flush: pull wall-lovers to the nearest wall segment ----
     if before.get("wall") is not None and before["wall"] >= 0.995:

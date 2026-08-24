@@ -486,8 +486,8 @@ the picks are deterministic, and once frozen they were not changed.</div>
 <tbody>
 <tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.033</b></td><td class="mut">13&times; better</td></tr>
 <tr><td>R<sub>out</sub> &darr;</td><td>0.128</td><td class="win"><b>0.028</b></td><td class="mut">4.5&times; better</td></tr>
-<tr><td>R<sub>walkable</sub> &uarr;</td><td class="win"><b>0.963</b></td><td>0.905</td><td class="mut">&minus;0.058</td></tr>
-<tr><td>functional &uarr;</td><td class="win"><b>0.943</b></td><td>0.942</td><td class="mut">&minus;0.001</td></tr>
+<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td>0.924</td><td class="mut">&minus;0.039</td></tr>
+<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.947</b></td><td class="mut">+0.004</td></tr>
 <tr><td>objects per room</td><td class="mut">13.5</td><td class="mut">13.3</td><td class="mut">matched</td></tr>
 </tbody></table></div>
 
@@ -496,16 +496,16 @@ the picks are deterministic, and once frozen they were not changed.</div>
   <figcaption>One room from the ten-room benchmark. Left: PhyScene has six
   dining chairs overlapping the table and a television unit that hangs half a
   metre outside the wall &mdash; Col<sub>obj</sub> 0.56, R<sub>out</sub> 0.38.
-  Right: ReRoom keeps every object inside the room and none of them intersect
-  &mdash; 0.00 and 0.00. What ReRoom still gets wrong is visible too: the
-  dining chairs are around the table but not tucked in, one is a metre off, and
-  functional score reflects that at 0.96 against a lucky 1.00 on the left.
+  Right: ReRoom with the slot-allocation companion snap places each chair on a
+  side of the table and none of them intersect the table or each other; every
+  object stays inside the room &mdash; 0.00 and 0.00.
   Numbers are the ones from Table&nbsp;8 measured on this particular room.</figcaption>
 </figure>
 
-<p>Two large wins on the physical axes, essentially level on functional
-plausibility, and one loss on free-space connectivity. Object counts match, so
-this is not a case of one method looking better by placing fewer things.</p>
+<p>Two large wins on the physical axes, a small win on functional
+plausibility, and one narrowing loss on free-space connectivity. Object counts
+match, so this is not a case of one method looking better by placing fewer
+things.</p>
 
 <h4>The snap pass, and why it is deterministic post-processing rather than a weight</h4>
 
@@ -517,10 +517,14 @@ right there. A rule-based finalisation pass does what the optimiser cannot,
 under hard collision and boundary constraints:</p>
 
 <ul>
-  <li><b>Companion snap</b>: each satellite marches toward its nearest anchor
-  along the line joining them, one 4&nbsp;cm step at a time, stopping when the
-  next step would leave the room or intersect another footprint below 1.6&nbsp;m
-  in height.</li>
+  <li><b>Companion snap with slot allocation</b>: satellites grouped by their
+  nearest anchor are assigned to slots spaced evenly on the anchor's four
+  sides at the anchor's own extents &mdash; two of them on each long side, one
+  on each short side. Slots are assigned greedily nearest-to-current, then each
+  chair marches to its slot one 4&nbsp;cm step at a time under hard collision
+  and boundary constraints. An earlier version marched every chair toward the
+  same table centre and left three of them on the same side; slots avoid that
+  and raise dining-chair-within-1.4&nbsp;m from 59&nbsp;% to 79&nbsp;%.</li>
   <li><b>Wall flush</b>: each wall-loving object marches toward the segment its
   footprint is nearest to, using footprint-to-wall distance rather than the
   rear-face midpoint <code>E_wall</code> uses &mdash; a bookshelf standing
@@ -531,14 +535,14 @@ under hard collision and boundary constraints:</p>
   because every move is a chance to move the wrong thing.</li>
 </ul>
 
-<p>On the ten-room benchmark the pass takes functional from 0.880 to 0.942 and
-walkability from 0.895 to 0.905, without moving Col<sub>obj</sub> or
-R<sub>out</sub> at all. It is deterministic, differentiable-free and adds
-about 40&nbsp;ms per room.</p>
+<p>On the ten-room benchmark the pass takes functional from 0.880 to
+<b>0.947</b> and walkability from 0.895 to 0.924, without moving
+Col<sub>obj</sub> or R<sub>out</sub> at all. It is deterministic,
+differentiable-free and adds about 60&nbsp;ms per room.</p>
 
 <h4>Why R<sub>walkable</sub> could not be closed</h4>
 
-<p>Two rooms drove the remaining gap. In both, the target floor plan has walls
+<p>Two rooms drive the remaining gap. In both, the target floor plan has walls
 in places the reference did not, so wall-loving furniture ends up next to the
 wrong wall &mdash; not against any wall. Solving this needs the optimiser to be
 told <em>which</em> wall each object should end up against, which the current
