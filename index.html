@@ -1021,22 +1021,57 @@ no longer reflect the shipped method.</div>
 
 <div class="note"><strong>設計選擇:polish 是「共存」而不是「取代」guidance。</strong>先讓 in-sampling guidance 產生 coherent proposal,再用 projection 輕度修正剩餘的可行性(wall gap、OOB corner、cross-motif clearance)。這比原本 PDF eq (37) 的 aggressive escalating projection <em>更好</em>&mdash;&mdash;因為那會為了 col=0 把 dining set 打散。而比純 guidance <em>更完整</em>&mdash;&mdash;因為那漏了 E<sub>rel</sub>、E<sub>style</sub>。</div>
 
-<h3 id="cn-training-next">8.6 剩餘的訓練層工作(下一輪)</h3>
+<h3 id="cn-metric20">8.6 訓練層驗證 &middot; <code>flow_metric20</code>(20 epoch,新 metric-space loss)</h3>
 
-<p>Polish 解掉 OOB / col / motif 保存,但<strong>大房 wall float 仍有 ~20 cm 殘留</strong>。訓練層需要真正約束「靠牆」而不是「複製 velocity」。上輪 (<code>wall_pos_loss</code>) 失敗的教訓:</p>
+<p>照上一節的三個教訓,設計新 loss <code>wall_metric_loss</code>,直接對 <em>x1<sub>hat</sub> 位置</em>誤差在 <em>metric 空間</em>加權(把 (u, v) 誤差乘上 target 房間的 metric 半徑),只在 &tau; &gt; 0.5 計算避開低 &tau; 噪音,並加重 weight decay 防過擬合。<strong>只跑 20 epoch 先看趨勢是否對</strong>,再決定要不要投入更長訓練。</p>
 
-<ol>
-  <li><strong>Normalized-space loss 太寬容</strong>&mdash;&mdash;同樣 1 % 的 normalized 誤差在 6 m 房間 = 6 cm。下輪改成 metric-space,直接乘 target scale。</li>
-  <li><strong>Velocity 空間繞遠路</strong>&mdash;&mdash;要壓「x1 到牆距離」而不是「velocity 差」。用 hard wall-dist penalty on x1_hat 且加 τ 濾波(τ &gt; 0.5 才算,避開低 τ 噪音)。</li>
-  <li><strong>沒 regularization</strong>&mdash;&mdash;100 epoch overfit 產生 224 cm 離群。下輪加 weight decay 到 wall 分支、限制 anchor drift。</li>
+<figure>
+  <img src="assets/loss_curves_metric.png" alt="Training curves: three attempts side by side">
+  <figcaption>三次訓練並列。綠色為新的 <code>flow_metric20</code>(20 ep):val 在 ep 11 到最低 0.0113,ep 12+ 開始震盪(overfit 徵兆,20 ep 剛好是對的停點);右側 metric loss 從 peak 0.005 降到 0.0003(17&times;),新 loss 有被真的優化。灰色為失敗的 <code>flow_wallpos</code>(100 ep):val 一路降到 0.0011,但實測 max float 224 cm(見 8.3)&mdash;&mdash;val 假象。</figcaption>
+</figure>
+
+<figure>
+  <img src="assets/three_sizes_metric20.png" alt="Three sizes with flow_metric20 checkpoint">
+  <figcaption>同一 22 m² 客廳,<code>flow_metric20 + shipped polish</code> 的三尺寸實測。<strong>0.75&times; 大改善</strong>&mdash;&mdash;tv_stand 從基準的 14 cm 浮空變成 0.9 cm 貼牆、sideboard 5.2 &rarr; 1.2 cm。1.0&times; 幾乎完美複製 reference;1.35&times; sofa 20 cm 是唯一明顯浮空(基準是 18 cm,略退)。</figcaption>
+</figure>
+
+<h4>6 場景平均對照</h4>
+<div class="tw">
+<table>
+<thead>
+<tr><th>Size</th><th>Checkpoint</th><th>Mean float (cm)</th><th>Max (cm)</th><th>OOB %</th><th>Col %</th><th>S<sub>rel</sub></th></tr>
+</thead>
+<tbody>
+<tr><td>0.75&times;</td><td>flow_wall (shipped)</td><td>7.7</td><td>29.8</td><td>2.6</td><td>2.9</td><td>0.42</td></tr>
+<tr><td>0.75&times;</td><td>flow_metric20</td><td>9.2</td><td>33.7</td><td>2.8</td><td class="win">2.2</td><td>0.42</td></tr>
+<tr><td>1.00&times;</td><td>flow_wall (shipped)</td><td>14.6</td><td>61.9</td><td>2.0</td><td>3.9</td><td class="win">0.93</td></tr>
+<tr><td>1.00&times;</td><td>flow_metric20</td><td class="win">13.7</td><td class="win">61.6</td><td>2.2</td><td>4.0</td><td>0.92</td></tr>
+<tr><td><strong>1.35&times;</strong></td><td>flow_wall (shipped)</td><td>19.5</td><td>102.1</td><td>2.9</td><td>1.9</td><td>0.86</td></tr>
+<tr><td><strong>1.35&times;</strong></td><td><strong>flow_metric20</strong></td><td class="win">17.4</td><td>105.1</td><td class="win">2.5</td><td class="win">1.4</td><td class="win">0.87</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<p style="margin:0 0 8px"><strong>三個關鍵發現:</strong></p>
+<ol style="margin:0">
+  <li><strong>趨勢是對的。</strong>1.35&times; 大房 mean float 降 11 %(19.5 &rarr; 17.4 cm)、col 從 1.9 % 降到 1.4 %、S<sub>rel</sub> 略升到 0.87。這是 metric-space loss 該作用的地方。</li>
+  <li><strong>沒有 wall_pos_loss 那種災難。</strong>Max float 都 &lt; 106 cm,不會製造 224 cm 離群。val 0.0113 這次跟實測有<em>正相關</em>&mdash;&mdash;不是假象。</li>
+  <li><strong>幅度不夠當 shipped default。</strong>只有 2 cm 大房改善,小房略退步。<strong>訓練層貢獻是「小改善」,不是「breakthrough」</strong>。Shipped 仍是 <code>flow_wall + polish</code>(polish 帶來的 OOB 2&ndash;3&times; 改善才是主要贏)。</li>
 </ol>
+</div>
 
-<p>下輪只跑 <strong>20 epoch 先看趨勢</strong>,趨勢對再繼續。</p>
+<h4>結論與下一步的選項</h4>
+<ul>
+  <li><code>flow_metric20/flow_best.pt</code>(ep 11,val 0.0113)存起來當<strong>驗證通過的原型 checkpoint</strong>,不推為 default</li>
+  <li>Shipped path 保持:<code>flow_wall</code> + <code>polish=True, anchor=100</code>(見 8.5)</li>
+  <li>下一步選項:(A) 加大 <code>wall_metric_loss</code> 權重從 8 → 20&ndash;30 再 20 epoch,賭幅度變大;(B) 重新平衡小房 / 大房 loss weighting;(C) 停在這裡,承認訓練層是<em>已驗證但小改善</em>,把時間花在其他 PDF 沒實作項</li>
+</ul>
 
 <h3 id="cn-summary">8.7 現況一句話總結</h3>
 
 <div class="note">
-<p style="margin:0"><strong>PDF § 8 / § 9 / § 10 / § 11 / § 12 / § 13 eq (37) / § 19 <em>全部保留並用於生成</em>。</strong>§ 8 七個能量:E<sub>rel</sub>/E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub>/E<sub>func</sub>/E<sub>style</sub> 進 8.5 的 polish 步驟真正影響 layout,E<sub>edit</sub> 保留 slot 待接使用者輸入。§ 13 eq (37) 的 constraint projection 用「輕量共存」形式恢復 &mdash; 在 guidance sample 之後跑一次 anchor L2 版本,兩層互補:guidance 產生 coherent proposal、polish 修剩餘可行性。實測 OOB 降 2&ndash;3&times;、S<sub>rel</sub> 略升。8.6 的訓練層工作(metric-space wall dist + 正則化,20 epoch 先驗證)是下一輪。</p>
+<p style="margin:0"><strong>PDF § 8 / § 9 / § 10 / § 11 / § 12 / § 13 eq (37) / § 19 <em>全部保留並用於生成</em>。</strong>§ 8 七個能量:E<sub>rel</sub>/E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub>/E<sub>func</sub>/E<sub>style</sub> 進 8.5 的 polish 步驟真正影響 layout,E<sub>edit</sub> 保留 slot 待接使用者輸入。§ 13 eq (37) 的 constraint projection 用「輕量共存」形式恢復 &mdash; 在 guidance sample 之後跑一次 anchor L2 版本,兩層互補。實測 OOB 降 2&ndash;3&times;、S<sub>rel</sub> 略升。8.6 的訓練層改動(<code>flow_metric20</code>,新 metric-space loss,20 epoch)<strong>趨勢已驗證通過</strong>:1.35&times; 大房 mean float 降 11 %、無 wall_pos_loss 那種災難離群,但幅度不夠當 default,存為 opt-in 原型 checkpoint。</p>
 </div>
 
 </div>
