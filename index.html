@@ -234,6 +234,33 @@
 <div class="note">
 <strong>為什麼不直接抄 LEGO-Net 的 PointNet?</strong>LEGO-Net 用 PointNet 編絕對 metric 座標的 floor plan,對<em>單一房間 denoising</em> 有效,但對<em>跨房間 retargeting</em> 反而是災難 &mdash; 相同形狀不同尺寸會被當兩個房型學。所以我們把 boundary 拆成兩路:normalized(u, v)給形狀先驗,metric(u&times;h₁, v&times;h₂)給尺度先驗,一起餵給 set-transformer。</div>
 
+<h2 id="training-pairs">訓練 pair 怎麼做的(圖示備查)</h2>
+
+<h3>現行:反向 pair(<code>RetargetPairs.__getitem__</code>)</h3>
+<p>真實 3D-FRONT 場景保留當 <em>target</em>(自帶 GT layout),<em>reference</em> 反向製造:把場景的 room deform,再把物件 warp 進去 &mdash; 兩者一起當 model 的輸入。這種 pair 天然涵蓋放大跟縮小兩個方向(見圖中 ref/target 面積比)。</p>
+<figure>
+  <img src="assets/training_pair_backward.png" alt="Backward-manufactured training pair">
+  <figcaption>三個 deform level 各一例。左 = pseudo-reference(輸入),右 = target = 真實場景(GT)。Level 1 uniform_scale 這例是「ref 大、target 小」(縮小訊號);Level 2 aspect_ratio 是「ref 小、target 大」(放大訊號)。</figcaption>
+</figure>
+
+<h3>候選:Warp-based pseudo-GT pair(<strong>目前 <em>未</em>啟用</strong>)</h3>
+<p>反向直接對稱:<em>reference</em> 保留真實不動,<em>target</em> 房間 deform,GT layout 用 affine warp 當 bootstrap。GT 不完美(只是仿射投影),但直接教 model「reference → 不同大小 target」這個方向,補足現行 pair 對<em>放大</em>方向的訊號密度。</p>
+<figure>
+  <img src="assets/training_pair_warp.png" alt="Warp-based pseudo-GT training pair (not active)">
+  <figcaption>與上圖對稱:左 = 真實 reference(不動),右 = deformed target + affine warp 的 pseudo-GT。若下輪 200 epoch 大房仍不理想會啟用。</figcaption>
+</figure>
+
+<h3>還缺的訊號:隨機抽換物件</h3>
+<div class="note">
+<strong>觀察:</strong>目前訓練 pair 裡,物件的<em>類別、尺寸、外觀</em>都完全一致 &mdash; 只有位置變。這讓 model 沒機會學到 <em>α<sub>ij</sub></em>(關係彈性:哪些對象間距該剛、哪些該彈)&mdash; 因為同一組類別永遠對應同樣的相對位置,「相同關係下不同尺寸物件」的分佈 model 沒看過。<br><br>
+<strong>解方:</strong>訓練時以某機率把物件<em>換成同類別但不同尺寸</em>的真實 asset(從 <code>bank</code> 抽,類似推理時的 substitution 但用在訓練)。這樣:
+<ul style="margin:6px 0 0">
+  <li>大 sofa 配小 coffee_table vs 小 sofa 配大 coffee_table 都會出現 &mdash; model 學到「同 motif 內的距離該保留還是該延展」</li>
+  <li>不同尺寸物件塞進同一 pseudo-ref 房間會製造合理 &amp; 不合理的碰撞情境 &mdash; model 學到 collision-aware 的距離取捨</li>
+</ul>
+下輪 200 epoch(或緊接下一輪)會併入這條。
+</div>
+
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
 </footer>
