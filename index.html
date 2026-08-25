@@ -199,6 +199,99 @@ floor plan and returns an editable arrangement that preserves the first inside t
 
 <h2 id="method">3 Method</h2>
 
+<figure class="flow">
+<svg viewBox="0 0 720 940" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <defs>
+    <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#7a7a7a"/>
+    </marker>
+    <marker id="ahc" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#a8412a"/>
+    </marker>
+  </defs>
+
+  <style>
+    .pf-box{fill:#f7f7f7;stroke:#d8d8d8;stroke-width:1.2;rx:8;}
+    .pf-core{fill:#f9ece8;stroke:#a8412a;stroke-width:1.6;rx:10;}
+    .pf-out{fill:#efe2dd;stroke:#a8412a;stroke-width:1.6;rx:10;}
+    .pf-t{fill:#1a1a1a;font-size:15px;font-weight:600;}
+    .pf-s{fill:#5c5c5c;font-size:12.5px;}
+    .pf-tag{fill:#a8412a;font-size:10.5px;font-weight:700;letter-spacing:.04em;}
+    .pf-lbl{fill:#8a8a8a;font-size:11px;font-style:italic;}
+    .pf-edge{stroke:#7a7a7a;stroke-width:1.4;fill:none;}
+    .pf-edgec{stroke:#a8412a;stroke-width:1.6;fill:none;}
+    .pf-en{fill:#a8412a;font-size:12px;font-weight:600;}
+  </style>
+
+  <!-- INPUTS -->
+  <rect class="pf-box" x="40" y="22" width="290" height="50" rx="8"/>
+  <text class="pf-t" x="185" y="44" text-anchor="middle">Reference room image(s)</text>
+  <text class="pf-s" x="185" y="62" text-anchor="middle">the design a user likes</text>
+
+  <rect class="pf-box" x="392" y="22" width="288" height="50" rx="8"/>
+  <text class="pf-t" x="536" y="44" text-anchor="middle">Target floor polygon P_t</text>
+  <text class="pf-s" x="536" y="62" text-anchor="middle">any shape — L, slanted, concave</text>
+
+  <!-- perception -->
+  <path class="pf-edge" d="M185,72 L185,104" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="40" y="106" width="290" height="52" rx="8"/>
+  <text class="pf-t" x="185" y="128" text-anchor="middle">Perception</text>
+  <text class="pf-s" x="185" y="146" text-anchor="middle">MIDI-3D  ·  or 3D-FRONT graph (oracle)</text>
+
+  <!-- intent graph -->
+  <path class="pf-edge" d="M185,158 L185,196" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="40" y="198" width="640" height="72" rx="8"/>
+  <text class="pf-tag" x="60" y="220">LEARNED</text>
+  <text class="pf-t" x="360" y="228" text-anchor="middle">Design-Intent Graph  +  Relation Elasticity  &#945;</text>
+  <text class="pf-s" x="360" y="250" text-anchor="middle">relations &#183; hierarchical motifs &#183; &#945;<tspan font-style="italic">= preserve what is rigid, adapt what is elastic</tspan></text>
+
+  <!-- target floor down the right -->
+  <path class="pf-edge" d="M536,72 L536,120 L700,120 L700,470" fill="none" stroke-dasharray="4 3"/>
+  <text class="pf-lbl" x="704" y="300" transform="rotate(90 704 300)">target boundary conditions the flow</text>
+
+  <!-- summarize -->
+  <path class="pf-edge" d="M360,270 L360,306" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="150" y="308" width="420" height="50" rx="8"/>
+  <text class="pf-t" x="360" y="330" text-anchor="middle">Selection &#183; Summarise</text>
+  <text class="pf-s" x="360" y="348" text-anchor="middle">smaller room &#8594; drop whole motifs / prune within them</text>
+
+  <!-- GENERATIVE CORE -->
+  <path class="pf-edge" d="M360,358 L360,392" marker-end="url(#ahc)"/>
+  <rect class="pf-core" x="70" y="394" width="580" height="156" rx="10"/>
+  <text class="pf-tag" x="92" y="418">GENERATIVE CORE &#183; LEARNED</text>
+  <text class="pf-t" x="360" y="446" text-anchor="middle">Flow Transformer  (DiT, 33M params)</text>
+  <text class="pf-s" x="360" y="466" text-anchor="middle">intent graph &amp; &#945; enter as per-edge attention bias  &#8594;  k candidate layouts</text>
+  <rect x="108" y="486" width="504" height="46" rx="7" fill="#fff" stroke="#e3c9c0" stroke-width="1.1"/>
+  <text class="pf-en" x="360" y="504" text-anchor="middle">&#8635; in-sampling physical guidance</text>
+  <text class="pf-s" x="360" y="522" text-anchor="middle">E_bound  +  E_col (nestable pairs exempt)  +  E_clear  &#8212;  no post-processing</text>
+  <path class="pf-edgec" d="M700,470 L652,470" marker-end="url(#ahc)"/>
+
+  <!-- grow + substitute -->
+  <path class="pf-edge" d="M360,550 L360,584" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="150" y="586" width="420" height="52" rx="8"/>
+  <text class="pf-t" x="360" y="608" text-anchor="middle">Grow &#183; Population   +   Substitution</text>
+  <text class="pf-s" x="360" y="626" text-anchor="middle">larger room &#8594; add furniture (gated)  &#183;  swap asset for a closer-fitting one</text>
+
+  <!-- rank -->
+  <path class="pf-edge" d="M360,638 L360,672" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="150" y="674" width="420" height="50" rx="8"/>
+  <text class="pf-t" x="360" y="696" text-anchor="middle">Selection &#183; Exact-energy ranking</text>
+  <text class="pf-s" x="360" y="714" text-anchor="middle">full E(Y) scores the k candidates &#8594; pick the best</text>
+
+  <!-- output -->
+  <path class="pf-edgec" d="M360,724 L360,758" marker-end="url(#ahc)"/>
+  <rect class="pf-out" x="196" y="760" width="328" height="56" rx="10"/>
+  <text class="pf-t" x="360" y="785" text-anchor="middle">Editable 3D scene  S_t</text>
+  <text class="pf-s" x="360" y="803" text-anchor="middle">placeable in the target, preserves the reference (S_rel 0.985)</text>
+
+  <!-- side legend: two-stage bracket -->
+  <text class="pf-lbl" x="30" y="386" transform="rotate(90 30 386)" text-anchor="middle" font-size="11.5">&#8592; intent extraction</text>
+  <text class="pf-lbl" x="30" y="640" transform="rotate(90 30 640)" text-anchor="middle" font-size="11.5">&#8592; generative retargeting</text>
+</svg>
+<figcaption>The pipeline at a glance. A reference design is parsed into an intent graph with a learned relation elasticity; a graph-conditioned flow transformer then proposes the layout, with the section-8 energy spent on conditioning (E<sub>rel</sub> in the attention bias), in-sampling physical guidance (E<sub>bound</sub>, E<sub>col</sub>, E<sub>clear</sub>), and ranking the candidates &mdash; not on a from-scratch search. Selection, growth and substitution run around the generative core.</figcaption>
+</figure>
+
+
 <h3>3.1 Design intent, not coordinates</h3>
 
 <p>The reference room is parsed into a graph whose nodes are object instances and whose edges are
