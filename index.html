@@ -200,7 +200,7 @@ floor plan and returns an editable arrangement that preserves the first inside t
 <h2 id="method">3 Method</h2>
 
 <figure class="flow">
-<svg viewBox="0 0 720 940" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<svg viewBox="0 0 780 1140" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'PingFang TC','Noto Sans TC',Segoe UI,Roboto,Helvetica,Arial,sans-serif">
   <defs>
     <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
       <path d="M0,0 L8,4 L0,8 Z" fill="#7a7a7a"/>
@@ -212,83 +212,109 @@ floor plan and returns an editable arrangement that preserves the first inside t
 
   <style>
     .pf-box{fill:#f7f7f7;stroke:#d8d8d8;stroke-width:1.2;rx:8;}
+    .pf-new{fill:#fff9ec;stroke:#c98b2c;stroke-width:1.6;rx:8;}
     .pf-core{fill:#f9ece8;stroke:#a8412a;stroke-width:1.6;rx:10;}
     .pf-out{fill:#efe2dd;stroke:#a8412a;stroke-width:1.6;rx:10;}
     .pf-t{fill:#1a1a1a;font-size:15px;font-weight:600;}
-    .pf-s{fill:#5c5c5c;font-size:12.5px;}
+    .pf-s{fill:#5c5c5c;font-size:12px;}
     .pf-tag{fill:#a8412a;font-size:10.5px;font-weight:700;letter-spacing:.04em;}
+    .pf-newtag{fill:#c98b2c;font-size:10.5px;font-weight:700;letter-spacing:.04em;}
     .pf-lbl{fill:#8a8a8a;font-size:11px;font-style:italic;}
     .pf-edge{stroke:#7a7a7a;stroke-width:1.4;fill:none;}
     .pf-edgec{stroke:#a8412a;stroke-width:1.6;fill:none;}
     .pf-en{fill:#a8412a;font-size:12px;font-weight:600;}
+    .pf-sec{fill:#7a7a7a;font-size:10.5px;letter-spacing:.02em;}
   </style>
 
-  <!-- INPUTS -->
-  <rect class="pf-box" x="40" y="22" width="290" height="50" rx="8"/>
-  <text class="pf-t" x="185" y="44" text-anchor="middle">Reference room image(s)</text>
-  <text class="pf-s" x="185" y="62" text-anchor="middle">the design a user likes</text>
+  <!-- 輸入 -->
+  <rect class="pf-box" x="40" y="22" width="310" height="50" rx="8"/>
+  <text class="pf-t" x="195" y="44" text-anchor="middle">參考房間影像</text>
+  <text class="pf-s" x="195" y="62" text-anchor="middle">使用者喜歡的設計</text>
 
-  <rect class="pf-box" x="392" y="22" width="288" height="50" rx="8"/>
-  <text class="pf-t" x="536" y="44" text-anchor="middle">Target floor polygon P_t</text>
-  <text class="pf-s" x="536" y="62" text-anchor="middle">any shape — L, slanted, concave</text>
+  <rect class="pf-box" x="412" y="22" width="308" height="50" rx="8"/>
+  <text class="pf-t" x="566" y="44" text-anchor="middle">目標地面多邊形 P_t</text>
+  <text class="pf-s" x="566" y="62" text-anchor="middle">任意形狀 &mdash; L 形、斜牆、凹角</text>
 
-  <!-- perception -->
-  <path class="pf-edge" d="M185,72 L185,104" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="40" y="106" width="290" height="52" rx="8"/>
-  <text class="pf-t" x="185" y="128" text-anchor="middle">Perception</text>
-  <text class="pf-s" x="185" y="146" text-anchor="middle">MIDI-3D  ·  or 3D-FRONT graph (oracle)</text>
+  <!-- 感知 -->
+  <path class="pf-edge" d="M195,72 L195,104" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="40" y="106" width="310" height="52" rx="8"/>
+  <text class="pf-t" x="195" y="128" text-anchor="middle">感知(Perception)</text>
+  <text class="pf-s" x="195" y="146" text-anchor="middle">MIDI-3D 影像解析 · 或 3D-FRONT graph(oracle)</text>
 
-  <!-- intent graph -->
-  <path class="pf-edge" d="M185,158 L185,196" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="40" y="198" width="640" height="72" rx="8"/>
-  <text class="pf-tag" x="60" y="220">LEARNED</text>
-  <text class="pf-t" x="360" y="228" text-anchor="middle">Design-Intent Graph  +  Relation Elasticity  &#945;</text>
-  <text class="pf-s" x="360" y="250" text-anchor="middle">relations &#183; hierarchical motifs &#183; &#945;<tspan font-style="italic">= preserve what is rigid, adapt what is elastic</tspan></text>
+  <!-- 設計意圖圖 + α -->
+  <path class="pf-edge" d="M195,158 L195,196" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="40" y="198" width="680" height="72" rx="8"/>
+  <text class="pf-tag" x="60" y="220">學到的(LEARNED)</text>
+  <text class="pf-sec" x="700" y="220" text-anchor="end">§19</text>
+  <text class="pf-t" x="380" y="230" text-anchor="middle">設計意圖圖(Design-Intent Graph)+ 關係彈性 &#945;<sub>ij</sub></text>
+  <text class="pf-s" x="380" y="252" text-anchor="middle">物件關係 · 階層 motifs · &#945; <tspan font-style="italic">= 剛性的保留、彈性的隨房間調整</tspan></text>
 
-  <!-- target floor down the right -->
-  <path class="pf-edge" d="M536,72 L536,120 L700,120 L700,470" fill="none" stroke-dasharray="4 3"/>
-  <text class="pf-lbl" x="704" y="300" transform="rotate(90 704 300)">target boundary conditions the flow</text>
+  <!-- 目標邊界虛線一路往下 -->
+  <path class="pf-edge" d="M566,72 L566,120 L740,120 L740,590" fill="none" stroke-dasharray="4 3"/>
+  <text class="pf-lbl" x="744" y="360" transform="rotate(90 744 360)">目標邊界作為 flow 的條件</text>
 
-  <!-- summarize -->
-  <path class="pf-edge" d="M360,270 L360,306" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="150" y="308" width="420" height="50" rx="8"/>
-  <text class="pf-t" x="360" y="330" text-anchor="middle">Selection &#183; Summarise</text>
-  <text class="pf-s" x="360" y="348" text-anchor="middle">smaller room &#8594; drop whole motifs / prune within them</text>
+  <!-- Summarise -->
+  <path class="pf-edge" d="M380,270 L380,306" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="150" y="308" width="460" height="52" rx="8"/>
+  <text class="pf-sec" x="600" y="326" text-anchor="end">§9</text>
+  <text class="pf-t" x="380" y="330" text-anchor="middle">挑選 · 精簡(Summarise)</text>
+  <text class="pf-s" x="380" y="350" text-anchor="middle">房間變小 &rarr; 刪掉整組 motif 或裁減 motif 內部</text>
+
+  <!-- Substitution (新順序:flow 前置) -->
+  <path class="pf-edge" d="M380,360 L380,394" marker-end="url(#ah)"/>
+  <rect class="pf-new" x="150" y="396" width="460" height="60" rx="8"/>
+  <text class="pf-newtag" x="170" y="418">新順序 · 前置</text>
+  <text class="pf-sec" x="600" y="418" text-anchor="end">§11 &middot; §8.2</text>
+  <text class="pf-t" x="380" y="431" text-anchor="middle">資產替換 Substitution(縮小到能放進去的真實資產)</text>
+  <text class="pf-s" x="380" y="449" text-anchor="middle">shrink-only + min_size 硬性下限;<em>先</em>換再 flow,避免硬塞被 collision 推散</text>
 
   <!-- GENERATIVE CORE -->
-  <path class="pf-edge" d="M360,358 L360,392" marker-end="url(#ahc)"/>
-  <rect class="pf-core" x="70" y="394" width="580" height="156" rx="10"/>
-  <text class="pf-tag" x="92" y="418">GENERATIVE CORE &#183; LEARNED</text>
-  <text class="pf-t" x="360" y="446" text-anchor="middle">Flow Transformer  (DiT, 33M params)</text>
-  <text class="pf-s" x="360" y="466" text-anchor="middle">intent graph &amp; &#945; enter as per-edge attention bias  &#8594;  k candidate layouts</text>
-  <rect x="108" y="486" width="504" height="46" rx="7" fill="#fff" stroke="#e3c9c0" stroke-width="1.1"/>
-  <text class="pf-en" x="360" y="504" text-anchor="middle">&#8635; in-sampling physical guidance</text>
-  <text class="pf-s" x="360" y="522" text-anchor="middle">E_bound  +  E_col (nestable pairs exempt)  +  E_clear  &#8212;  no post-processing</text>
-  <path class="pf-edgec" d="M700,470 L652,470" marker-end="url(#ahc)"/>
+  <path class="pf-edge" d="M380,456 L380,486" marker-end="url(#ahc)"/>
+  <rect class="pf-core" x="70" y="488" width="620" height="168" rx="10"/>
+  <text class="pf-tag" x="92" y="512">生成核心 · LEARNED</text>
+  <text class="pf-sec" x="670" y="512" text-anchor="end">§13 eq (37) 前半</text>
+  <text class="pf-t" x="380" y="536" text-anchor="middle">Flow Transformer(DiT,33 M 參數)</text>
+  <text class="pf-s" x="380" y="556" text-anchor="middle">意圖圖 &amp; &#945; 進入每條 edge 的 attention bias &rarr; 產生 k 個候選佈局</text>
+  <rect x="108" y="580" width="544" height="64" rx="7" fill="#fff" stroke="#e3c9c0" stroke-width="1.1"/>
+  <text class="pf-en" x="380" y="600" text-anchor="middle">&#8635; ODE 每步:in-sampling 物理 guidance</text>
+  <text class="pf-s" x="380" y="618" text-anchor="middle">E<tspan font-style="italic">bound</tspan> + E<tspan font-style="italic">col</tspan>(nestable pairs 豁免) + E<tspan font-style="italic">clear</tspan> + wall_pull(依 area_ratio 自適應)</text>
+  <text class="pf-s" x="380" y="635" text-anchor="middle" fill="#a8412a">不做後處理硬修 &middot; feasibility 塞進生成迴圈</text>
 
-  <!-- grow + substitute -->
-  <path class="pf-edge" d="M360,550 L360,584" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="150" y="586" width="420" height="52" rx="8"/>
-  <text class="pf-t" x="360" y="608" text-anchor="middle">Grow &#183; Population   +   Substitution</text>
-  <text class="pf-s" x="360" y="626" text-anchor="middle">larger room &#8594; add furniture (gated)  &#183;  swap asset for a closer-fitting one</text>
+  <!-- Polish (新步驟) -->
+  <path class="pf-edge" d="M380,656 L380,690" marker-end="url(#ah)"/>
+  <rect class="pf-new" x="70" y="692" width="620" height="86" rx="8"/>
+  <text class="pf-newtag" x="92" y="714">新步驟 · 恢復 eq (37) projection</text>
+  <text class="pf-sec" x="670" y="714" text-anchor="end">§13 eq (37) 後半 &middot; §8.5</text>
+  <text class="pf-t" x="380" y="732" text-anchor="middle">Polish(輕量 constraint projection,freeze_yaw,anchor L2)</text>
+  <text class="pf-s" x="380" y="750" text-anchor="middle">Adam 25 步,對 TorchProblem 全能量做梯度下降:</text>
+  <text class="pf-s" x="380" y="768" text-anchor="middle">E<tspan font-style="italic">rel</tspan> + E<tspan font-style="italic">bound</tspan> + E<tspan font-style="italic">col</tspan> + E<tspan font-style="italic">clear</tspan> + E<tspan font-style="italic">func</tspan> + E<tspan font-style="italic">style</tspan>;anchor 保住 motif 不被打散</text>
 
-  <!-- rank -->
-  <path class="pf-edge" d="M360,638 L360,672" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="150" y="674" width="420" height="50" rx="8"/>
-  <text class="pf-t" x="360" y="696" text-anchor="middle">Selection &#183; Exact-energy ranking</text>
-  <text class="pf-s" x="360" y="714" text-anchor="middle">full E(Y) scores the k candidates &#8594; pick the best</text>
+  <!-- Population (放大房才觸發) -->
+  <path class="pf-edge" d="M380,778 L380,812" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="150" y="814" width="460" height="52" rx="8"/>
+  <text class="pf-sec" x="600" y="832" text-anchor="end">§10</text>
+  <text class="pf-t" x="380" y="836" text-anchor="middle">Population 生長(房間變大 &rarr; 依 co-occurrence 新增家具)</text>
+  <text class="pf-s" x="380" y="856" text-anchor="middle">_vet_additions 守門:新增家具必須「加入後 layout 成本不變」才收下</text>
 
-  <!-- output -->
-  <path class="pf-edgec" d="M360,724 L360,758" marker-end="url(#ahc)"/>
-  <rect class="pf-out" x="196" y="760" width="328" height="56" rx="10"/>
-  <text class="pf-t" x="360" y="785" text-anchor="middle">Editable 3D scene  S_t</text>
-  <text class="pf-s" x="360" y="803" text-anchor="middle">placeable in the target, preserves the reference (S_rel 0.985)</text>
+  <!-- Ranking (七能量排名) -->
+  <path class="pf-edge" d="M380,866 L380,900" marker-end="url(#ah)"/>
+  <rect class="pf-box" x="150" y="902" width="460" height="52" rx="8"/>
+  <text class="pf-sec" x="600" y="920" text-anchor="end">§8 全 7 能量</text>
+  <text class="pf-t" x="380" y="924" text-anchor="middle">Selection · Exact-energy ranking(選 best 候選)</text>
+  <text class="pf-s" x="380" y="944" text-anchor="middle">全 7 個 § 8 能量算 E(Y),k 個候選挑最低;E<tspan font-style="italic">edit</tspan> slot 保留待接使用者輸入</text>
 
-  <!-- side legend: two-stage bracket -->
-  <text class="pf-lbl" x="30" y="386" transform="rotate(90 30 386)" text-anchor="middle" font-size="11.5">&#8592; intent extraction</text>
-  <text class="pf-lbl" x="30" y="640" transform="rotate(90 30 640)" text-anchor="middle" font-size="11.5">&#8592; generative retargeting</text>
+  <!-- 最終場景 -->
+  <path class="pf-edgec" d="M380,954 L380,988" marker-end="url(#ahc)"/>
+  <rect class="pf-out" x="196" y="990" width="368" height="60" rx="10"/>
+  <text class="pf-t" x="380" y="1016" text-anchor="middle">可編輯 3D 場景 S_t</text>
+  <text class="pf-s" x="380" y="1034" text-anchor="middle">可置入目標房間、保留 reference 意圖(S<tspan font-style="italic">rel</tspan> 0.985 on 30-scene bench)</text>
+
+  <!-- 左邊分段標籤 -->
+  <text class="pf-lbl" x="28" y="230" transform="rotate(90 28 230)" text-anchor="middle" font-size="11.5">&larr; 意圖抽取</text>
+  <text class="pf-lbl" x="28" y="580" transform="rotate(90 28 580)" text-anchor="middle" font-size="11.5">&larr; 生成 (eq 37 前)</text>
+  <text class="pf-lbl" x="28" y="870" transform="rotate(90 28 870)" text-anchor="middle" font-size="11.5">&larr; 投影 + 生長 + 排名 (eq 37 後)</text>
 </svg>
-<figcaption>The pipeline at a glance. A reference design is parsed into an intent graph with a learned relation elasticity; a graph-conditioned flow transformer then proposes the layout, with the section-8 energy spent on conditioning (E<sub>rel</sub> in the attention bias), in-sampling physical guidance (E<sub>bound</sub>, E<sub>col</sub>, E<sub>clear</sub>), and ranking the candidates &mdash; not on a from-scratch search. Selection, growth and substitution run around the generative core.</figcaption>
+<figcaption><strong>目前實際 shipped pipeline(依 <code>generative_retarget</code> 執行順序,中文)</strong>。橘色框 = 相對 PDF 或最初實作有調整的關鍵步驟:<em>資產替換前置</em>(§8.2 修正 A,避免 flow 硬塞放不下的家具)、以及 <em>Polish 輕量投影</em>(§8.5 恢復 PDF eq (37) 的 constraint projection,anchor L2 保住 motif)。生成核心用 in-sampling guidance 覆蓋 E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub>/E<sub>func</sub>-wall_pull;polish 補上 E<sub>rel</sub>/E<sub>style</sub>;排名用全 7 能量。</figcaption>
 </figure>
 
 
