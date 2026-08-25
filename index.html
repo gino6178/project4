@@ -1,1160 +1,202 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReRoom: Reference-Guided Retargeting of Interior Design into New Floor Geometry</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
-      integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
-        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
-        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
-        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\(',right:'\)',display:false}],throwOnError:false});"></script>
+<title>ReRoom · 目前的做法</title>
 <style>
-  :root{ --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a; --panel:#f7f7f7; }
+  :root{
+    --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a;
+    --panel:#f7f7f7; --amber:#c98b2c; --amber-bg:#fff9ec;
+  }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:#fff;color:var(--ink);
-       font:17px/1.7 "Charter","Georgia","Times New Roman",serif;
+       font:17px/1.75 -apple-system,"PingFang TC","Noto Sans TC",BlinkMacSystemFont,"Segoe UI",sans-serif;
        -webkit-font-smoothing:antialiased}
-  .wrap{max-width:820px;margin:0 auto;padding:0 22px}
-  .stale{border-left:3px solid #b45309;background:#fffbeb;padding:.55em .8em;margin:0 0 8px;
-    font-size:.86em;line-height:1.45;color:#78350f;border-radius:0 3px 3px 0}
-  .stale b{font-weight:600}
-  .cutstrip{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:0 0 26px}
-  .cutstrip img,.cutstrip video{height:170px;width:auto;border-radius:3px}
-  @media(max-width:900px){.cutstrip img,.cutstrip video{height:112px}}
-  .eq{display:flex;align-items:center;gap:14px;margin:20px 0}
-  .eq .body{flex:1;overflow-x:auto;overflow-y:hidden;text-align:center}
-  .eq .num{color:var(--mut);font-size:14px;flex:none}
-  .katex{font-size:1.02em}
-  header{padding:56px 0 30px;text-align:center;border-bottom:1px solid var(--line)}
-  h1{font-size:clamp(27px,4.4vw,40px);line-height:1.22;margin:0 0 10px;font-weight:600;
-     letter-spacing:-.01em}
-  .sub{color:var(--mut);font-size:clamp(15px,2.2vw,19px);margin:0 0 6px;font-style:italic}
-  .authors{font-size:17px;margin:14px 0 2px}
-  .venue{color:var(--mut);font-size:15px;margin:0 0 20px}
-  .links{display:flex;gap:22px;justify-content:center;flex-wrap:wrap;font-size:16px}
-  .links a{color:var(--acc);text-decoration:none;border-bottom:1px solid rgba(168,65,42,.35);
-           padding-bottom:1px}
-  .links a:hover{border-bottom-color:var(--acc)}
-  h2{font-size:25px;margin:52px 0 10px;font-weight:600;letter-spacing:-.01em;text-align:left}
-  h3{font-size:19px;margin:34px 0 8px;font-weight:600}
-  h4{font-size:16.5px;margin:24px 0 6px;font-weight:600;color:#2a2a2a}
-  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:26px 0}
-  .grid3 figure{margin:0}
-  .grid3 video{width:100%;display:block;border-radius:3px;background:#fff}
-  .grid3 .cap{color:var(--mut);font-size:13.5px;margin-top:5px;text-align:center}
-  @media (max-width:640px){ .grid3{grid-template-columns:1fr} }
-  .algo{border:1px solid var(--line);border-radius:3px;margin:18px 0;overflow:hidden}
-  .algo-h{background:var(--panel);border-bottom:1px solid var(--line);padding:7px 12px;
-          font-weight:600;font-size:14.5px}
-  .algo pre{margin:0;padding:11px 12px;font:12.5px/1.55 ui-monospace,Menlo,Consolas,monospace;
-            overflow-x:auto}
-  .algo-f{border-top:1px solid var(--line);padding:7px 12px;font-size:13px;color:var(--mut)}
-  h5{font-size:15px;margin:22px 0 6px;color:var(--mut);font-weight:600;
-     letter-spacing:.2px}
-  .flow{margin:26px 0} .flow svg{width:100%;height:auto;display:block}
-  nav.toc{display:flex;flex-wrap:wrap;gap:0 18px;justify-content:center;padding:14px 0 2px;
-          border-bottom:1px solid var(--line);font-size:14.5px}
-  nav.toc a{color:var(--mut);text-decoration:none}
-  nav.toc a:hover{color:var(--acc)}
-  p{margin:0 0 16px;text-align:left}
-  .lead{font-size:17.5px}
-  figure{margin:26px 0}
-  figure video{width:100%;display:block;border-radius:3px;background:#fff}
-  figure img{width:100%;display:block;border-radius:3px;background:#fff}
-  figcaption{color:var(--mut);font-size:14.5px;margin-top:10px;line-height:1.6;text-align:left}
-  .tnum,.fnum{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin:0 0 6px}
-  .tw{overflow-x:auto;margin:20px 0}
-  td.mut{color:var(--mut)}
-  table{border-collapse:collapse;width:100%;font-size:15px;min-width:520px;
-        font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
-  th,td{padding:7px 10px;border-bottom:1px solid var(--line);text-align:right}
-  th:first-child,td:first-child{text-align:left}
-  thead th{font-weight:600;border-bottom:1.5px solid var(--ink);white-space:nowrap}
-  .win{font-weight:700}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 22px 80px}
+  h1{font-size:32px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+  .sub{color:var(--mut);font-size:17px;margin:0 0 32px}
+  h2{font-size:23px;margin:56px 0 12px;font-weight:600;letter-spacing:-.005em}
+  h3{font-size:18px;margin:32px 0 8px;font-weight:600}
+  p{margin:0 0 14px}
+  ul{margin:0 0 14px;padding-left:24px} li{margin-bottom:6px}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;
+       background:var(--panel);padding:1px 5px;border-radius:3px}
+  em{color:#333}
   .note{background:var(--panel);border-left:3px solid var(--acc);padding:14px 18px;
         border-radius:0 3px 3px 0;font-size:16px;margin:22px 0;color:#3c3c3c}
   .note strong{color:var(--ink)}
-  pre{background:var(--panel);border:1px solid var(--line);border-radius:3px;padding:14px;
-      overflow-x:auto;font-size:13.5px;line-height:1.5;
-      font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
-  footer{margin:60px 0 48px;padding-top:22px;border-top:1px solid var(--line);
+  figure{margin:22px 0}
+  figure img{width:100%;display:block;border-radius:3px;background:#fff}
+  figcaption{color:var(--mut);font-size:14.5px;margin-top:10px;line-height:1.6}
+  .flow{margin:22px 0} .flow svg{width:100%;height:auto;display:block}
+  footer{margin:60px 0 0;padding-top:22px;border-top:1px solid var(--line);
          color:var(--mut);font-size:14.5px}
-  ul{margin:0 0 16px;padding-left:24px} li{margin-bottom:7px}
-  ol.refs{padding-left:30px;font-size:14.5px;line-height:1.55;color:#333}
-  ol.refs li{margin-bottom:9px}
-  ol.refs a{color:var(--acc);text-decoration:none;border-bottom:1px solid rgba(168,65,42,.3)}
-  @media (max-width:640px){ body{font-size:16px} }
+  footer a{color:var(--acc)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<header>
-  <h1>ReRoom: Reference-Guided Retargeting of Interior Design into New Floor Geometry</h1>
-  <p class="sub">The identity of a room is a hierarchy of relations with different physical rigidity, not a set of coordinates &mdash; so a design is transferred by deciding what to preserve, what to stretch, and what to give up</p>
-  <p class="authors">Anonymous</p>
-  <p class="venue">Preprint</p>
-  <div class="links">
-    <a href="experiments.html">Every experiment</a>
-    <a href="#limits">What is not claimed</a>
-    <a href="https://github.com/gino6178/project4">Code</a>
-  </div>
-</header>
+<h1>ReRoom · 目前的做法</h1>
+<p class="sub">參考導向的 3D 室內設計 retargeting &mdash; 現行 shipped pipeline(中文說明)</p>
 
-<nav class="toc">
-  <a href="#abstract">Abstract</a><a href="#intro">1 Introduction</a><a href="#related">2 Related work</a><a href="#method">3 Method</a><a href="#results">4 Experiments</a><a href="#compare">5 Comparison</a><a href="#limits">6 Limitations</a><a href="#plan">7 Shipped pipeline</a><a href="#cn-latest">8 最新進展(中文)</a><a href="#refs">References</a>
-</nav>
+<p><strong>問題</strong>:給一張使用者喜歡的房間設計、跟一個形狀 / 大小可能完全不同的目標房間,自動把設計「搬」過去 &mdash; 保留原本的關係與 motif,但佈局要符合新房間的幾何。</p>
 
-<h2 id="abstract">Abstract</h2>
-<p class="lead">Given photographs of a room somebody likes and a target floor plan of a different
-size, aspect ratio or shape, we produce an editable 3D furniture arrangement that is physically
-placeable in the target and preserves the reference's furniture composition, spatial relations,
-design motifs and visual style. The working hypothesis is that a room's identity does not live in
-absolute coordinates but in a hierarchy of relations with different physical rigidity: a nightstand
-beside a bed is fixed by the human body, a sofa facing a television may stretch with the room. The
-system therefore treats retargeting as joint <em>placement, selection and substitution</em> under
-hard geometric constraints, rather than as an affine map of the source layout.</p>
+<p><strong>核心設計</strong>:設計不是「座標」,而是「關係 + 彈性」。α<sub>ij</sub>(關係彈性)決定每對物件之間哪些距離該保留、哪些可以隨房間變。搬房間時,不動的東西照搬,彈性大的自動放鬆。</p>
 
-<p>Across 1&nbsp;000 held-out retargetings, normalised-coordinate scaling leaves 8.8&nbsp;% of
-furniture area outside the target room and 5.8&nbsp;% in collision; ReRoom leaves 0.38&nbsp;% and
-0.57&nbsp;%. Combined physical legality rises from 0.636 to 0.880. When the target is
-<em>smaller</em> than the reference &mdash; the case the method exists for &mdash; the coordinate
-map collapses to 0.472 legality while ReRoom holds 0.858. Running a released floor-plan-conditioned
-generator (PhyScene, CVPR&nbsp;2024) on the same rooms and scoring both with one evaluator, ReRoom
-has 3.5&times; fewer colliding objects and 5&times; fewer objects outside the floor plan at the same
-object count &mdash; and loses on free-space connectivity, which we diagnose rather than tune away.</p>
-
-<figure>
-  <img src="assets/hero.png" alt="A reference room and the same design retargeted into three differently shaped floor plans">
-  <figcaption>One reference living room (top left) carried into three target floor plans &mdash;
-  narrower, a corner removed, a slanted wall. Every object lands inside the room and the motifs
-  survive: the dining table keeps its chairs, the sofa keeps its coffee table and television.
-  Overhead objects such as the pendant lamp are drawn as dashed outlines because they overlap
-  furniture in plan while sitting metres above it. Numbers are measured on each panel.</figcaption>
-</figure>
-
-<h2 id="intro">1 Introduction</h2>
-
-<p>Somebody sees a room they like in a photograph and wants it in their own apartment. Their
-apartment is not that room: it is narrower, or L-shaped, or has a wall at an angle. What should
-happen to the design?</p>
-
-<p>The naive answer &mdash; normalise the source coordinates by the source bounding box and paste
-them into the target &mdash; is what a coordinate map does, and it fails in a specific, measurable
-way. It preserves every relation perfectly, including the relation between a wardrobe and a wall
-that is no longer there. Measured over 1&nbsp;000 retargetings it puts 8.8&nbsp;% of the furniture
-area outside the room. It is not a weak baseline for lack of effort; it is the strongest possible
-method on relation preservation, and that is exactly why it is unusable.</p>
-
-<p>The opposite answer &mdash; ignore the reference and synthesise a layout for the floor plan
-&mdash; is physically excellent and semantically empty. In our experiments it reaches the best
-legality of any method (0.919) and the worst motif preservation of any method that looks at the
-reference at all (0.859 against 0.942).</p>
-
-<div class="note"><strong>The task is a trade, not an optimisation with a single answer.</strong>
-Every method sits on a Pareto frontier between physical feasibility and design preservation, and
-across eight core metrics no method in our study dominates another. What can be claimed is a
-position on that frontier: ReRoom is the only method that stays within 6&nbsp;% of the best achieved
-value on <em>both</em> axes at once. The next best compromise gives up 10&nbsp;%; the extremes give
-up 14&nbsp;% and 31&nbsp;%.</div>
-
-<h3>Contributions</h3>
-<ul>
-  <li><b>A formulation.</b> Reference-guided scene retargeting as joint placement, selection and
-  substitution under hard geometry, with the reference entering as soft relational targets rather
-  than as coordinates.</li>
-  <li><b>A design-intent representation.</b> Hierarchical motifs plus a fitted <em>relation
-  elasticity</em> that separates relations held by the human body from relations that may stretch
-  with the room.</li>
-  <li><b>An evaluation that reports its own trade.</b> Feasibility, functionality, motif
-  preservation and appearance are measured separately, with the reference in its own room as the
-  preservation ceiling and the real dataset's own violation rate as the feasibility floor.</li>
-</ul>
-
-<h2 id="related">2 Related work</h2>
-
-<p>Four groups of work sit near this problem, and each is missing one of its pieces.
-<em>Scene retargeting</em> moves a complete 3D exemplar into a differently sized room, but takes the
-source as given 3D geometry and does not read design intent from photographs. <em>Image-to-3D scene
-reconstruction</em> (MIDI&nbsp;[5], GenRecon&nbsp;[4]) recovers compositional 3D instances from
-images, but reconstructs the room it was shown rather than adapting it to new floor geometry.
-<em>Floor-plan-conditioned generation</em> (PhyScene&nbsp;[11], CHOrD&nbsp;[7]) produces plausible
-layouts for a given outline, but from a learned prior rather than from a particular reference room.
-<em>Reference- or instruction-conditioned generation</em> (SAGE&nbsp;[3], InstructScene&nbsp;[9],
-Holodeck&nbsp;[10]) conditions on a reference or a description, but targets semantic coherence
-rather than preservation of a specific spatial design.</p>
-
-<div class="eq"><div class="body">
-$$\text{Reference image(s)} \;+\; \text{new floor geometry} \;\longrightarrow\;
-\text{retargeted editable 3D scene}$$
-</div><div class="num">(1)</div></div>
-
-<p>The gap is the composition: no prior system takes photographs of a room and a differently shaped
-floor plan and returns an editable arrangement that preserves the first inside the second.</p>
-
-<h2 id="method">3 Method</h2>
+<h2>現在的做法(流程圖)</h2>
 
 <figure class="flow">
-<svg viewBox="0 0 780 1140" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,'PingFang TC','Noto Sans TC',Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+<svg viewBox="0 0 720 900" xmlns="http://www.w3.org/2000/svg"
+     font-family="-apple-system,'PingFang TC','Noto Sans TC',BlinkMacSystemFont,'Segoe UI',sans-serif">
   <defs>
-    <marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 Z" fill="#7a7a7a"/>
-    </marker>
-    <marker id="ahc" markerWidth="9" markerHeight="9" refX="7" refY="4" orient="auto">
-      <path d="M0,0 L8,4 L0,8 Z" fill="#a8412a"/>
+    <marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+      <path d="M0,0 L7,4 L0,8 Z" fill="#7a7a7a"/>
     </marker>
   </defs>
-
   <style>
-    .pf-box{fill:#f7f7f7;stroke:#d8d8d8;stroke-width:1.2;rx:8;}
-    .pf-new{fill:#fff9ec;stroke:#c98b2c;stroke-width:1.6;rx:8;}
-    .pf-core{fill:#f9ece8;stroke:#a8412a;stroke-width:1.6;rx:10;}
-    .pf-out{fill:#efe2dd;stroke:#a8412a;stroke-width:1.6;rx:10;}
-    .pf-t{fill:#1a1a1a;font-size:15px;font-weight:600;}
-    .pf-s{fill:#5c5c5c;font-size:12px;}
-    .pf-tag{fill:#a8412a;font-size:10.5px;font-weight:700;letter-spacing:.04em;}
-    .pf-newtag{fill:#c98b2c;font-size:10.5px;font-weight:700;letter-spacing:.04em;}
-    .pf-lbl{fill:#8a8a8a;font-size:11px;font-style:italic;}
-    .pf-edge{stroke:#7a7a7a;stroke-width:1.4;fill:none;}
-    .pf-edgec{stroke:#a8412a;stroke-width:1.6;fill:none;}
-    .pf-en{fill:#a8412a;font-size:12px;font-weight:600;}
-    .pf-sec{fill:#7a7a7a;font-size:10.5px;letter-spacing:.02em;}
+    .b{fill:#f7f7f7;stroke:#d8d8d8;stroke-width:1.2}
+    .core{fill:#f9ece8;stroke:#a8412a;stroke-width:1.6}
+    .amber{fill:#fff9ec;stroke:#c98b2c;stroke-width:1.6}
+    .out{fill:#efe2dd;stroke:#a8412a;stroke-width:1.6}
+    .t{fill:#1a1a1a;font-size:15px;font-weight:600}
+    .s{fill:#5c5c5c;font-size:12.5px}
+    .sec{fill:#8a8a8a;font-size:10.5px}
+    .tag{fill:#a8412a;font-size:10.5px;font-weight:700;letter-spacing:.04em}
+    .amtag{fill:#c98b2c;font-size:10.5px;font-weight:700;letter-spacing:.04em}
+    .e{stroke:#7a7a7a;stroke-width:1.4;fill:none}
   </style>
 
-  <!-- 輸入 -->
-  <rect class="pf-box" x="40" y="22" width="310" height="50" rx="8"/>
-  <text class="pf-t" x="195" y="44" text-anchor="middle">參考房間影像</text>
-  <text class="pf-s" x="195" y="62" text-anchor="middle">使用者喜歡的設計</text>
+  <!-- 1. 輸入 -->
+  <rect class="b" x="60" y="20" width="280" height="52" rx="8"/>
+  <text class="t" x="200" y="42" text-anchor="middle">參考房間影像</text>
+  <text class="s" x="200" y="60" text-anchor="middle">使用者喜歡的設計</text>
+  <rect class="b" x="380" y="20" width="280" height="52" rx="8"/>
+  <text class="t" x="520" y="42" text-anchor="middle">目標地面多邊形 P_t</text>
+  <text class="s" x="520" y="60" text-anchor="middle">任意形狀:L 形、斜牆、凹角</text>
 
-  <rect class="pf-box" x="412" y="22" width="308" height="50" rx="8"/>
-  <text class="pf-t" x="566" y="44" text-anchor="middle">目標地面多邊形 P_t</text>
-  <text class="pf-s" x="566" y="62" text-anchor="middle">任意形狀 &mdash; L 形、斜牆、凹角</text>
+  <!-- 2. 感知 -->
+  <path class="e" d="M200,72 L200,100" marker-end="url(#ah)"/>
+  <rect class="b" x="60" y="102" width="280" height="52" rx="8"/>
+  <text class="t" x="200" y="124" text-anchor="middle">感知(MIDI-3D)</text>
+  <text class="s" x="200" y="142" text-anchor="middle">從影像抽物件 + 房間;或直接吃 3D-FRONT graph</text>
 
-  <!-- 感知 -->
-  <path class="pf-edge" d="M195,72 L195,104" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="40" y="106" width="310" height="52" rx="8"/>
-  <text class="pf-t" x="195" y="128" text-anchor="middle">感知(Perception)</text>
-  <text class="pf-s" x="195" y="146" text-anchor="middle">MIDI-3D 影像解析 · 或 3D-FRONT graph(oracle)</text>
+  <!-- 3. 意圖圖 + α -->
+  <path class="e" d="M200,154 L200,182" marker-end="url(#ah)"/>
+  <rect class="b" x="60" y="184" width="600" height="68" rx="8"/>
+  <text class="tag" x="76" y="204">LEARNED</text>
+  <text class="sec" x="644" y="204" text-anchor="end">§19</text>
+  <text class="t" x="360" y="216" text-anchor="middle">設計意圖圖 + 關係彈性 α<tspan font-size="11" dy="-2">ij</tspan></text>
+  <text class="s" x="360" y="238" text-anchor="middle">物件 · 關係 · 階層 motifs · α:剛性關係保留,彈性關係隨房間變</text>
 
-  <!-- 設計意圖圖 + α -->
-  <path class="pf-edge" d="M195,158 L195,196" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="40" y="198" width="680" height="72" rx="8"/>
-  <text class="pf-tag" x="60" y="220">學到的(LEARNED)</text>
-  <text class="pf-sec" x="700" y="220" text-anchor="end">§19</text>
-  <text class="pf-t" x="380" y="230" text-anchor="middle">設計意圖圖(Design-Intent Graph)+ 關係彈性 &#945;<sub>ij</sub></text>
-  <text class="pf-s" x="380" y="252" text-anchor="middle">物件關係 · 階層 motifs · &#945; <tspan font-style="italic">= 剛性的保留、彈性的隨房間調整</tspan></text>
+  <!-- 目標邊界虛線通到 flow -->
+  <path class="e" d="M520,72 L520,90 L680,90 L680,455" stroke-dasharray="4 3" fill="none"/>
+  <text class="s" x="684" y="280" transform="rotate(90 684 280)" fill="#8a8a8a" font-style="italic">目標邊界作為 flow 的條件輸入</text>
 
-  <!-- 目標邊界虛線一路往下 -->
-  <path class="pf-edge" d="M566,72 L566,120 L740,120 L740,590" fill="none" stroke-dasharray="4 3"/>
-  <text class="pf-lbl" x="744" y="360" transform="rotate(90 744 360)">目標邊界作為 flow 的條件</text>
+  <!-- 4. 精簡 -->
+  <path class="e" d="M360,252 L360,282" marker-end="url(#ah)"/>
+  <rect class="b" x="120" y="284" width="480" height="52" rx="8"/>
+  <text class="sec" x="584" y="302" text-anchor="end">§9</text>
+  <text class="t" x="360" y="306" text-anchor="middle">Summarise:房間變小就刪 motif</text>
+  <text class="s" x="360" y="324" text-anchor="middle">按面積比 &amp; 密度預算,決定丟哪些整組 motif 或裁掉 motif 內部</text>
 
-  <!-- Summarise -->
-  <path class="pf-edge" d="M380,270 L380,306" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="150" y="308" width="460" height="52" rx="8"/>
-  <text class="pf-sec" x="600" y="326" text-anchor="end">§9</text>
-  <text class="pf-t" x="380" y="330" text-anchor="middle">挑選 · 精簡(Summarise)</text>
-  <text class="pf-s" x="380" y="350" text-anchor="middle">房間變小 &rarr; 刪掉整組 motif 或裁減 motif 內部</text>
+  <!-- 5. 資產替換(前置,橘色) -->
+  <path class="e" d="M360,336 L360,366" marker-end="url(#ah)"/>
+  <rect class="amber" x="120" y="368" width="480" height="60" rx="8"/>
+  <text class="amtag" x="140" y="388">flow 之前</text>
+  <text class="sec" x="584" y="388" text-anchor="end">§11</text>
+  <text class="t" x="360" y="402" text-anchor="middle">Substitution:換成更小的真實資產(縮小房)</text>
+  <text class="s" x="360" y="420" text-anchor="middle">shrink-only + 尺寸下限;先換再 flow,避免硬塞被 collision 推散</text>
 
-  <!-- Substitution (新順序:flow 前置) -->
-  <path class="pf-edge" d="M380,360 L380,394" marker-end="url(#ah)"/>
-  <rect class="pf-new" x="150" y="396" width="460" height="60" rx="8"/>
-  <text class="pf-newtag" x="170" y="418">新順序 · 前置</text>
-  <text class="pf-sec" x="600" y="418" text-anchor="end">§11 &middot; §8.2</text>
-  <text class="pf-t" x="380" y="431" text-anchor="middle">資產替換 Substitution(縮小到能放進去的真實資產)</text>
-  <text class="pf-s" x="380" y="449" text-anchor="middle">shrink-only + min_size 硬性下限;<em>先</em>換再 flow,避免硬塞被 collision 推散</text>
+  <!-- 6. Flow + guidance (生成核心) -->
+  <path class="e" d="M360,428 L360,458" marker-end="url(#ah)"/>
+  <rect class="core" x="60" y="460" width="600" height="150" rx="10"/>
+  <text class="tag" x="76" y="482">生成核心 · LEARNED</text>
+  <text class="sec" x="644" y="482" text-anchor="end">§13 eq (37) 前半</text>
+  <text class="t" x="360" y="502" text-anchor="middle">Flow Transformer(DiT,33 M 參數)</text>
+  <text class="s" x="360" y="522" text-anchor="middle">意圖圖 &amp; α 進入每條 edge 的 attention bias &rarr; 生成 k 個候選佈局</text>
+  <rect x="88" y="538" width="544" height="60" rx="6" fill="#fff" stroke="#e3c9c0"/>
+  <text class="t" x="360" y="558" text-anchor="middle" fill="#a8412a">ODE 每步:in-sampling 物理 guidance</text>
+  <text class="s" x="360" y="578" text-anchor="middle">E<tspan font-style="italic">bound</tspan> + E<tspan font-style="italic">col</tspan>(nestable pairs 豁免) + E<tspan font-style="italic">clear</tspan></text>
+  <text class="s" x="360" y="594" text-anchor="middle">+ wall_pull(靠牆物件依 area_ratio 自適應)</text>
 
-  <!-- GENERATIVE CORE -->
-  <path class="pf-edge" d="M380,456 L380,486" marker-end="url(#ahc)"/>
-  <rect class="pf-core" x="70" y="488" width="620" height="168" rx="10"/>
-  <text class="pf-tag" x="92" y="512">生成核心 · LEARNED</text>
-  <text class="pf-sec" x="670" y="512" text-anchor="end">§13 eq (37) 前半</text>
-  <text class="pf-t" x="380" y="536" text-anchor="middle">Flow Transformer(DiT,33 M 參數)</text>
-  <text class="pf-s" x="380" y="556" text-anchor="middle">意圖圖 &amp; &#945; 進入每條 edge 的 attention bias &rarr; 產生 k 個候選佈局</text>
-  <rect x="108" y="580" width="544" height="64" rx="7" fill="#fff" stroke="#e3c9c0" stroke-width="1.1"/>
-  <text class="pf-en" x="380" y="600" text-anchor="middle">&#8635; ODE 每步:in-sampling 物理 guidance</text>
-  <text class="pf-s" x="380" y="618" text-anchor="middle">E<tspan font-style="italic">bound</tspan> + E<tspan font-style="italic">col</tspan>(nestable pairs 豁免) + E<tspan font-style="italic">clear</tspan> + wall_pull(依 area_ratio 自適應)</text>
-  <text class="pf-s" x="380" y="635" text-anchor="middle" fill="#a8412a">不做後處理硬修 &middot; feasibility 塞進生成迴圈</text>
+  <!-- 7. Polish (橘色) -->
+  <path class="e" d="M360,610 L360,638" marker-end="url(#ah)"/>
+  <rect class="amber" x="60" y="640" width="600" height="82" rx="8"/>
+  <text class="amtag" x="76" y="660">恢復 PDF eq (37) projection</text>
+  <text class="sec" x="644" y="660" text-anchor="end">§13 eq (37) 後半 &middot; §8</text>
+  <text class="t" x="360" y="678" text-anchor="middle">Polish:輕量投影(freeze_yaw + anchor L2)</text>
+  <text class="s" x="360" y="696" text-anchor="middle">Adam 25 步,對 § 8 六個能量做梯度下降:</text>
+  <text class="s" x="360" y="713" text-anchor="middle">E<tspan font-style="italic">rel</tspan>+E<tspan font-style="italic">bound</tspan>+E<tspan font-style="italic">col</tspan>+E<tspan font-style="italic">clear</tspan>+E<tspan font-style="italic">func</tspan>+E<tspan font-style="italic">style</tspan>;anchor 保住 motif 不被打散</text>
 
-  <!-- Polish (新步驟) -->
-  <path class="pf-edge" d="M380,656 L380,690" marker-end="url(#ah)"/>
-  <rect class="pf-new" x="70" y="692" width="620" height="86" rx="8"/>
-  <text class="pf-newtag" x="92" y="714">新步驟 · 恢復 eq (37) projection</text>
-  <text class="pf-sec" x="670" y="714" text-anchor="end">§13 eq (37) 後半 &middot; §8.5</text>
-  <text class="pf-t" x="380" y="732" text-anchor="middle">Polish(輕量 constraint projection,freeze_yaw,anchor L2)</text>
-  <text class="pf-s" x="380" y="750" text-anchor="middle">Adam 25 步,對 TorchProblem 全能量做梯度下降:</text>
-  <text class="pf-s" x="380" y="768" text-anchor="middle">E<tspan font-style="italic">rel</tspan> + E<tspan font-style="italic">bound</tspan> + E<tspan font-style="italic">col</tspan> + E<tspan font-style="italic">clear</tspan> + E<tspan font-style="italic">func</tspan> + E<tspan font-style="italic">style</tspan>;anchor 保住 motif 不被打散</text>
+  <!-- 8. Population -->
+  <path class="e" d="M360,722 L360,750" marker-end="url(#ah)"/>
+  <rect class="b" x="120" y="752" width="480" height="52" rx="8"/>
+  <text class="sec" x="584" y="770" text-anchor="end">§10</text>
+  <text class="t" x="360" y="774" text-anchor="middle">Population:房間變大時新增家具</text>
+  <text class="s" x="360" y="792" text-anchor="middle">依 co-occurrence 提議;_vet_additions 守門(加入後成本不能變)</text>
 
-  <!-- Population (放大房才觸發) -->
-  <path class="pf-edge" d="M380,778 L380,812" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="150" y="814" width="460" height="52" rx="8"/>
-  <text class="pf-sec" x="600" y="832" text-anchor="end">§10</text>
-  <text class="pf-t" x="380" y="836" text-anchor="middle">Population 生長(房間變大 &rarr; 依 co-occurrence 新增家具)</text>
-  <text class="pf-s" x="380" y="856" text-anchor="middle">_vet_additions 守門:新增家具必須「加入後 layout 成本不變」才收下</text>
-
-  <!-- Ranking (七能量排名) -->
-  <path class="pf-edge" d="M380,866 L380,900" marker-end="url(#ah)"/>
-  <rect class="pf-box" x="150" y="902" width="460" height="52" rx="8"/>
-  <text class="pf-sec" x="600" y="920" text-anchor="end">§8 全 7 能量</text>
-  <text class="pf-t" x="380" y="924" text-anchor="middle">Selection · Exact-energy ranking(選 best 候選)</text>
-  <text class="pf-s" x="380" y="944" text-anchor="middle">全 7 個 § 8 能量算 E(Y),k 個候選挑最低;E<tspan font-style="italic">edit</tspan> slot 保留待接使用者輸入</text>
-
-  <!-- 最終場景 -->
-  <path class="pf-edgec" d="M380,954 L380,988" marker-end="url(#ahc)"/>
-  <rect class="pf-out" x="196" y="990" width="368" height="60" rx="10"/>
-  <text class="pf-t" x="380" y="1016" text-anchor="middle">可編輯 3D 場景 S_t</text>
-  <text class="pf-s" x="380" y="1034" text-anchor="middle">可置入目標房間、保留 reference 意圖(S<tspan font-style="italic">rel</tspan> 0.985 on 30-scene bench)</text>
-
-  <!-- 左邊分段標籤 -->
-  <text class="pf-lbl" x="28" y="230" transform="rotate(90 28 230)" text-anchor="middle" font-size="11.5">&larr; 意圖抽取</text>
-  <text class="pf-lbl" x="28" y="580" transform="rotate(90 28 580)" text-anchor="middle" font-size="11.5">&larr; 生成 (eq 37 前)</text>
-  <text class="pf-lbl" x="28" y="870" transform="rotate(90 28 870)" text-anchor="middle" font-size="11.5">&larr; 投影 + 生長 + 排名 (eq 37 後)</text>
+  <!-- 9. 排名 + 輸出 -->
+  <path class="e" d="M360,804 L360,830" marker-end="url(#ah)"/>
+  <rect class="out" x="120" y="832" width="480" height="52" rx="8"/>
+  <text class="sec" x="584" y="850" text-anchor="end">§8 全 7 能量</text>
+  <text class="t" x="360" y="854" text-anchor="middle">Ranking + 輸出:可編輯 3D 場景 S_t</text>
+  <text class="s" x="360" y="872" text-anchor="middle">全 7 個能量 E(Y) 挑最佳候選;E<tspan font-style="italic">edit</tspan> slot 保留待接使用者輸入</text>
 </svg>
-<figcaption><strong>目前實際 shipped pipeline(依 <code>generative_retarget</code> 執行順序,中文)</strong>。橘色框 = 相對 PDF 或最初實作有調整的關鍵步驟:<em>資產替換前置</em>(§8.2 修正 A,避免 flow 硬塞放不下的家具)、以及 <em>Polish 輕量投影</em>(§8.5 恢復 PDF eq (37) 的 constraint projection,anchor L2 保住 motif)。生成核心用 in-sampling guidance 覆蓋 E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub>/E<sub>func</sub>-wall_pull;polish 補上 E<sub>rel</sub>/E<sub>style</sub>;排名用全 7 能量。</figcaption>
+<figcaption>橘色框 = 相對原本(PDF / 早期實作)有調整的關鍵步驟:資產替換<em>前置</em>、Polish 步驟<em>恢復 eq (37)</em> 但用 anchor L2 版本以免打散 coherence。</figcaption>
 </figure>
 
+<h2>每一步在做什麼</h2>
 
-<h3>3.1 Design intent, not coordinates</h3>
-
-<p>The reference room is parsed into a graph whose nodes are object instances and whose edges are
-spatial and functional relations &mdash; <em>near</em>, <em>facing</em>, <em>aligned</em>,
-<em>support</em>, <em>against-wall</em>, <em>symmetric</em>, <em>grouped-with</em>. Objects are then
-clustered into <b>motifs</b>: a bed with its two nightstands, a dining table with its chairs, a sofa
-with a coffee table and a television. The motif layer exists because deleting a dining table and
-leaving six chairs is geometrically legal and semantically absurd; selection has to happen at the
-level of the functional group.</p>
-
-<p>Each relation carries an <b>elasticity</b> \(\alpha_r \in [0,1]\) governing how its target
-distance responds when the room rescales by \(\gamma\):</p>
-
-<div class="eq"><div class="body">
-$$\tilde d_{ij} \;=\; (1-\alpha_{ij})\, d_{ij} \;+\; \alpha_{ij}\, \gamma\, d_{ij},
-\qquad
-\alpha_{ij} = f_\psi\bigl(c_i, c_j, \rho_{ij}, m(i), m(j), g(P_r), g(P_t)\bigr)$$
-</div><div class="num">(2)</div></div>
-
-<p>with \(c\) the categories, \(\rho\) the relation type, \(m(\cdot)\) the motif membership and
-\(g(P)\) a floor-geometry descriptor. Fitted on 524&nbsp;000 relations harvested from the corpus,
-\(f_\psi\) recovers the expected ordering without being told it: chair&ndash;table 0.05
-(pinned by the human body), bed&ndash;wardrobe 0.63&ndash;0.87 (free to move apart).</p>
-
-<h3>3.2 Retargeting as a constrained decision</h3>
-
-<p>Every object gets a decision variable \(y_i = (k_i, a_i, x_i, y_i, \theta_i, s_i)\): whether it
-is kept, which asset realises it, where it sits, how it is turned, and a bounded footprint trim.
-Retargeting therefore contains <em>placement + selection + substitution</em> at once. The quality
-of a candidate layout is scored by an energy</p>
-
-<div class="eq"><div class="body">
-$$E(Y) = \lambda_{\text{rel}} E_{\text{rel}} + \lambda_{\text{bound}} E_{\text{bound}}
-+ \lambda_{\text{col}} E_{\text{col}} + \lambda_{\text{clear}} E_{\text{clear}}
-+ \lambda_{\text{func}} E_{\text{func}} + \lambda_{\text{style}} E_{\text{style}}
-+ \lambda_{\text{edit}} E_{\text{edit}}$$
-</div><div class="num">(3)</div></div>
-
-<p>but the layout is not found by descending (3) from scratch &mdash; doing so lands in local minima
-a person reads as wrong (a sofa a few degrees off square) and, worse, drives the collision term to
-zero by scattering a dining set whose chairs are <em>supposed</em> to tuck under the table. The
-shipped method instead follows the plan's two-stage design (&sect;7): a generative model proposes
-the layout and the energy is spent on conditioning, guidance and selection, not on a from-scratch
-search.</p>
-
-<h4>3.2.1 The generative proposal</h4>
-
-<p>Placement is produced by a graph-conditioned, permutation-equivariant transformer over object
-tokens (DiT-style, 33&nbsp;M parameters) that predicts the pose of every kept object at once. The
-design intent enters as <em>conditioning, never as order</em>: each relation of the intent graph
-becomes an additive per-head attention bias carrying its type, its weight, the fitted elasticity
-\(\alpha\), the room-scale ratio \(\gamma\) and the elasticity-adjusted target relation
-\(\tilde d\); the target floor polygon enters as sampled boundary points with inward normals, so
-concave and slanted outlines are representable rather than flattened to width&times;depth. The model
-is trained by flow matching on <em>manufactured</em> pairs &mdash; a real 3D-FRONT layout, and the
-same design warped into a curriculum-deformed room as a pseudo-reference &mdash; so it learns to
-carry a design across a change of room shape, with free supervision and no need for paired data.</p>
-
-<h4>3.2.2 Feasibility as in-sampling guidance</h4>
-
-<p>The energy's physical terms do not disappear; they change role. \(E_{\text{bound}}\),
-\(E_{\text{col}}\) and \(E_{\text{clear}}\) become a differentiable <b>guidance gradient applied
-inside the sampler</b>: at each step of the probability-flow ODE the predicted clean layout is
-scored and nudged toward feasibility &mdash; PhyScene's classifier-guidance idea, ported to flow
-matching. Out-of-plan overhang is measured on the footprint corners against the boundary samples;
-collision is charged only between pairs that should <em>not</em> overlap, with a nestable exemption
-(a chair and its table, a nightstand and its bed) so a functional group stays intact; clearance
-opens a walkable corridor between different motifs without spreading a single group apart. Because
-the correction is a gradient inside the generative loop, there is no post-hoc snapping and the
-legitimate overlaps of a real room are kept &mdash; the same reason PhyScene tolerates them.</p>
-
-<h4>3.2.3 The energy's remaining roles, and selection</h4>
-
-<p>The rest of (3) is distributed across the learned system rather than optimised directly.
-\(E_{\text{rel}}\) lives in the attention bias (the elasticity-conditioned relations the transformer
-is trained to reproduce); \(E_{\text{style}}\) is handled by asset substitution; \(E_{\text{edit}}\)
-by summarisation. Finally the <b>full exact energy ranks the \(k\) sampled candidates</b> and picks
-the winner &mdash; the section-8 energy acting as a selection prior over the generative proposal,
-which is the eq.-(37) division of labour: the model supplies diversity and a global layout prior,
-the energy supplies feasibility and choice.</p>
-
-<h3>3.3 Selection, growth, and substitution</h3>
-
-<p>The other two thirds of the decision variable are handled around the generative core. When the
-target is <b>smaller</b>, capacity planning drops whole motifs or prunes structurally within them
-(six dining chairs become four) rather than deleting objects by score. When the target is
-<b>larger</b>, a bigger room is filled by <em>adding</em> furniture, not by stretching what is
-there: a population planner places new pieces relative to the surviving motifs, and a feasibility
-gate then admits each addition only while it costs the layout nothing. <b>Substitution</b> swaps
-each asset for the closest-fitting real one in the bank when the room shrank &mdash; a reference
-sofa too large becomes a smaller sofa of similar style, not a non-physically rescaled one. So
-placement (the flow), selection (summarise / grow) and substitution (retrieval) together realise
-the whole of \(y_i\).</p>
-
-<p>User constraints \(C_t\) are hard: an object the user pins keeps its pose exactly and can never
-be dropped, and floor the user marks as no-go is punched out of the boundary the guidance reads, so
-a no-go zone has a wall's gradient.</p>
-
-<figure>
-  <img src="assets/levels.png" alt="One design retargeted across the deformation curriculum">
-  <figcaption>The geometry curriculum. Targets are produced by five levels of deformation of a real
-  floor plan &mdash; uniform scale, aspect change, a slanted wall, a corner cut, a concave
-  perturbation &mdash; because irregular rooms are rare in the corpus and we did not want the method
-  tuned on the few that exist. The same reference is shown retargeted into the first four.</figcaption>
-</figure>
-
-<h2 id="results">4 Experiments</h2>
-
-<p>All numbers are measured on held-out 3D-FRONT rooms under one protocol on one machine. Two rows
-are anchors rather than methods: <em>source reference</em> is the design scored in its own room, the
-ceiling for preservation; it is also the floor for feasibility, because professionally designed
-rooms are not collision-free either.</p>
-
-<p class="mut" style="font-size:.92em"><b>What this section isolates.</b> The ablations below hold
-the design-intent representation of &sect;3.1 fixed and turn its parts on and off, using the energy
-of &sect;3.2 as the retargeting engine &mdash; the cleanest way to attribute an effect to a
-component, and the setting under which the elasticity and motif machinery were validated. The
-shipped generative pipeline of &sect;3.2.1&ndash;3.2.3 is the system evaluated head-to-head against a
-released method in &sect;5; because both condition on the same intent graph, what these ablations
-establish about the representation carries over.</p>
-
-<div class="tw"><p class="tnum">Table 1 &mdash; Oracle retargeting, 200 held-out rooms &times; 5 deformation levels (n = 1000)</p>
-<table>
-<thead><tr><th>method</th><th>R<sub>OOB</sub> &darr;</th><th>R<sub>col</sub> &darr;</th>
-<th>clearance &darr;</th><th>S<sub>rel</sub> &uarr;</th><th>S<sub>motif</sub> &uarr;</th>
-<th>legality &uarr;</th><th>score &uarr;</th></tr></thead>
-<tbody>
-<tr><td>source reference <span class="mut">(anchor)</span></td><td class="mut">0.0222</td><td class="mut">0.0597</td><td class="mut">0.2690</td><td class="mut">1.0000</td><td class="mut">1.0000</td><td class="mut">0.6888</td><td class="mut">0.8135</td></tr>
-<tr><td>reference, copied rigidly</td><td>0.1193</td><td>0.0597</td><td>0.2984</td><td class="win">1.0000</td><td class="win">1.0000</td><td>0.6048</td><td>0.7544</td></tr>
-<tr><td>normalised-coordinate scaling</td><td>0.0877</td><td>0.0578</td><td>0.2865</td><td>0.9637</td><td class="win">1.0000</td><td>0.6360</td><td>0.7703</td></tr>
-<tr><td>best-fit affine</td><td>0.1107</td><td>0.0573</td><td>0.2956</td><td>0.9646</td><td class="win">1.0000</td><td>0.6142</td><td>0.7567</td></tr>
-<tr><td>floor plan only, reference ignored</td><td class="win">0.0030</td><td class="win">0.0017</td><td class="win">0.0781</td><td>0.7122</td><td>0.8586</td><td class="win">0.9186</td><td>0.8419</td></tr>
-<tr><td>relation-aware only</td><td>0.0075</td><td>0.0134</td><td>0.1587</td><td>0.8775</td><td>0.9848</td><td>0.8299</td><td>0.8679</td></tr>
-<tr><td>+ motif summarisation and population</td><td>0.0043</td><td>0.0059</td><td>0.1281</td><td>0.8098</td><td>0.9400</td><td>0.8650</td><td>0.8630</td></tr>
-<tr><td><b>ReRoom, full</b></td><td>0.0038</td><td>0.0057</td><td>0.1138</td><td>0.8110</td><td>0.9417</td><td>0.8796</td><td class="win">0.8705</td></tr>
-</tbody></table></div>
-
-<p>Read the two extremes first. The coordinate maps score near-perfectly on relation preservation
-<em>because</em> they preserve every relation, including into walls. The floor-plan-only synthesiser
-is the most physically legal method there is <em>because</em> it owes the reference nothing. Neither
-is a strawman; each is the best possible method on one axis and the worst on the other.</p>
-
-<div class="tw"><p class="tnum">Table 2 &mdash; Where the trade actually bites: by target/source area ratio</p>
-<table>
-<thead><tr><th>method</th><th colspan="3">target smaller (&lt; 0.9&times;)</th><th colspan="3">target larger (&gt; 1.1&times;)</th></tr>
-<tr><th></th><th>legality</th><th>S<sub>rel</sub></th><th>S<sub>motif</sub></th><th>legality</th><th>S<sub>rel</sub></th><th>S<sub>motif</sub></th></tr></thead>
-<tbody>
-<tr><td>normalised-coordinate scaling</td><td class="win">0.472</td><td>0.972</td><td>1.000</td><td>0.760</td><td>0.934</td><td>1.000</td></tr>
-<tr><td><b>ReRoom, full</b></td><td><b>0.858</b></td><td>0.685</td><td>0.865</td><td><b>0.917</b></td><td>0.867</td><td>0.983</td></tr>
-</tbody></table></div>
-
-<div class="note"><strong>Shrinking is the case the method exists for, and it is where the
-coordinate map collapses.</strong> At 0.472 legality more than half of the feasibility budget is
-gone: furniture through walls, furniture through furniture. This single cell is the largest gap in
-the study and it is the comparison the problem formulation names as the central one.</div>
-
-<figure>
-  <img src="assets/compare.png" alt="Direct scaling versus ReRoom on a corner-cut target">
-  <figcaption>The same reference into a corner-cut target. Normalised-coordinate scaling (left)
-  keeps every relation perfectly &mdash; S<sub>rel</sub> 1.00 &mdash; by pushing the dining set and
-  the sofa past the walls and into each other: 6.9&nbsp;% of area out of bounds, 10.5&nbsp;% in
-  collision. ReRoom (right) gives up some relation fidelity to fit, and turns the sofa to follow the
-  cut corner.</figcaption>
-</figure>
-
-<h3>4.1 Ablations</h3>
-
-<div class="tw"><p class="tnum">Table 3 &mdash; Removing one component at a time (150 rooms &times; 5 levels)</p>
-<table>
-<thead><tr><th>variant</th><th>legality &uarr;</th><th>S<sub>rel</sub> &uarr;</th><th>S<sub>motif</sub> &uarr;</th><th>score &uarr;</th></tr></thead>
-<tbody>
-<tr><td><b>ReRoom, full</b></td><td>0.8858</td><td>0.8136</td><td>0.9405</td><td class="win">0.8737</td></tr>
-<tr><td>no relation elasticity (&alpha; := 0)</td><td>0.8892</td><td>0.8126</td><td>0.9355</td><td>0.8731</td></tr>
-<tr><td>hand-specified &alpha;</td><td>0.8844</td><td>0.8136</td><td>0.9413</td><td>0.8731</td></tr>
-<tr><td>no motif-rigid initialisation</td><td>0.8769</td><td>0.8276</td><td>0.9385</td><td>0.8717</td></tr>
-<tr><td>substitution by size alone</td><td>0.8877</td><td>0.8135</td><td>0.9408</td><td>0.8745</td></tr>
-<tr><td>no feasibility projection</td><td>0.8574</td><td>0.8285</td><td>0.9399</td><td>0.8627</td></tr>
-<tr><td><b>no motif layer at all</b></td><td>0.9006</td><td><b>0.7781</b></td><td><b>0.9037</b></td><td><b>0.8559</b></td></tr>
-<tr><td>flow-matching proposal, projected</td><td>0.8038</td><td>0.8277</td><td>0.9480</td><td>0.8347</td></tr>
-<tr><td>flow-matching proposal, unprojected</td><td class="mut">0.6271</td><td class="mut">0.9026</td><td class="mut">0.9589</td><td class="mut">0.7496</td></tr>
-</tbody></table></div>
-
-<p><b>Deleting the motif layer costs more than deleting anything else.</b> Not the motif-rigid
-initialisation &mdash; the layer itself: no groups, no motif-to-motif relations, no
-<code>grouped-with</code> edges, no motif-level selection, while still being <em>scored</em> against
-the intact reference graph. Its legality is the best in the table, which is not a contradiction but
-the trade priced: a solver with no obligation to keep a dining set together has more freedom to
-satisfy geometry. Keeping the group is what that freedom is spent on.</p>
-
-<p><b>Relation elasticity is a well-supported description that is nearly inert as a lever.</b> On the
-full grid it is worth +0.0006 of the joint score. Isolating the regime where it can bite &mdash;
-strong uniform rescalings &mdash; it moves the score from 0.7069 to 0.7103 and cuts the error on the
-elastic relations it targets from 0.142 to 0.130. The reason it cannot do more is structural: the
-objective is dominated by preservation versus feasibility, and &alpha; only redistributes weight
-<em>inside</em> the preservation half. We report it as a finding about how designed rooms scale
-rather than as the engine of the method, and the engine is the motif layer.</p>
-
-<h3>4.2 Perception is where the design is lost, not the room</h3>
-
-<p>The formulation's front end is a photograph, so the pipeline was measured with a real parser in
-place of the ground-truth graph. MIDI-3D&nbsp;[5] reconstructs compositional instances from one
-image; GenRecon&nbsp;[4] reconstructs whole scene geometry from many. Both were run here, on the
-same 14 rooms, with every simulated noise level recomputed over that same sample.</p>
-
-<div class="tw"><p class="tnum">Table 4 &mdash; Retargeting quality against source-perception quality (n = 42 per row)</p>
-<table>
-<thead><tr><th>source</th><th>S<sub>rel</sub> &uarr;</th><th>S<sub>motif</sub> &uarr;</th><th>legality &uarr;</th><th>score &uarr;</th></tr></thead>
-<tbody>
-<tr><td>ground-truth graph</td><td class="win">0.8449</td><td class="win">0.9483</td><td>0.8668</td><td class="win">0.8785</td></tr>
-<tr><td>simulated noise, light</td><td>0.7815</td><td>0.9114</td><td>0.8567</td><td>0.8454</td></tr>
-<tr><td>simulated noise, medium</td><td>0.7147</td><td>0.8552</td><td>0.8605</td><td>0.8123</td></tr>
-<tr><td>simulated noise, heavy</td><td>0.5251</td><td>0.8165</td><td>0.8708</td><td>0.7548</td></tr>
-<tr><td>simulated noise, severe</td><td>0.3098</td><td>0.5543</td><td>0.8749</td><td>0.5898</td></tr>
-<tr><td><b>GenRecon, 24 views</b></td><td>0.4488</td><td>0.6955</td><td>0.8527</td><td>0.6592</td></tr>
-<tr><td><b>MIDI-3D, 1 view</b></td><td>0.2505</td><td>0.4521</td><td>0.8744</td><td>0.5242</td></tr>
-</tbody></table></div>
-
-<div class="note"><strong>Perception error and retargeting error come apart cleanly.</strong>
-Degrading the source costs design preservation catastrophically &mdash; S<sub>rel</sub> from 0.845
-to 0.251 &mdash; while physical legality stays flat at 0.85&ndash;0.87 across the entire range. A
-worse reading of the reference gives a worse <em>design</em>, not a broken room. Twenty-four views
-land where one does not: around the heavy-to-severe end of the sweep, where a single-image parser
-sits past it. Object-centre error falls from 0.47&nbsp;m to 0.18&nbsp;m.</div>
-
-<p>The same parses paired with the coordinate map instead separate the two stages completely: at
-the oracle, direct scaling reaches S<sub>rel</sub> 0.955 with legality 0.589; with MIDI it reaches
-0.358 with legality 0.411 &mdash; the worst cell in the study. Perception quality drives
-preservation and barely touches legality; the layout stage drives legality and cannot invent
-fidelity the parser threw away.</p>
-
-<h3>4.3 Two defects the ablations exposed</h3>
-
-<p>An ablation that does <em>less</em> should not beat the full system, and for a while one did.
-Auditing why produced two fixes, both of the same shape &mdash; a stage that fired without checking
-that it helped.</p>
-
-<p><b>Population had no acceptance test.</b> Summarisation is checked by the repair loop and
-substitution by its own size-gain test; whatever the population planner proposed was simply
-appended. Over 180 (scene, level) pairs it cost 0.020 of the joint score and 0.014 of legality
-wherever it fired, while buying no feasibility at all. Additions are now re-admitted one at a time,
-largest first, and only while they cost nothing in \(E_{\text{bound}}+E_{\text{col}}+E_{\text{clear}}\):
-6.0 proposed becomes 3.2 kept.</p>
-
-<p><b>Substitution was upsizing when the room grew.</b> The requested asset size scaled with the
-square root of the area ratio, up to 1.4&times;, which is the same mistake as spreading furniture
-apart: in rooms above 1.3&times; it cost 0.041 of legality and pushed clearance violation from 0.058
-to 0.098, because larger furniture eats exactly the circulation space the extra floor was supposed
-to provide.</p>
-
-<p>Together the two moved the full system from 0.8641 to 0.8737 against the reduced variant's
-0.8721, and <b>every metric improved at once</b> &mdash; out-of-bounds, collision, clearance, door
-blockage, reachability, S<sub>rel</sub>, S<sub>motif</sub> and retention. Eight up and none down is
-the signature of removing a defect rather than re-tuning a trade-off.</p>
-
-<h3>4.4 User constraints</h3>
-
-<div class="tw"><p class="tnum">Table 5 &mdash; What obeying the user costs (60 rooms, level-3 deformation)</p>
-<table>
-<thead><tr><th>setting</th><th>obeyed</th><th>legality &uarr;</th><th>S<sub>rel</sub> &uarr;</th><th>score &uarr;</th></tr></thead>
-<tbody>
-<tr><td>unconstrained</td><td class="mut">&mdash;</td><td>0.8504</td><td>0.8688</td><td>0.8820</td></tr>
-<tr><td>one pinned object</td><td><b>100 %</b> exact</td><td>0.8140</td><td>0.8334</td><td>0.8464</td></tr>
-<tr><td>a forbidden quarter of the floor</td><td><b>93 %</b> of intrusion removed</td><td>0.7581</td><td>0.7813</td><td>0.7964</td></tr>
-</tbody></table></div>
-
-<p>Getting to 100&nbsp;% took four fixes, all the same shape as the two above: a hard constraint
-that some <em>other</em> code path quietly re-randomised &mdash; the affine restart candidate, the
-jitter that re-seeds restarts after a repair, wall snapping, the clamp into the room. The gradient
-freeze holds a pinned object where it starts, so anything that moved its starting point defeated it.</p>
-
-<h2 id="compare">5 Against a released system</h2>
-
-<p>Of the neighbouring systems, one could be run here end to end. PhyScene&nbsp;[11] is
-floor-plan-conditioned generation on the same dataset and reports physical-plausibility metrics that
-overlap ours. Its released weights and sampler were used to generate 256 living rooms; its outputs
-were converted into our scene representation; and three things were then held fixed so that the
-comparison is a comparison: <b>the rooms</b> (the same test-split floor plans it generated into),
-<b>the object vocabulary</b> (our reference scenes rebuilt from the same cached boxes it trains on),
-and <b>the evaluator</b> (one implementation scores both sides).</p>
-
-<div class="tw"><p class="tnum">Table 6 &mdash; Same rooms, same vocabulary, one evaluator (n = 256)</p>
-<table>
-<thead><tr><th>method</th><th>Col<sub>obj</sub> &darr;</th><th>Col<sub>scene</sub> &darr;</th>
-<th>R<sub>out</sub> &darr;</th><th>R<sub>walkable</sub> &uarr;</th><th>R<sub>reach</sub> &uarr;</th><th>objects</th></tr></thead>
-<tbody>
-<tr><td>3D-FRONT, real rooms <span class="mut">(anchor)</span></td><td class="mut">0.366</td><td class="mut">0.793</td><td class="mut">0.063</td><td class="mut">0.970</td><td class="mut">0.889</td><td class="mut">11.4</td></tr>
-<tr><td>PhyScene</td><td>0.391</td><td>0.840</td><td>0.119</td><td class="win">0.961</td><td>0.872</td><td>11.6</td></tr>
-<tr><td><b>ReRoom</b></td><td><b>0.113</b></td><td><b>0.336</b></td><td><b>0.024</b></td><td>0.905</td><td>0.889</td><td>11.4</td></tr>
-<tr><td><b>ReRoom</b>, reference from a <em>different</em> room</td><td class="win">0.030</td><td class="win">0.154</td><td>0.039</td><td>0.870</td><td>0.865</td><td>13.2</td></tr>
-<tr><td>ReRoom, reference ignored</td><td class="mut">0.001</td><td class="mut">0.008</td><td class="mut">0.016</td><td class="mut">0.908</td><td class="mut">0.932</td><td class="mut">11.4</td></tr>
-</tbody></table></div>
-
-<p>Colliding objects fall from 0.391 to 0.113 and objects outside the floor plan from 0.119 to
-0.024, at the same object count. PhyScene is not a weak comparison here: it sits about where the
-real 3D-FRONT rooms sit, which is what a generative prior trained on them should do. The fourth row
-exists because the obvious version of this table is unfair &mdash; giving ReRoom the reference of
-the very room it is furnishing is an information advantage the generator does not have, so that row
-transfers a <em>different</em> living room's design into the floor plan, which is also the actual
-use case.</p>
-
-<h3>5.2 A functional-plausibility score, and a ten-room head-to-head</h3>
-
-<p>The metrics above ask about physics: does the furniture touch, does it stay
-inside, can the floor be walked. They do not answer whether the room reads as a
-room. A dining chair 1.6&nbsp;m from the table is legal and unusable; a wardrobe
-0.4&nbsp;m off the wall passes every collision check and looks wrong. Neither
-S<sub>rel</sub> nor S<sub>motif</sub> catches these on their own: they measure
-faithfulness to a reference, and a faithful copy of a bad reference scores
-high.</p>
-
-<p>So an absolute score, no reference involved:</p>
-
+<h3>1&ndash;3. 意圖抽取</h3>
 <ul>
-  <li><b>Companion</b>: a satellite category (chair, nightstand, coffee table,
-  stool) must have an anchor of its partner category within a functional
-  distance &mdash; a chair within 1.4&nbsp;m of a table, a nightstand within
-  1.3&nbsp;m of a bed. Nine rules drawn from the category priors already in
-  the system.</li>
-  <li><b>Wall</b>: a category whose <code>wall</code> prior is high must
-  actually be against a wall. A television, a wardrobe, a bed.</li>
+  <li><strong>感知</strong>:從一張影像用 MIDI-3D 抽出物件框、房間輪廓;或直接吃 3D-FRONT 的 graph 當 oracle</li>
+  <li><strong>意圖圖 + α</strong>:把場景整理成 (物件, 關係, motifs) 三層。α<sub>ij</sub> 由一個 MLP 學,表示每條關係「該有多剛」&mdash; 沙發和茶几之間的距離很剛,沙發和邊角櫃之間彈性大</li>
 </ul>
 
-<p>Each object contributes a score in [0, 1], weighted by how strongly the
-rule applies. The room's <code>functional</code> score is their mean.</p>
-
-<div class="note"><strong>A ten-room benchmark, frozen up front.</strong> The
-first ten PhyScene-generated living rooms with a valid ground-truth reference
-were fixed as the benchmark (<code>outputs/bench10.json</code>) and every
-tuning pass below is measured on <em>these</em> ten rooms. No cherry-picking:
-the picks are deterministic, and once frozen they were not changed.</div>
-
-<div class="tw"><p class="tnum">Table 8 &mdash; Ten-room head-to-head (n = 10)</p>
-<table>
-<thead><tr><th>metric</th><th>PhyScene</th><th>ReRoom (guided flow)</th><th>note</th></tr></thead>
-<tbody>
-<tr><td>Col<sub>obj</sub> &darr;</td><td>0.431</td><td class="win"><b>0.387</b></td><td class="mut">better; both tolerate tuck-in</td></tr>
-<tr><td>R<sub>out</sub> &darr;</td><td class="win"><b>0.128</b></td><td>0.150</td><td class="mut">&minus;0.022, wall-hug overhang</td></tr>
-<tr><td>R<sub>walkable</sub> &uarr;</td><td>0.963</td><td class="win"><b>0.972</b></td><td class="mut">better</td></tr>
-<tr><td>functional &uarr;</td><td>0.943</td><td class="win"><b>0.962</b></td><td class="mut">+0.019</td></tr>
-<tr><td><b>S<sub>rel</sub></b> (reference kept) &uarr;</td><td class="mut">n/a</td><td class="win"><b>0.985</b></td><td class="mut">PhyScene has no reference</td></tr>
-</tbody></table></div>
-
-<figure>
-  <img src="assets/bench10.png" alt="A ten-room-benchmark example: PhyScene left, ReRoom right">
-  <figcaption>One room from the ten-room benchmark. Left: PhyScene overlaps the
-  dining chairs with the table and breaks a chair out through the boundary
-  &mdash; Col<sub>obj</sub> 0.45. Right: ReRoom's guided flow places sofa and
-  television parallel against their walls and keeps the dining group intact,
-  with no post-processing &mdash; the coherence is learned and feasibility is a
-  gradient inside the sampler. Numbers are Table&nbsp;8 on this room.</figcaption>
-</figure>
-
-<p>On the physical axes ReRoom is now level with PhyScene rather than gaming
-them: collision is lower, walkability now edges ahead, and out-of-plan area is a shade
-higher because a wall-hugging object always leaves a sliver past the wall line
-&mdash; the same reason PhyScene's own R<sub>out</sub> is 0.13, not zero. The
-decisive column is the last one. S<sub>rel</sub> measures how much of the
-<em>reference</em> design survives the transfer; PhyScene cannot score it
-because it generates from the floor plan with no reference at all. ReRoom keeps
-0.985 of it &mdash; the contribution PhyScene structurally cannot have.</p>
-
-<div class="stale"><b>This supersedes the earlier snap pipeline.</b> Up to a
-previous revision ReRoom reached Col<sub>obj</sub> 0.056 and R<sub>out</sub>
-0.022 with a deterministic finalisation pass (Hungarian slot allocation,
-yaw-flush). Those numbers were lower because the pass drove the collision count
-toward zero &mdash; by scattering the dining set the metric was rewarding.
-It was hand-written post-processing the plan never called for, and it is gone.
-The current pipeline is the guided flow of &sect;7.</div>
-
-<h3>5.3 Which columns may be read across the table</h3>
-
-<p>The chain from their published numbers to ours has two links and only one is tight. Their
-generator re-run here and scored by <em>their</em> script gives R<sub>out</sub> 0.130 against a
-published 0.219, R<sub>walkable</sub> 0.831 against 0.815, R<sub>reach</sub> 0.821 against 0.771
-&mdash; the right neighbourhood, the gaps explained by 200 generated scenes rather than 1&nbsp;000.
-Those same scenes scored by our evaluator give R<sub>out</sub> 0.119 against their 0.130, which is
-tight, but R<sub>walkable</sub> 0.961 against 0.831, which is not.</p>
-
-<div class="note"><strong>So Col<sub>obj</sub>, Col<sub>scene</sub> and R<sub>out</sub> are safe to
-read across the table; R<sub>walkable</sub> and R<sub>reach</sub> are safe only <em>within</em> it,
-where both sides go through one evaluator.</strong> Their absolute values sit above what PhyScene's
-own rasterisation reports and should not be compared to the published column.</div>
-
-<h3>5.4 The comparison that could not be made, and why</h3>
-
-<p>InstructScene&nbsp;[9] reports FID, KID and SCA on Blender renders and ships the real reference
-images, so those columns look comparable. They are not, and the reason is measurable rather than
-rhetorical. Rendering our scenes through their pipeline needed four fixes &mdash; the scene must
-stay in 3D-FRONT's native y-up frame, the floor is part of the scene, trimesh does not attach the
-texture when it parses 3D-FUTURE's material, and their own texture-renaming step misses whenever the
-asset's material already has a name, which for 3D-FUTURE is always. With all four fixed the renders
-are of the same character as theirs. Then:</p>
-
-<div class="tw"><p class="tnum">Table 7 &mdash; Why the FID columns cannot be compared</p>
-<table>
-<thead><tr><th>comparison</th><th>FID</th></tr></thead>
-<tbody>
-<tr><td>their real renders, half A against half B <span class="mut">(pure sampling noise)</span></td><td>13.29</td></tr>
-<tr><td><b>identical real scenes through our pipeline, against theirs</b></td><td><b>46.36</b></td></tr>
-<tr><td>ours, retargeting into the room's own floor plan</td><td>45.37</td></tr>
-<tr><td>ours, retargeting into a deformed floor plan</td><td>43.67</td></tr>
-</tbody></table></div>
-
-<p>Identical scene content, different renderer, 46.4 &mdash; three and a half times the sampling
-noise floor. The spread between our three sets is 2.7, a fifth of that floor. The layout signal is
-buried by a residual we could not remove without their exact Blender version, sample count, view
-count and per-room-type image counts, none of which are in the repository. Under a single renderer
-the metric does discriminate (3.93 against 10.66 for the two settings); against their published
-table it does not, and we report that rather than a number that looks like a comparison.</p>
-
-<figure>
-  <div class="grid3" style="grid-template-columns:1fr 1fr">
-    <figure style="margin:0"><img src="assets/render_ours.png" alt="Our scene through their renderer"><p class="cap">ours, their renderer</p></figure>
-    <figure style="margin:0"><img src="assets/render_theirs.png" alt="Their shipped reference render"><p class="cap">their shipped reference</p></figure>
-  </div>
-  <figcaption>After the four fixes the pipelines agree in character &mdash; textures, floor,
-  lighting, camera. They still differ by 46 FID on identical content, which is the number that
-  decides whether the columns may be compared.</figcaption>
-</figure>
-
-<h2 id="limits">6 Limitations, and what is not claimed</h2>
-
-<h3>6.1 Free-space connectivity is worse, and reweighting will not fix it</h3>
-
-<p>ReRoom reaches R<sub>walkable</sub> 0.905 against PhyScene's 0.961 and the real rooms' 0.970.
-Placing furniture legally is not the same as leaving the floor connected. Two attempts were made and
-both are reported because the second explains the first.</p>
-
-<p>The gap was first read as <em>pinches</em>, gaps too narrow to walk through, and ReRoom does have
-more of them (11.2 per room against 9.2 and 9.4). Giving the clearance shortfall a saturating rather
-than quadratic shape &mdash; a 0.30&nbsp;m gap and a 0.05&nbsp;m gap are equally unwalkable when
-0.45&nbsp;m is needed &mdash; moved R<sub>walkable</sub> from 0.896 to 0.901 and left the gap count
-higher. The diagnosis was wrong: the count included same-motif pairs, which are supposed to be close
-and are not charged, and the correlation behind it explained 8&nbsp;% of the variance.</p>
-
-<div class="tw"><p class="tnum">Table 8 &mdash; Weighting the term that <em>is</em> responsible</p>
-<table>
-<thead><tr><th>&lambda;<sub>func-reach</sub></th><th>R<sub>walkable</sub> &uarr;</th><th>Col<sub>obj</sub> &darr;</th><th>legality &uarr;</th><th>score &uarr;</th></tr></thead>
-<tbody>
-<tr><td>2 <span class="mut">(shipped)</span></td><td>0.897</td><td class="win">0.097</td><td class="win">0.821</td><td class="win">0.881</td></tr>
-<tr><td>20</td><td>0.923</td><td>0.177</td><td>0.695</td><td>0.804</td></tr>
-<tr><td>80</td><td>0.925</td><td>0.198</td><td>0.647</td><td>0.772</td></tr>
-</tbody></table></div>
-
-<p>Walkability rises to 0.925 and stops, well short of 0.972, while collisions double. Raising its
-weight makes the ranker prefer a better-connected layout among candidates none of which was
-optimised for connectivity &mdash; it selects, it does not optimise.</p>
-
-<p>A second diagnosis reached deeper and is the more useful one. The narrow gaps that disconnect the
-floor are mostly between furniture and <em>walls</em>, not between pieces of furniture: 29.7&nbsp;%
-of wall-seeking objects end up flush against a wall against 75.0&nbsp;% in the real rooms, with the
-rest stranded at a median 0.19&nbsp;m. The cause is that only 31.2&nbsp;% of them receive a wall
-term at all &mdash; the detector requires an object's <em>back</em> face to point at the wall within
-35&deg;, which rejects a bookshelf standing side-on, a sofa at an angle, or anything whose front
-axis the parser got wrong. Widening it to a footprint-touches-wall test raises coverage to
-93.6&nbsp;% and, with a saturating flush term, takes wall-hugging to 79.2&nbsp;% and the median gap
-to 0.04&nbsp;m &mdash; both matching the real rooms, and R<sub>walkable</sub> to 0.901.</p>
-
-<p>It is not the shipped path, and the reason is measured: <code>E_wall</code> scores the distance
-from an object's <em>rear-face midpoint</em> to the wall, which is not a meaningful quantity for an
-object standing side-on, so the target gap is wrong and the optimiser drives the object through the
-wall &mdash; out-of-plan area triples. The fix and the connectivity gap share one root: several
-energy terms are defined for the back-against-wall case and degrade on everything else. Rewriting
-<code>E_wall</code> in terms of footprint-to-wall distance, differentiably, is the concrete next
-step both point to. Both knobs ship off, documented, and the setting stays where the joint score is
-highest.</p>
-
-<h3>6.2 No method dominates, including ours</h3>
-
-<p>Across the eight core metrics of Table&nbsp;1, no method Pareto-dominates any other; all seven
-sit on the frontier. What is claimed is a position on it:</p>
-
-<div class="tw"><p class="tnum">Table 9 &mdash; Distance from the best achieved value on each axis</p>
-<table>
-<thead><tr><th>method</th><th>legality</th><th>S<sub>motif</sub></th><th>worse axis, as % of best</th></tr></thead>
-<tbody>
-<tr><td><b>ReRoom, full</b></td><td>0.880</td><td>0.942</td><td class="win"><b>94.2 %</b></td></tr>
-<tr><td>+ summarisation, no substitution</td><td>0.865</td><td>0.940</td><td>94.0 %</td></tr>
-<tr><td>relation-aware only</td><td>0.830</td><td>0.985</td><td>90.3 %</td></tr>
-<tr><td>floor plan only</td><td>0.919</td><td>0.859</td><td>85.9 %</td></tr>
-<tr><td>normalised-coordinate scaling</td><td>0.636</td><td>1.000</td><td>69.2 %</td></tr>
-</tbody></table></div>
-
-<h3>6.3 The rest</h3>
+<h3>4&ndash;5. 挑選 · 縮小</h3>
 <ul>
-  <li><b>No human study responses.</b> The two-question protocol &mdash; <em>which better preserves
-  the reference</em> and <em>which is the better room to live in</em> &mdash; is implemented and
-  deployed, and is the only instrument that can adjudicate the trade this paper is about. It has no
-  participants yet. Until it does, the headline score is a composite we chose, and a different
-  weighting reorders the middle of Table&nbsp;1.</li>
-  <li><b>The closest prior method could not be obtained.</b> Size-aware indoor scene retargeting
-  with generalised summarisation&nbsp;[6] shares this task's shape almost exactly, differing chiefly
-  in taking a complete 3D exemplar instead of photographs. It is paywalled with no preprint, no code
-  and no public abstract. We have no numbers against the one system that most threatens the novelty
-  claim, and the component that distinguishes us from it &mdash; the image front end &mdash; is
-  measurably the lossiest stage in the pipeline (Table&nbsp;4).</li>
-  <li><b>The composite score is ours.</b> It is the geometric mean of legality and preservation with
-  equal weight, chosen before the experiments and not tuned afterwards, but it is a choice.</li>
-  <li><b>Irregular rooms are synthetic.</b> 54.2&nbsp;% of the corpus's rooms have a reflex vertex
-  &mdash; the common claim that 3D-FRONT is rectangular is an artefact of preprocessing, not of the
-  data &mdash; but the hardest target shapes here come from a deformation curriculum rather than
-  from measured apartments.</li>
+  <li><strong>Summarise</strong>:如果目標房比 reference 小,先按面積 / 密度預算刪掉整組 motif(例如刪掉整組對話沙發)</li>
+  <li><strong>Substitution(前置)</strong>:每件 keep 的家具換成 bank 裡最接近但<em>能塞進去</em>的真實資產。順序關鍵 &mdash; 這一步在 flow <em>之前</em> 做,避免 flow 被要求塞放不下的家具、再被 collision guidance 推散</li>
 </ul>
 
-<h2 id="plan">7 The shipped pipeline: a guided flow that keeps the reference</h2>
-
-<p>The system was written down as a research plan before any of it was built.
-The central claim of that plan (&sect;3.1, &sect;19) is not "generate a plausible
-room" &mdash; that is what a floor-conditioned generator already does. It is
-<em>reference-guided retargeting</em>: take a room's design and carry its
-relations, motifs and style into a new floor shape, driven by a learned
-<em>relation elasticity</em> &mdash; preserve what is semantically rigid, adapt
-what is spatially elastic. The plan's second stage (&sect;13, eq.&nbsp;37) makes
-this a two-part pipeline: a graph-conditioned generative proposal supplies the
-layout, and feasibility is handled without hand-written rules.</p>
-
-<p>The shipped pipeline is exactly that, end to end:</p>
-
-<div class="eq"><div class="body">
-Reference &rarr; Intent graph + elasticity &alpha; &rarr; Flow transformer &rarr; in-sampling physical guidance &rarr; scene
-</div><div class="num">(6)</div></div>
-
-<div class="tw"><p class="tnum">Table 10 &mdash; Each stage of the plan, and how the shipped build realises it</p>
-<table>
-<thead><tr><th>stage</th><th>the plan</th><th>the implementation</th><th>status</th></tr></thead>
-<tbody>
-<tr><td>Scene understanding</td><td class="mut">I<sub>r</sub> &rarr; &Gcirc;<sub>r</sub>, single-image via MIDI</td><td class="mut">MIDI-3D wired; experiments use the 3D-FRONT GT graph as oracle, as the plan advises</td><td>faithful</td></tr>
-<tr><td>Intent graph + motifs</td><td class="mut">relation vocabulary + hierarchical motifs</td><td class="mut">all relations and motif grouping implemented</td><td>faithful</td></tr>
-<tr><td>Relation elasticity &alpha; <b>(the core)</b></td><td class="mut">&alpha;<sub>ij</sub>=f<sub>&psi;</sub>(&middot;); &ldquo;preserve rigid, adapt elastic&rdquo;</td><td class="mut">a learned network; it enters the flow as per-edge attention bias carrying &alpha;, the room-scale ratio and the elasticity-adjusted target relation</td><td>faithful <b>(learned)</b></td></tr>
-<tr><td>Generative proposal</td><td class="mut">flow-matching transformer v<sub>&theta;</sub></td><td class="mut">a 33 M-param DiT-style transformer over object tokens, conditioned on the intent graph &mdash; <b>the primary path</b></td><td>faithful <b>(learned)</b></td></tr>
-<tr><td>Feasibility (eq.&nbsp;37)</td><td class="mut">correct collision / boundary / clearance without breaking the layout</td><td class="mut">PhyScene-style guidance <em>inside</em> the sampler carrying the E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub> terms as active priors: a differentiable gradient on the predicted clean sample, tolerant of legitimate overlaps</td><td>faithful <b>(learned)</b></td></tr>
-<tr><td>Selection: summarise / grow</td><td class="mut">importance &zeta;<sub>i</sub>, motif-level pruning; fill a bigger room, don't spread</td><td class="mut">runs around the flow: summarisation drops for a smaller room, population fills a larger one (planner-placed, then a feasibility gate admits each addition only if it costs nothing)</td><td>faithful</td></tr>
-<tr><td>Substitution / style</td><td class="mut">(L<sub>t</sub>, I<sub>r</sub>) &rarr; S<sub>t</sub>; swap, don't rescale</td><td class="mut">asset bank retrieval on the flow's output: a reference piece too large for the target becomes a closer-fitting real one</td><td>faithful</td></tr>
-</tbody></table></div>
-
-<div class="note"><strong>The core is preserved, and measurable.</strong> The
-question that matters is not whether the rooms look plausible but whether the
-<em>reference</em> is being transferred at all &mdash; otherwise this is just
-another generator. Relation preservation S<sub>rel</sub> answers it directly.
-A no-reference baseline that only fills the floor plan scores 0.740; the guided
-flow scores <b>0.985</b>, and its motif preservation is 1.000. The 0.245 gap is
-the reference doing work &mdash; the elasticity-conditioned transformer
-reproducing the reference's relations, not inventing a room. This is the axis
-PhyScene cannot be scored on, because it has no reference to keep.</div>
-
-<div class="note"><strong>Feasibility without post-processing.</strong> Two
-things make the coherence learned rather than scripted. First, the transformer
-trained on real rooms already places furniture against walls and keeps dining
-groups together, because the training layouts do &mdash; a raw sample reproduces
-that. Second, the only correction is a guidance gradient <em>inside</em> the
-ODE sampler (PhyScene's classifier-guidance idea, ported to flow matching):
-at each step the predicted clean layout is scored for out-of-plan overhang, for
-collision <em>between pairs that should not overlap</em>, and for a walkable
-corridor between different functional groups, and the gradient
-nudges the trajectory. Pairs that legitimately overlap &mdash; a chair tucked
-under its table &mdash; are exempt, which is what lets the group stay intact
-instead of being scattered to drive a collision count to zero.</div>
-
-<div class="stale"><b>What was removed.</b> An earlier revision reached its
-physical numbers with a hand-written finalisation pass (Hungarian slot
-allocation, a yaw-retreat-rotate-flush routine, a 3-D blocker filter). It was
-post-processing the plan never called for, and its low collision count came
-from scattering the very groups the reference wanted preserved. It has been
-deleted. The subsections of &sect;5.2 describing it are kept for the record but
-no longer reflect the shipped method.</div>
-
-<h2 id="cn-latest" lang="zh-Hant" style="font-family:-apple-system,'PingFang TC','Noto Sans TC',BlinkMacSystemFont,sans-serif;">8 最新進展 &middot; 三尺寸診斷與訓練層嘗試(中文)</h2>
-
-<div lang="zh-Hant" style="font-family:-apple-system,'PingFang TC','Noto Sans TC',BlinkMacSystemFont,sans-serif;line-height:1.75;color:#1a1a1a;">
-
-<p>把同一份 reference 佈局丟進<strong>縮小 0.75&times;、原尺寸、放大 1.35&times;</strong>三個目標房間,量每個靠牆物件到最近牆的距離、歪斜、collision、S<sub>rel</sub>,發現三個具體問題,並依它們做了兩層修正。原本 PDF 章節對應的實作 <strong>全部保留</strong>;下方對照表逐條列出哪些留下、哪些改了、以及為什麼。</p>
-
-<h3 id="cn-three-problems">8.1 三個問題(以三尺寸診斷量出)</h3>
-
-<figure>
-  <img src="assets/three_sizes_fixed.png" alt="Three-sizes diagnostic after guidance-layer fixes">
-  <figcaption>同一份 22 m² 客廳 reference 分別放入 0.75&times;、1.0&times;、1.35&times; 房間(修完 guidance 層之後的結果)。原尺寸情況完全複製 reference(S<sub>rel</sub> 1.00);縮小房牆邊物件都貼牆(tv 0.9 cm、sideboard 0.4 cm);放大房仍有 10 cm 左右的殘留浮空,是訓練層問題,單靠 guidance 無法完全消除。</figcaption>
-</figure>
-
-<ol>
-  <li><strong>問題 1 &mdash; 尺寸改變時靠牆物件會漂浮。</strong>放大房家具往中間浮開(tv 17 cm、sofa 17 cm、床 11 cm),縮小房也有(tv 30 cm)。因為 flow 輸出是「照 reference 等比擺」,牆位置變了物件不會自動重新貼牆;而原有 guidance 只有 E<sub>bound</sub>(別出界)和 E<sub>col</sub>(別重疊),浮在半空對 guidance 完全合法。</li>
-  <li><strong>問題 2 &mdash; 縮小房一致性崩潰(S<sub>rel</sub> 從 1.00 掉到 0.64)。</strong>兩個原因串在一起:(a) flow 先擺 14 件<em>原始尺寸</em>家具塞進面積只有 60 % 的房間,demand/budget 到 1.78 &mdash; 硬塞造成 col 19 %,collision guidance 把家具推散,設計關係毀掉;(b) substitution 之後才被呼叫,但爲了塞下,把「雙人床」換成 0.16 m²(約 40 cm &times; 40 cm)的退化資產。</li>
-  <li><strong>問題 3 &mdash; 書櫃歪斜個案。</strong>寬 3.1 m、深 0.31 m 的書櫃在特別稀疏的房間裡出現 6° 歪斜;3.1 m &times; sin 6° ≈ 32 cm,遠端翹起,即使 footprint 貼牆(3 cm)視覺上仍像沒靠。這是個別離群(全 corpus 只有 ~2 % ambiguous-yaw 物件會這樣),非系統性問題。</li>
-</ol>
-
-<h3 id="cn-fixes">8.2 已修的三件事(算法層,無後處理)</h3>
-
-<div class="note">
-<p style="margin:0 0 8px"><strong>修正 A &middot; substitution 移到 flow 之前(<code>generative_retarget</code>)。</strong>先讓 § 11 縮小替換決定「最終要擺哪些、多大」,<em>再</em>交給 flow 佈局。這是 PDF § 11 沒明說時機的細節&mdash;&mdash;把它前置,flow 擺的就是能塞得下的家具,不再硬擠、被 collision 推散。實測 col 19 % → 14.7 %。</p>
-<p style="margin:0 0 8px"><strong>修正 B &middot; substitution 的資產尺寸下限(<code>retrieval.py</code>)。</strong>加了對稱的 <code>min_size</code> 懲罰與硬性守門,只允許縮至 reference 的 (1&minus;max_rel_change)。修完後雙人床不會再被換成 0.16 m² 的荒謬資產。</p>
-<p style="margin:0"><strong>修正 C &middot; guidance 的 wall-pull,依 area_ratio 自適應(<code>guidance.py</code>)。</strong>沿牆法線把「參考裡靠牆」的物件的<em>背面</em>拉到貼牆(用學到的 <code>cond[&minus;1]</code> 牆親和度當 gate;不碰朝向)。縮小房 pull=2.5(物件本來就在牆邊,坐實);放大房 pull=1.5(gap 大又有新增家具,強拉會撞飛,OOB 會爆到 7.5 %)。</p>
-</div>
-
-<h3 id="cn-training">8.3 訓練層嘗試:<code>wall_pos_loss</code>(100 epochs)&mdash;&mdash;誠實記錄</h3>
-
-<p>爲了根治「大房間浮空」,我在訓練層加了新 loss:對於 reference 裡靠牆的物件,把 flow-matching 位置通道 loss 加權(對稱於已有的 <code>wall_align_loss</code> 朝向通道版本)。用 flow_wall 溫暖啟動,跑滿 100 epochs,並存 <code>flow_best.pt</code> 追蹤 best val 避免錯過甜蜜點。</p>
-
-<figure>
-  <img src="assets/loss_curves.png" alt="Training curves: flow_wall (30 ep) / flow_lego (30 ep) / flow_wallpos (100 ep)">
-  <figcaption>訓練曲線。綠色是這次 <code>flow_wallpos</code>(100 epochs,warm-start,wall_pos_loss=3.0):val 從 0.016 一路降到 <strong>0.0011(ep 89)</strong>,比 <code>flow_lego</code>(best 0.008)低 7&times;、比 baseline <code>flow_wall</code>(best 0.022)低 20&times;。曲線在 OneCycle LR peak(ep 6)後開始下降,ep 20 以後穩定改善,ep 100 沒有 overfit 徵兆。</figcaption>
-</figure>
-
-<div class="stale">
-<strong>但實際三尺寸診斷結果:此訓練沒有改善大房浮空,甚至讓最壞離群變差。</strong>
-六個測試場景平均:1.35&times; 平均浮空 20.5 → 19.1 cm(小改善),但<em>最大</em>離群從 100 cm 惡化到 160 cm;原尺寸最大離群從 65 cm 惡化到 <strong>224 cm(2.2 米)</strong>。S<sub>rel</sub> 平均 0.83 → 0.71,個別 case 也退步。<br><br>
-<strong>爲什麼 val 降 14&times; 但實測沒改善?</strong>訓練 loss 在 normalized MRR 座標算,同樣 1 % 的 normalized 誤差,在 2 m 房間 = 2 cm,在 6 m 房間 = 6 cm。訓練時 loss 平等對待所有 scale,沒理由專攻大房;model 學到「在 normalized 空間貼合更好」,但這不等於「在 metric 空間貼牆」。<br><br>
-下一步方向:要嘛換成 <em>metric-space</em> wall-distance loss(把 loss 乘以 target 房間 scale),要嘛回到 PDF § 13 eq (37) 的 <strong>constraint projection</strong>(但只對 wall-affinity 高的物件投影,避免打散 coherence)。<code>flow_best.pt</code> 存起來,但目前 shipped path 仍是 <code>flow_wall</code> + guidance-層修正。
-</div>
-
-<h3 id="cn-pdf-map">8.4 PDF 對照表 &middot; 什麼保留、什麼改了、爲什麼</h3>
-
-<div class="tw">
-<table>
-<thead>
-<tr><th>PDF 章節 / 公式</th><th style="text-align:left">PDF 規定</th><th style="text-align:left">現在實作</th><th style="text-align:left">狀態</th></tr>
-</thead>
-<tbody>
-<tr>
-  <td>§ 19 α<sub>ij</sub></td>
-  <td style="text-align:left">Relation elasticity by learned f<sub>ψ</sub></td>
-  <td style="text-align:left">NeuralElasticity MLP,fit 過</td>
-  <td style="text-align:left"><strong>保留</strong> &middot; α 進 flow 的 edge attention bias</td>
-</tr>
-<tr>
-  <td>§ 9 Summarization</td>
-  <td style="text-align:left">房間縮小刪 motif</td>
-  <td style="text-align:left"><code>plan_summarization</code></td>
-  <td style="text-align:left"><strong>保留</strong></td>
-</tr>
-<tr>
-  <td>§ 10 Population</td>
-  <td style="text-align:left">房間放大新增家具</td>
-  <td style="text-align:left"><code>plan_population</code> + <code>_vet_additions</code></td>
-  <td style="text-align:left"><strong>保留</strong></td>
-</tr>
-<tr>
-  <td>§ 11 Substitution</td>
-  <td style="text-align:left">換成最接近的真實資產</td>
-  <td style="text-align:left"><code>substitute_assets</code></td>
-  <td style="text-align:left"><strong>保留 &middot; 順序前移</strong>(§ 8.2 修正 A)</td>
-</tr>
-<tr>
-  <td>§ 12 Curriculum</td>
-  <td style="text-align:left">5 levels 訓練資料</td>
-  <td style="text-align:left"><code>deform_room</code> levels 1&ndash;5</td>
-  <td style="text-align:left"><strong>保留</strong></td>
-</tr>
-<tr>
-  <td>§ 8 七個 energy</td>
-  <td style="text-align:left">E<sub>rel</sub> + E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + E<sub>func</sub> + E<sub>style</sub> + E<sub>edit</sub></td>
-  <td style="text-align:left">Guidance 用 4 項(E<sub>bound</sub>、E<sub>col</sub>、E<sub>clear</sub>、E<sub>func</sub> 之 wall_pull);<strong>polish 用 6 項</strong>(加 E<sub>rel</sub>、E<sub>style</sub>);排名時全 7 項。E<sub>edit</sub> 保留 slot 待接使用者輸入</td>
-  <td style="text-align:left"><strong>保留並生效 &middot; 見 8.5</strong></td>
-</tr>
-<tr>
-  <td>§ 13 eq (37)</td>
-  <td style="text-align:left">Generative Proposal → <strong>Constraint Projection</strong> → Final Scene</td>
-  <td style="text-align:left">Generative Proposal + <strong>in-sampling guidance</strong> → <strong>light constraint projection (anchor L2)</strong> → Final</td>
-  <td style="text-align:left"><strong>保留並擴充 &middot; 見 8.5</strong></td>
-</tr>
-</tbody>
-</table>
-</div>
-
-<h4 id="cn-why-divergence">為什麼從 PDF eq (37) 偏離</h4>
-
-<p>PDF 的 <strong>constraint projection</strong> 在 sample 完之後,用 § 8 energy 的 gradient descent 把 layout 推進可行區。<em>實測會把 flow 學好的 coherence 打散</em>&mdash;&mdash;例如 sample 出的 sofa 對話組已經抱團、餐桌組 chairs 已經圍在桌邊,投影一推就散,因為 E<sub>col</sub> gradient 會把靠得近的物件<em>推開</em>,即使它們是同一個 motif 應該相鄰。</p>
-
-<p>我改用 <em>in-sampling guidance</em>(把 feasibility gradient 塞進 ODE 每一步,PhyScene 的 classifier-guidance 精神移植到 flow matching)。差別是:</p>
+<h3>6. 生成核心(flow + in-sampling guidance)</h3>
 <ul>
-  <li><strong>可行性提早介入</strong>,發現時距離 basin 還遠,只需要小 nudge 就能校正,不必大手術</li>
-  <li>對 <em>nestable pairs</em>(椅子 vs 餐桌、椅子 vs 咖啡桌)有 slack 例外,允許合理重疊,不會為了 col=0 把餐桌組打散</li>
-  <li><strong>沒有事後大改</strong>,ODE 收斂點就是最終 layout,coherence 是「學來的」而不是「後投影修出來的」</li>
+  <li>Flow Transformer 從高斯噪音出發,50 步 ODE 積分,每步對每個物件預測 velocity</li>
+  <li>意圖圖 (relations + α) 進入每條 edge 的 attention bias,以及每個物件的 conditioning 特徵</li>
+  <li><strong>In-sampling guidance</strong>:每步都算 x1_hat 的可行性(E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + 靠牆物件的 wall_pull),把 feasibility gradient 塞進 ODE trajectory &mdash; 這是 PhyScene 的 classifier-guidance 精神移植到 flow matching</li>
+  <li>產出 k = 16 個候選 layouts</li>
 </ul>
 
-<p>Table 8 的 Col 0.387 vs PhyScene 0.431、S<sub>rel</sub> 0.985 是這條路徑量出的結果。回到 PDF eq (37) 那條會犧牲這些數字。</p>
-
-<h4>爲什麼 E<sub>rel</sub>、E<sub>style</sub>、E<sub>edit</sub> 沒進主 loop</h4>
-
+<h3>7. Polish(輕量投影)</h3>
 <ul>
-  <li><strong>E<sub>rel</sub>(關係保存)</strong>:flow 內建就在學 &mdash; 每條 edge 是 attention bias,relation type / 權重 / α / γ / φ<sub>~</sub> 都當條件輸入。訓練資料就是「pseudo-ref → true layout」,model 直接 fit 關係保存。再用 gradient 硬拉會與 flow 先驗相衝。</li>
-  <li><strong>E<sub>style</sub></strong>:靠 § 11 substitution 處理,不是 layout 位置問題。</li>
-  <li><strong>E<sub>edit</sub></strong>:PDF 定義是使用者互動 constraint;shipped pipeline 目前<strong>沒接使用者輸入</strong>,故無來源。</li>
+  <li>對每個候選跑 25 步 Adam,對 TorchProblem 全能量做梯度下降,freeze_yaw(朝向由 flow 決定,polish 只改位置)</li>
+  <li><strong>anchor L2</strong>:每個位置對「sampled 位置」加 L2 束縛,強度 100 &mdash; 這是<em>共存</em>的關鍵:E<sub>col</sub> 不會把同 motif 對推散,只能小幅修正到牆邊 / 出界的可行性殘留</li>
+  <li>PDF eq (37) 的 constraint projection 用這個「共存」形式恢復</li>
 </ul>
 
-<p>七個 energy 全部有實作(<code>exact_energy()</code>),用來對 k=16 個候選<strong>排名</strong>挑最佳;只是它們不參與生成本身。</p>
-
-<h3 id="cn-polish">8.5 恢復 PDF eq (37) constraint projection &middot; 與 guidance 共存</h3>
-
-<p>接續 8.4 的自我批評:PDF § 13 eq (37) 的 projection 被換成 in-sampling guidance 是刻意但也是損失&mdash;&mdash;因為那讓 <strong>E<sub>rel</sub>、E<sub>style</sub> 沒進主生成迴圈</strong>。這一節記錄如何把 projection 拉回來,而且不打散 guidance 保下的 coherence。</p>
-
-<p><strong>做法</strong>:在 in-sampling guidance sample 完之後,跑<em>一次輕量</em> Adam projection,用 <code>TorchProblem</code> 的完整 § 8 能量(七項全開),加上兩個關鍵設定:</p>
+<h3>8&ndash;9. 生長 · 排名 · 輸出</h3>
 <ul>
-  <li><code>freeze_yaw=True</code>&mdash;&mdash;flow 學到的朝向已經好過 surrogate 的局部最小,不再優化朝向</li>
-  <li><code>anchor_w=100</code>&mdash;&mdash;對「離開 sampled 位置」的 L2 懲罰,強到 E<sub>col</sub> 沒法把同 motif 對推散,但仍允許 5&ndash;15 cm 局部修正</li>
+  <li><strong>Population</strong>:如果目標房比 reference 大,依 co-occurrence 模型提議新家具;<code>_vet_additions</code> 守門 &mdash; 加入後 layout 成本不能變才收</li>
+  <li><strong>Ranking</strong>:全 7 個能量(含 E<sub>rel</sub>、E<sub>style</sub>、E<sub>edit</sub>)算 E(Y),k 個候選挑最低</li>
+  <li>輸出可編輯的 3D 場景</li>
 </ul>
 
-<p>Sweep 過 <code>anchor_w &isin; {6, 30, 100}</code>,6 個 test scenes &times; 3 個尺寸下量結果:</p>
-
-<div class="tw">
-<table>
-<thead>
-<tr><th>Size</th><th>Mode</th><th>Mean float</th><th>Max float</th><th>OOB %</th><th>Col %</th><th>S<sub>rel</sub></th></tr>
-</thead>
-<tbody>
-<tr><td>0.75&times;</td><td>no polish</td><td>9.1</td><td>28.6</td><td>5.7</td><td>4.4</td><td>0.41</td></tr>
-<tr><td>0.75&times;</td><td><strong>polish anchor=100</strong></td><td class="win">7.7</td><td>29.8</td><td class="win">2.6</td><td class="win">2.9</td><td class="win">0.42</td></tr>
-<tr><td>1.00&times;</td><td>no polish</td><td>16.1</td><td>65.6</td><td>3.9</td><td>5.5</td><td>0.91</td></tr>
-<tr><td>1.00&times;</td><td><strong>polish anchor=100</strong></td><td class="win">14.6</td><td class="win">61.6</td><td class="win">2.0</td><td class="win">3.9</td><td class="win">0.93</td></tr>
-<tr><td>1.35&times;</td><td>no polish</td><td>20.6</td><td>100.6</td><td>7.8</td><td>1.9</td><td>0.85</td></tr>
-<tr><td>1.35&times;</td><td><strong>polish anchor=100</strong></td><td class="win">19.5</td><td>102.1</td><td class="win">2.9</td><td>1.9</td><td class="win">0.86</td></tr>
-</tbody>
-</table>
-</div>
-
-<p><strong>結論</strong>:</p>
-<ul>
-  <li><strong>OOB 降 2&ndash;3&times;(1.35&times; 房從 7.8 % → 2.9 %)</strong>,這才是 polish 該做的事:PDF § 8 E<sub>bound</sub> 進 loop,強制不出界</li>
-  <li><strong>S<sub>rel</sub> 反而略升</strong>(0.85 → 0.86, 0.91 → 0.93)&mdash;&mdash; anchor + E<sub>rel</sub> 讓 motifs 不被打散;coherence 保住了</li>
-  <li>Wall float 是小改善(1.35&times; 20.6 → 19.5 cm);大房殘留浮空是<strong>訓練層問題</strong>(見 8.6)</li>
-  <li>七個 § 8 能量現在<em>都</em>影響 layout,不是只用於排名。E<sub>edit</sub> 保留 slot 待接使用者輸入</li>
-</ul>
+<h2>實際輸出</h2>
 
 <figure>
-  <img src="assets/three_sizes_polish.png" alt="Three sizes after enabling coexisting projection polish">
-  <figcaption>啟用 PDF eq (37) projection(anchor=100 弱共存版本)之後的三尺寸診斷。原尺寸完全複製 reference;縮小房 tv 有 14 cm 是 flow 選錯了牆,polish 沒硬把它拉回來(anchor L2 尊重 flow 決策);大房 sideboard 3.7 cm、bed 3.4 cm 顯著改善。</figcaption>
-</figure>
-
-<div class="note"><strong>設計選擇:polish 是「共存」而不是「取代」guidance。</strong>先讓 in-sampling guidance 產生 coherent proposal,再用 projection 輕度修正剩餘的可行性(wall gap、OOB corner、cross-motif clearance)。這比原本 PDF eq (37) 的 aggressive escalating projection <em>更好</em>&mdash;&mdash;因為那會為了 col=0 把 dining set 打散。而比純 guidance <em>更完整</em>&mdash;&mdash;因為那漏了 E<sub>rel</sub>、E<sub>style</sub>。</div>
-
-<h3 id="cn-metric20">8.6 訓練層驗證 &middot; <code>flow_metric20</code>(20 epoch,新 metric-space loss)</h3>
-
-<p>照上一節的三個教訓,設計新 loss <code>wall_metric_loss</code>,直接對 <em>x1<sub>hat</sub> 位置</em>誤差在 <em>metric 空間</em>加權(把 (u, v) 誤差乘上 target 房間的 metric 半徑),只在 &tau; &gt; 0.5 計算避開低 &tau; 噪音,並加重 weight decay 防過擬合。<strong>只跑 20 epoch 先看趨勢是否對</strong>,再決定要不要投入更長訓練。</p>
-
-<figure>
-  <img src="assets/loss_curves_metric.png" alt="Training curves: three attempts side by side">
-  <figcaption>三次訓練並列。綠色為新的 <code>flow_metric20</code>(20 ep):val 在 ep 11 到最低 0.0113,ep 12+ 開始震盪(overfit 徵兆,20 ep 剛好是對的停點);右側 metric loss 從 peak 0.005 降到 0.0003(17&times;),新 loss 有被真的優化。灰色為失敗的 <code>flow_wallpos</code>(100 ep):val 一路降到 0.0011,但實測 max float 224 cm(見 8.3)&mdash;&mdash;val 假象。</figcaption>
-</figure>
-
-<figure>
-  <img src="assets/three_sizes_metric20.png" alt="Three sizes with flow_metric20 checkpoint">
-  <figcaption>同一 22 m² 客廳,<code>flow_metric20 + shipped polish</code> 的三尺寸實測。<strong>0.75&times; 大改善</strong>&mdash;&mdash;tv_stand 從基準的 14 cm 浮空變成 0.9 cm 貼牆、sideboard 5.2 &rarr; 1.2 cm。1.0&times; 幾乎完美複製 reference;1.35&times; sofa 20 cm 是唯一明顯浮空(基準是 18 cm,略退)。</figcaption>
-</figure>
-
-<h4>6 場景平均對照</h4>
-<div class="tw">
-<table>
-<thead>
-<tr><th>Size</th><th>Checkpoint</th><th>Mean float (cm)</th><th>Max (cm)</th><th>OOB %</th><th>Col %</th><th>S<sub>rel</sub></th></tr>
-</thead>
-<tbody>
-<tr><td>0.75&times;</td><td>flow_wall (shipped)</td><td>7.7</td><td>29.8</td><td>2.6</td><td>2.9</td><td>0.42</td></tr>
-<tr><td>0.75&times;</td><td>flow_metric20</td><td>9.2</td><td>33.7</td><td>2.8</td><td class="win">2.2</td><td>0.42</td></tr>
-<tr><td>1.00&times;</td><td>flow_wall (shipped)</td><td>14.6</td><td>61.9</td><td>2.0</td><td>3.9</td><td class="win">0.93</td></tr>
-<tr><td>1.00&times;</td><td>flow_metric20</td><td class="win">13.7</td><td class="win">61.6</td><td>2.2</td><td>4.0</td><td>0.92</td></tr>
-<tr><td><strong>1.35&times;</strong></td><td>flow_wall (shipped)</td><td>19.5</td><td>102.1</td><td>2.9</td><td>1.9</td><td>0.86</td></tr>
-<tr><td><strong>1.35&times;</strong></td><td><strong>flow_metric20</strong></td><td class="win">17.4</td><td>105.1</td><td class="win">2.5</td><td class="win">1.4</td><td class="win">0.87</td></tr>
-</tbody>
-</table>
-</div>
-
-<div class="note">
-<p style="margin:0 0 8px"><strong>三個關鍵發現:</strong></p>
-<ol style="margin:0">
-  <li><strong>趨勢是對的。</strong>1.35&times; 大房 mean float 降 11 %(19.5 &rarr; 17.4 cm)、col 從 1.9 % 降到 1.4 %、S<sub>rel</sub> 略升到 0.87。這是 metric-space loss 該作用的地方。</li>
-  <li><strong>沒有 wall_pos_loss 那種災難。</strong>Max float 都 &lt; 106 cm,不會製造 224 cm 離群。val 0.0113 這次跟實測有<em>正相關</em>&mdash;&mdash;不是假象。</li>
-  <li><strong>幅度不夠當 shipped default。</strong>只有 2 cm 大房改善,小房略退步。<strong>訓練層貢獻是「小改善」,不是「breakthrough」</strong>。Shipped 仍是 <code>flow_wall + polish</code>(polish 帶來的 OOB 2&ndash;3&times; 改善才是主要贏)。</li>
-</ol>
-</div>
-
-<h4>結論與下一步的選項</h4>
-<ul>
-  <li><code>flow_metric20/flow_best.pt</code>(ep 11,val 0.0113)存起來當<strong>驗證通過的原型 checkpoint</strong>,不推為 default</li>
-  <li>Shipped path 保持:<code>flow_wall</code> + <code>polish=True, anchor=100</code>(見 8.5)</li>
-  <li>下一步選項:(A) 加大 <code>wall_metric_loss</code> 權重從 8 → 20&ndash;30 再 20 epoch,賭幅度變大;(B) 重新平衡小房 / 大房 loss weighting;(C) 停在這裡,承認訓練層是<em>已驗證但小改善</em>,把時間花在其他 PDF 沒實作項</li>
-</ul>
-
-<h3 id="cn-compare">8.7 三版本 &times; 三尺寸 &middot; 一眼並排</h3>
-
-<p>把三個版本的實際輸出放在同一張圖上,方便直接對比:同一份 22 m² 客廳 reference(第一列)分別放進 0.75&times; / 1.0&times; / 1.35&times; 房間。</p>
-
-<figure>
-  <img src="assets/three_versions_compare.png" alt="Three versions × three sizes side by side">
-  <figcaption>行 A:只有 guidance,無 polish(早期 §8.2 狀態)。行 B:<strong>SHIPPED</strong> = guidance + polish(§8.5)。行 C:<code>flow_metric20</code> + polish(§8.6 新訓練 checkpoint)。每格下方顯示 OOB / col / S<sub>rel</sub>。</figcaption>
+  <img src="assets/three_sizes_polish.png" alt="Three-sizes shipped output">
+  <figcaption>同一份 22 m² 客廳 reference,分別放入 0.75&times; / 1.0&times; / 1.35&times; 房間,用現在的 shipped pipeline 輸出。原尺寸幾乎完全複製 reference(S<sub>rel</sub> 1.00);縮小房 wall 邊物件都貼牆;放大房殘留 ~10 cm 浮空是訓練層限制,單靠 guidance + polish 無法完全消除。</figcaption>
 </figure>
 
 <div class="note">
-<p style="margin:0 0 8px"><strong>肉眼可見的差別(此場景):</strong></p>
-<ul style="margin:0">
-  <li><strong>0.75&times; 縮小房</strong>:A→B→C 的 col% 一路降(13.6 → 8.1 → 6.2);S<sub>rel</sub> A→B 從 0.65 升到 0.67(polish 保住 motif)</li>
-  <li><strong>1.0&times; 原尺寸</strong>:三個版本 S<sub>rel</sub> 幾乎都是 0.99&ndash;1.00,大致完美複製 reference</li>
-  <li><strong>1.35&times; 放大房</strong>:此場景差異最小,三版都 OOB 0.0 %、col 2&ndash;4 %;polish 和 metric20 都比 A 略清爽</li>
-</ul>
+<strong>已知限制</strong>:大房間(&gt;1.3&times;)wall 物件仍有 ~10&ndash;20 cm 平均浮空;這是<em>訓練層</em>的問題 &mdash; flow 學到的是「照 reference 等比擺」,牆位置變了它不會自動重新貼牆,而 in-sampling guidance 只能軟推。修這個要在訓練 loss 上加約束,測過的候選方案(<code>wall_pos_loss</code> normalized 空間版)實測未改善;<code>wall_metric_loss</code> metric 空間版趨勢對但幅度小。仍在 iterate。
 </div>
-
-<h3 id="cn-summary">8.8 現況一句話總結</h3>
-
-<div class="note">
-<p style="margin:0"><strong>PDF § 8 / § 9 / § 10 / § 11 / § 12 / § 13 eq (37) / § 19 <em>全部保留並用於生成</em>。</strong>§ 8 七個能量:E<sub>rel</sub>/E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub>/E<sub>func</sub>/E<sub>style</sub> 進 8.5 的 polish 步驟真正影響 layout,E<sub>edit</sub> 保留 slot 待接使用者輸入。§ 13 eq (37) 的 constraint projection 用「輕量共存」形式恢復 &mdash; 在 guidance sample 之後跑一次 anchor L2 版本,兩層互補。實測 OOB 降 2&ndash;3&times;、S<sub>rel</sub> 略升。8.6 的訓練層改動(<code>flow_metric20</code>,新 metric-space loss,20 epoch)<strong>趨勢已驗證通過</strong>:1.35&times; 大房 mean float 降 11 %、無 wall_pos_loss 那種災難離群,但幅度不夠當 default,存為 opt-in 原型 checkpoint。</p>
-</div>
-
-</div>
-
-<h2 id="refs">References</h2>
-<ol class="refs">
-  <li>H. Fu et&nbsp;al. <em>3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics.</em> ICCV 2021.
-      <a href="https://arxiv.org/abs/2011.09127">arXiv:2011.09127</a></li>
-  <li>NVIDIA. <em>SAGE-10k Dataset.</em>
-      <a href="https://huggingface.co/datasets/nvidia/SAGE-10k">huggingface.co/datasets/nvidia/SAGE-10k</a></li>
-  <li>H. Xia et&nbsp;al. <em>SAGE: Scalable Agentic 3D Scene Generation for Embodied AI.</em> CVPR 2026.</li>
-  <li><em>GenRecon.</em> <a href="https://kasothaphie.github.io/GenRecon/">kasothaphie.github.io/GenRecon</a></li>
-  <li>H. Huang et&nbsp;al. <em>MIDI: Multi-Instance Diffusion for Single Image to 3D Scene
-      Generation.</em> CVPR 2025. <a href="https://huanngzh.github.io/MIDI-Page/">project page</a></li>
-  <li>Y. Cheng, W. Chen, Y. Gu, Y. Sun, Y. Zhai, X. Cheng and J. Lin. <em>Size-aware indoor scene
-      retargeting with generalized summarization.</em> Computers &amp; Graphics 132:104315, 2025.</li>
-  <li>C. Su et&nbsp;al. <em>CHOrD: Generation of Collision-Free, House-Scale, and Organized Digital
-      Twins for 3D Indoor Scenes with Controllable Floor Plans and Optimal Layouts.</em>
-      <a href="https://arxiv.org/abs/2503.11958">arXiv:2503.11958</a></li>
-  <li><em>DeBaRA: Denoising-Based 3D Room Arrangement.</em>
-      <a href="https://openreview.net/pdf?id=rajRJ6WKj2">OpenReview</a></li>
-  <li>G. Lin et&nbsp;al. <em>InstructScene: Instruction-Driven 3D Indoor Scene Synthesis with
-      Semantic Graph Prior.</em> ICLR 2024.
-      <a href="https://chenguolin.github.io/projects/InstructScene/">project page</a></li>
-  <li>Y. Yang et&nbsp;al. <em>Holodeck: Language Guided Generation of 3D Embodied AI
-      Environments.</em> CVPR 2024.</li>
-  <li>Y. Yang et&nbsp;al. <em>PhyScene: Physically Interactable 3D Scene Synthesis for Embodied
-      AI.</em> CVPR 2024. <a href="https://physcene.github.io/">project page</a></li>
-  <li>D. Paschalidou et&nbsp;al. <em>ATISS: Autoregressive Transformers for Indoor Scene
-      Synthesis.</em> NeurIPS 2021.</li>
-  <li>J. Tang et&nbsp;al. <em>DiffuScene: Denoising Diffusion Models for Generative Indoor Scene
-      Synthesis.</em> CVPR 2024.</li>
-</ol>
 
 <footer>
-  Every number on this page was produced by the code in
-  <a href="https://github.com/gino6178/project4">this repository</a>, on one machine, under one
-  protocol, and includes the results that did not work. Where a comparison could not honestly be
-  made, the measurement showing why is reported in its place.
+Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
 </footer>
 
 </div>
