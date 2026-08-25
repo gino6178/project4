@@ -192,8 +192,47 @@
 </figure>
 
 <div class="note">
-<strong>已知限制</strong>:大房間(&gt;1.3&times;)wall 物件仍有 ~10&ndash;20 cm 平均浮空;這是<em>訓練層</em>的問題 &mdash; flow 學到的是「照 reference 等比擺」,牆位置變了它不會自動重新貼牆,而 in-sampling guidance 只能軟推。修這個要在訓練 loss 上加約束,測過的候選方案(<code>wall_pos_loss</code> normalized 空間版)實測未改善;<code>wall_metric_loss</code> metric 空間版趨勢對但幅度小。仍在 iterate。
-</div>
+<strong>已知限制</strong>:大房間(&gt;1.3&times;)wall 物件仍有 ~10&ndash;20 cm 平均浮空;這是<em>訓練層</em>的問題 &mdash; flow 學到的是「照 reference 等比擺」,牆位置變了它不會自動重新貼牆,而 in-sampling guidance 只能軟推。修這個要在訓練 loss + 架構上動,見下方 <a href="#train-experiments">訓練層實驗</a>。</div>
+
+<h2 id="train-experiments">訓練層實驗(正在 iterate)</h2>
+
+<p>Shipped path 仍是 <code>flow_wall</code> baseline + polish;下面幾個訓練層改動<strong>正在跑 / 已跑過</strong>,累積成一條驗證後才會替換 shipped 的路線。</p>
+
+<h3>1. 訓練 loss:<code>wall_metric_loss</code>(metric-space 版位置損失)</h3>
+<ul>
+  <li>對「參考裡靠牆」的物件,直接在 metric 空間壓 <code>|x1_hat − x1_target|²</code>(乘以 target 房間的 metric 半徑)</li>
+  <li>只在 &tau; &gt; 0.5 計算,避開低 &tau; 噪音</li>
+  <li>20 epoch fine-tune:val 從 0.02 → 0.011(2&times;),實測 1.35&times; mean float 降 11 %(19.5 → 17.4 cm)</li>
+  <li>方向對,幅度不夠</li>
+</ul>
+
+<h3>2. 架構:並行 <em>graph node stream</em>(GraphGPS 風格)</h3>
+<ul>
+  <li>Box stream(現有 DiT)吃 state,學幾何 / 碰撞</li>
+  <li>新增 graph stream:吃 category + motif + edge features,GNN 三層 message passing,產出每個物件的<em>語意先驗</em> embedding</li>
+  <li>Per-block adaLN 融合:每層 DiT 都吃到 graph 訊號,不會被稀釋(用 zero-init fuse 保證 warm-start 相容)</li>
+  <li>20 epoch:val 跟 metric20 差不多(0.011),但 1.35&times; <strong>col 從 1.9 % 降到 0.9 %</strong>(baseline 的一半)&mdash; graph stream 學到了「什麼類別不該碰」的語意</li>
+</ul>
+
+<h3>3. 訓練資料:<em>scramble</em>(打亂位置 → 學習 reference 樣子)</h3>
+<ul>
+  <li>訓練時 50 % 的樣本:pseudo-reference 的位置<em>完全打亂</em>(整個房間內 uniform 隨機,yaw 隨機),類別 / motif / 尺寸保留</li>
+  <li>目標仍是真實 layout,強迫 model 從 <code>cat + wall_affinity + graph 語意 + boundary</code> 重建位置</li>
+  <li>類 LEGO-Net,但融進 flow matching(而不是 iterative denoising)</li>
+  <li>Train loss 從 0.06 跳到 5.96(任務真的變難),val 20 epoch 內從 5.96 → 0.17(還在下降,20 epoch 明顯不夠)</li>
+  <li>LEGO-Net 訓 500 k iterations,我們現在的 setup 等價 ~2 900 epoch;20 epoch 只是看趨勢</li>
+</ul>
+
+<h3>4. Boundary encoder:<em>metric-aware set-transformer</em>(正在跑)</h3>
+<ul>
+  <li>Boundary points 從 4 維(u, v, n_u, n_v)升到 <strong>6 維</strong>:加入每點的 metric 位置 (u&times;h₁, v&times;h₂)</li>
+  <li>Encoder 從單層 MLP + mean pool 升級成 <strong>2 層 set-transformer</strong>(邊界點彼此 self-attention,學房型 spatial 結構)</li>
+  <li>目的:讓 model 直接看到「這面牆在 3 米、那面在 6 米」的絕對距離 &mdash; 這是 baseline 無法區分 3 m 牆 vs 6 m 牆的根源</li>
+  <li>200 epoch 多 GPU(3&times; L40 DataParallel)訓練中,warm-start 自 scramble20;跑完再上網頁</li>
+</ul>
+
+<div class="note">
+<strong>為什麼不直接抄 LEGO-Net 的 PointNet?</strong>LEGO-Net 用 PointNet 編絕對 metric 座標的 floor plan,對<em>單一房間 denoising</em> 有效,但對<em>跨房間 retargeting</em> 反而是災難 &mdash; 相同形狀不同尺寸會被當兩個房型學。所以我們把 boundary 拆成兩路:normalized(u, v)給形狀先驗,metric(u&times;h₁, v&times;h₂)給尺度先驗,一起餵給 set-transformer。</div>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
