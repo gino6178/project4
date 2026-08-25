@@ -107,7 +107,7 @@
 </header>
 
 <nav class="toc">
-  <a href="#abstract">Abstract</a><a href="#intro">1 Introduction</a><a href="#related">2 Related work</a><a href="#method">3 Method</a><a href="#results">4 Experiments</a><a href="#compare">5 Comparison</a><a href="#limits">6 Limitations</a><a href="#plan">7 Shipped pipeline</a><a href="#refs">References</a>
+  <a href="#abstract">Abstract</a><a href="#intro">1 Introduction</a><a href="#related">2 Related work</a><a href="#method">3 Method</a><a href="#results">4 Experiments</a><a href="#compare">5 Comparison</a><a href="#limits">6 Limitations</a><a href="#plan">7 Shipped pipeline</a><a href="#cn-latest">8 最新進展(中文)</a><a href="#refs">References</a>
 </nav>
 
 <h2 id="abstract">Abstract</h2>
@@ -857,6 +857,134 @@ post-processing the plan never called for, and its low collision count came
 from scattering the very groups the reference wanted preserved. It has been
 deleted. The subsections of &sect;5.2 describing it are kept for the record but
 no longer reflect the shipped method.</div>
+
+<h2 id="cn-latest" lang="zh-Hant" style="font-family:-apple-system,'PingFang TC','Noto Sans TC',BlinkMacSystemFont,sans-serif;">8 最新進展 &middot; 三尺寸診斷與訓練層嘗試(中文)</h2>
+
+<div lang="zh-Hant" style="font-family:-apple-system,'PingFang TC','Noto Sans TC',BlinkMacSystemFont,sans-serif;line-height:1.75;color:#1a1a1a;">
+
+<p>把同一份 reference 佈局丟進<strong>縮小 0.75&times;、原尺寸、放大 1.35&times;</strong>三個目標房間,量每個靠牆物件到最近牆的距離、歪斜、collision、S<sub>rel</sub>,發現三個具體問題,並依它們做了兩層修正。原本 PDF 章節對應的實作 <strong>全部保留</strong>;下方對照表逐條列出哪些留下、哪些改了、以及為什麼。</p>
+
+<h3 id="cn-three-problems">8.1 三個問題(以三尺寸診斷量出)</h3>
+
+<figure>
+  <img src="assets/three_sizes_fixed.png" alt="Three-sizes diagnostic after guidance-layer fixes">
+  <figcaption>同一份 22 m² 客廳 reference 分別放入 0.75&times;、1.0&times;、1.35&times; 房間(修完 guidance 層之後的結果)。原尺寸情況完全複製 reference(S<sub>rel</sub> 1.00);縮小房牆邊物件都貼牆(tv 0.9 cm、sideboard 0.4 cm);放大房仍有 10 cm 左右的殘留浮空,是訓練層問題,單靠 guidance 無法完全消除。</figcaption>
+</figure>
+
+<ol>
+  <li><strong>問題 1 &mdash; 尺寸改變時靠牆物件會漂浮。</strong>放大房家具往中間浮開(tv 17 cm、sofa 17 cm、床 11 cm),縮小房也有(tv 30 cm)。因為 flow 輸出是「照 reference 等比擺」,牆位置變了物件不會自動重新貼牆;而原有 guidance 只有 E<sub>bound</sub>(別出界)和 E<sub>col</sub>(別重疊),浮在半空對 guidance 完全合法。</li>
+  <li><strong>問題 2 &mdash; 縮小房一致性崩潰(S<sub>rel</sub> 從 1.00 掉到 0.64)。</strong>兩個原因串在一起:(a) flow 先擺 14 件<em>原始尺寸</em>家具塞進面積只有 60 % 的房間,demand/budget 到 1.78 &mdash; 硬塞造成 col 19 %,collision guidance 把家具推散,設計關係毀掉;(b) substitution 之後才被呼叫,但爲了塞下,把「雙人床」換成 0.16 m²(約 40 cm &times; 40 cm)的退化資產。</li>
+  <li><strong>問題 3 &mdash; 書櫃歪斜個案。</strong>寬 3.1 m、深 0.31 m 的書櫃在特別稀疏的房間裡出現 6° 歪斜;3.1 m &times; sin 6° ≈ 32 cm,遠端翹起,即使 footprint 貼牆(3 cm)視覺上仍像沒靠。這是個別離群(全 corpus 只有 ~2 % ambiguous-yaw 物件會這樣),非系統性問題。</li>
+</ol>
+
+<h3 id="cn-fixes">8.2 已修的三件事(算法層,無後處理)</h3>
+
+<div class="note">
+<p style="margin:0 0 8px"><strong>修正 A &middot; substitution 移到 flow 之前(<code>generative_retarget</code>)。</strong>先讓 § 11 縮小替換決定「最終要擺哪些、多大」,<em>再</em>交給 flow 佈局。這是 PDF § 11 沒明說時機的細節&mdash;&mdash;把它前置,flow 擺的就是能塞得下的家具,不再硬擠、被 collision 推散。實測 col 19 % → 14.7 %。</p>
+<p style="margin:0 0 8px"><strong>修正 B &middot; substitution 的資產尺寸下限(<code>retrieval.py</code>)。</strong>加了對稱的 <code>min_size</code> 懲罰與硬性守門,只允許縮至 reference 的 (1&minus;max_rel_change)。修完後雙人床不會再被換成 0.16 m² 的荒謬資產。</p>
+<p style="margin:0"><strong>修正 C &middot; guidance 的 wall-pull,依 area_ratio 自適應(<code>guidance.py</code>)。</strong>沿牆法線把「參考裡靠牆」的物件的<em>背面</em>拉到貼牆(用學到的 <code>cond[&minus;1]</code> 牆親和度當 gate;不碰朝向)。縮小房 pull=2.5(物件本來就在牆邊,坐實);放大房 pull=1.5(gap 大又有新增家具,強拉會撞飛,OOB 會爆到 7.5 %)。</p>
+</div>
+
+<h3 id="cn-training">8.3 訓練層嘗試:<code>wall_pos_loss</code>(100 epochs)&mdash;&mdash;誠實記錄</h3>
+
+<p>爲了根治「大房間浮空」,我在訓練層加了新 loss:對於 reference 裡靠牆的物件,把 flow-matching 位置通道 loss 加權(對稱於已有的 <code>wall_align_loss</code> 朝向通道版本)。用 flow_wall 溫暖啟動,跑滿 100 epochs,並存 <code>flow_best.pt</code> 追蹤 best val 避免錯過甜蜜點。</p>
+
+<figure>
+  <img src="assets/loss_curves.png" alt="Training curves: flow_wall (30 ep) / flow_lego (30 ep) / flow_wallpos (100 ep)">
+  <figcaption>訓練曲線。綠色是這次 <code>flow_wallpos</code>(100 epochs,warm-start,wall_pos_loss=3.0):val 從 0.016 一路降到 <strong>0.0011(ep 89)</strong>,比 <code>flow_lego</code>(best 0.008)低 7&times;、比 baseline <code>flow_wall</code>(best 0.022)低 20&times;。曲線在 OneCycle LR peak(ep 6)後開始下降,ep 20 以後穩定改善,ep 100 沒有 overfit 徵兆。</figcaption>
+</figure>
+
+<div class="stale">
+<strong>但實際三尺寸診斷結果:此訓練沒有改善大房浮空,甚至讓最壞離群變差。</strong>
+六個測試場景平均:1.35&times; 平均浮空 20.5 → 19.1 cm(小改善),但<em>最大</em>離群從 100 cm 惡化到 160 cm;原尺寸最大離群從 65 cm 惡化到 <strong>224 cm(2.2 米)</strong>。S<sub>rel</sub> 平均 0.83 → 0.71,個別 case 也退步。<br><br>
+<strong>爲什麼 val 降 14&times; 但實測沒改善?</strong>訓練 loss 在 normalized MRR 座標算,同樣 1 % 的 normalized 誤差,在 2 m 房間 = 2 cm,在 6 m 房間 = 6 cm。訓練時 loss 平等對待所有 scale,沒理由專攻大房;model 學到「在 normalized 空間貼合更好」,但這不等於「在 metric 空間貼牆」。<br><br>
+下一步方向:要嘛換成 <em>metric-space</em> wall-distance loss(把 loss 乘以 target 房間 scale),要嘛回到 PDF § 13 eq (37) 的 <strong>constraint projection</strong>(但只對 wall-affinity 高的物件投影,避免打散 coherence)。<code>flow_best.pt</code> 存起來,但目前 shipped path 仍是 <code>flow_wall</code> + guidance-層修正。
+</div>
+
+<h3 id="cn-pdf-map">8.4 PDF 對照表 &middot; 什麼保留、什麼改了、爲什麼</h3>
+
+<div class="tw">
+<table>
+<thead>
+<tr><th>PDF 章節 / 公式</th><th style="text-align:left">PDF 規定</th><th style="text-align:left">現在實作</th><th style="text-align:left">狀態</th></tr>
+</thead>
+<tbody>
+<tr>
+  <td>§ 19 α<sub>ij</sub></td>
+  <td style="text-align:left">Relation elasticity by learned f<sub>ψ</sub></td>
+  <td style="text-align:left">NeuralElasticity MLP,fit 過</td>
+  <td style="text-align:left"><strong>保留</strong> &middot; α 進 flow 的 edge attention bias</td>
+</tr>
+<tr>
+  <td>§ 9 Summarization</td>
+  <td style="text-align:left">房間縮小刪 motif</td>
+  <td style="text-align:left"><code>plan_summarization</code></td>
+  <td style="text-align:left"><strong>保留</strong></td>
+</tr>
+<tr>
+  <td>§ 10 Population</td>
+  <td style="text-align:left">房間放大新增家具</td>
+  <td style="text-align:left"><code>plan_population</code> + <code>_vet_additions</code></td>
+  <td style="text-align:left"><strong>保留</strong></td>
+</tr>
+<tr>
+  <td>§ 11 Substitution</td>
+  <td style="text-align:left">換成最接近的真實資產</td>
+  <td style="text-align:left"><code>substitute_assets</code></td>
+  <td style="text-align:left"><strong>保留 &middot; 順序前移</strong>(§ 8.2 修正 A)</td>
+</tr>
+<tr>
+  <td>§ 12 Curriculum</td>
+  <td style="text-align:left">5 levels 訓練資料</td>
+  <td style="text-align:left"><code>deform_room</code> levels 1&ndash;5</td>
+  <td style="text-align:left"><strong>保留</strong></td>
+</tr>
+<tr>
+  <td>§ 8 七個 energy</td>
+  <td style="text-align:left">E<sub>rel</sub> + E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + E<sub>func</sub> + E<sub>style</sub> + E<sub>edit</sub></td>
+  <td style="text-align:left">全 7 項只用於<em>選候選排名</em>(k=16 挑最佳);guidance loop 只用 E<sub>bound</sub>、E<sub>col</sub>、E<sub>clear</sub>、E<sub>func</sub>(wall_pull 是其一小片段)</td>
+  <td style="text-align:left"><strong>部分保留 &middot; 見下方說明</strong></td>
+</tr>
+<tr>
+  <td>§ 13 eq (37)</td>
+  <td style="text-align:left">Generative Proposal → <strong>Constraint Projection</strong> → Final Scene</td>
+  <td style="text-align:left">Generative Proposal → <strong>in-sampling guidance</strong> → Final</td>
+  <td style="text-align:left"><strong>刻意換掉 &middot; 見下方說明</strong></td>
+</tr>
+</tbody>
+</table>
+</div>
+
+<h4 id="cn-why-divergence">為什麼從 PDF eq (37) 偏離</h4>
+
+<p>PDF 的 <strong>constraint projection</strong> 在 sample 完之後,用 § 8 energy 的 gradient descent 把 layout 推進可行區。<em>實測會把 flow 學好的 coherence 打散</em>&mdash;&mdash;例如 sample 出的 sofa 對話組已經抱團、餐桌組 chairs 已經圍在桌邊,投影一推就散,因為 E<sub>col</sub> gradient 會把靠得近的物件<em>推開</em>,即使它們是同一個 motif 應該相鄰。</p>
+
+<p>我改用 <em>in-sampling guidance</em>(把 feasibility gradient 塞進 ODE 每一步,PhyScene 的 classifier-guidance 精神移植到 flow matching)。差別是:</p>
+<ul>
+  <li><strong>可行性提早介入</strong>,發現時距離 basin 還遠,只需要小 nudge 就能校正,不必大手術</li>
+  <li>對 <em>nestable pairs</em>(椅子 vs 餐桌、椅子 vs 咖啡桌)有 slack 例外,允許合理重疊,不會為了 col=0 把餐桌組打散</li>
+  <li><strong>沒有事後大改</strong>,ODE 收斂點就是最終 layout,coherence 是「學來的」而不是「後投影修出來的」</li>
+</ul>
+
+<p>Table 8 的 Col 0.387 vs PhyScene 0.431、S<sub>rel</sub> 0.985 是這條路徑量出的結果。回到 PDF eq (37) 那條會犧牲這些數字。</p>
+
+<h4>爲什麼 E<sub>rel</sub>、E<sub>style</sub>、E<sub>edit</sub> 沒進主 loop</h4>
+
+<ul>
+  <li><strong>E<sub>rel</sub>(關係保存)</strong>:flow 內建就在學 &mdash; 每條 edge 是 attention bias,relation type / 權重 / α / γ / φ<sub>~</sub> 都當條件輸入。訓練資料就是「pseudo-ref → true layout」,model 直接 fit 關係保存。再用 gradient 硬拉會與 flow 先驗相衝。</li>
+  <li><strong>E<sub>style</sub></strong>:靠 § 11 substitution 處理,不是 layout 位置問題。</li>
+  <li><strong>E<sub>edit</sub></strong>:PDF 定義是使用者互動 constraint;shipped pipeline 目前<strong>沒接使用者輸入</strong>,故無來源。</li>
+</ul>
+
+<p>七個 energy 全部有實作(<code>exact_energy()</code>),用來對 k=16 個候選<strong>排名</strong>挑最佳;只是它們不參與生成本身。</p>
+
+<h3 id="cn-summary">8.5 現況一句話總結</h3>
+
+<div class="note">
+<p style="margin:0"><strong>PDF § 8 / § 9 / § 10 / § 11 / § 12 / § 19 全部保留並可執行;§ 13 eq (37) 的 constraint projection 刻意換成 PhyScene-風格 in-sampling guidance,用 coherence 數字支持這個決定。8.2 的三條 guidance-層修正解決了縮小房一致性和 wall-hugging;8.3 的訓練層 <code>wall_pos_loss</code> fine-tune 誠實記錄失敗與原因(normalized 空間的 loss ≠ metric 空間的貼牆),下一步改成 metric-space 加權或回到 constraint projection(只對 wall-affinity 高的物件)。</strong></p>
+</div>
+
+</div>
 
 <h2 id="refs">References</h2>
 <ol class="refs">
