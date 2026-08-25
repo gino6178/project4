@@ -234,31 +234,52 @@
 <div class="note">
 <strong>為什麼不直接抄 LEGO-Net 的 PointNet?</strong>LEGO-Net 用 PointNet 編絕對 metric 座標的 floor plan,對<em>單一房間 denoising</em> 有效,但對<em>跨房間 retargeting</em> 反而是災難 &mdash; 相同形狀不同尺寸會被當兩個房型學。所以我們把 boundary 拆成兩路:normalized(u, v)給形狀先驗,metric(u&times;h₁, v&times;h₂)給尺度先驗,一起餵給 set-transformer。</div>
 
-<h2 id="training-pairs">訓練 pair 怎麼做的(圖示備查)</h2>
+<h2 id="training-pairs">訓練 pair 怎麼做的(所有配置圖示備查)</h2>
 
-<h3>現行:反向 pair(<code>RetargetPairs.__getitem__</code>)</h3>
-<p>真實 3D-FRONT 場景保留當 <em>target</em>(自帶 GT layout),<em>reference</em> 反向製造:把場景的 room deform,再把物件 warp 進去 &mdash; 兩者一起當 model 的輸入。這種 pair 天然涵蓋放大跟縮小兩個方向(見圖中 ref/target 面積比)。</p>
+<p>下面四種 pair 是**現在有的、或候選要加**的所有訓練配置。每張左邊都是 model 的<em>輸入</em>、右邊是 model 學習的<em>目標</em>。同一份 22 m² L 形客廳跨三種 deform level(L1 uniform_scale、L2 aspect_ratio、L4 corner_cut)分別驗證,確認每種配置真的能生出合理樣本。</p>
+
+<h3>(1) 反向 pair · <strong>CURRENT DEFAULT</strong></h3>
+<p>真實 3D-FRONT 場景保留當 target(自帶 GT layout),reference 反向製造:把場景的 room deform,再把物件 affine warp 進去。天然涵蓋放大和縮小兩個方向 &mdash; L1 這例是 ref 1.54× target(縮小訊號),L2 是 0.83×(放大訊號)。</p>
 <figure>
-  <img src="assets/training_pair_backward.png" alt="Backward-manufactured training pair">
-  <figcaption>三個 deform level 各一例。左 = pseudo-reference(輸入),右 = target = 真實場景(GT)。Level 1 uniform_scale 這例是「ref 大、target 小」(縮小訊號);Level 2 aspect_ratio 是「ref 小、target 大」(放大訊號)。</figcaption>
+  <img src="assets/training_pair_backward.png" alt="Backward-manufactured training pair (current default)">
+  <figcaption>左 = pseudo-reference(輸入),右 = target = 真實場景(GT)。這是 <code>RetargetPairs.__getitem__</code> 目前預設走的路徑。</figcaption>
 </figure>
 
-<h3>候選:Warp-based pseudo-GT pair(<strong>目前 <em>未</em>啟用</strong>)</h3>
-<p>反向直接對稱:<em>reference</em> 保留真實不動,<em>target</em> 房間 deform,GT layout 用 affine warp 當 bootstrap。GT 不完美(只是仿射投影),但直接教 model「reference → 不同大小 target」這個方向,補足現行 pair 對<em>放大</em>方向的訊號密度。</p>
+<h3>(2) 反向 + <em>Scramble</em> · <strong>CURRENTLY ACTIVE(50 % 樣本)</strong></h3>
+<p>在反向 pair 的基礎上,50 % 樣本的 pseudo-reference 位置<em>完全隨機</em>(uniform 內部取樣,yaw 也隨機),類別 / motif / 尺寸保留。強迫 model 從語意 token(cat + motif + wall_affinity + graph stream + boundary)重建佈局,不能靠「複製 pseudo-ref」偷懶。</p>
 <figure>
-  <img src="assets/training_pair_warp.png" alt="Warp-based pseudo-GT training pair (not active)">
-  <figcaption>與上圖對稱:左 = 真實 reference(不動),右 = deformed target + affine warp 的 pseudo-GT。若下輪 200 epoch 大房仍不理想會啟用。</figcaption>
+  <img src="assets/training_pair_scramble.png" alt="Scramble augmentation (currently active)">
+  <figcaption>左 = 位置全部打亂的 pseudo-reference,右 = 真實場景 GT。類 LEGO-Net 的 iterative denoising 精神,但融進 flow matching。</figcaption>
 </figure>
 
-<h3>還缺的訊號:隨機抽換物件</h3>
+<h3>(3) Warp-based pseudo-GT pair · <strong>CANDIDATE(未啟用)</strong></h3>
+<p>反向對稱:reference 保留真實不動,target 房間 deform,GT layout 用 affine warp 當 bootstrap。GT 不完美(只是仿射投影),但直接教 model「reference → 不同大小 target」這個方向,補足現行 pair 對放大方向的訊號密度。</p>
+<figure>
+  <img src="assets/training_pair_warp.png" alt="Warp-based pseudo-GT training pair (candidate, not active)">
+  <figcaption>左 = 真實 reference(不動),右 = deformed target + affine warp 的 pseudo-GT。若下輪 200 epoch 大房仍不理想會啟用。</figcaption>
+</figure>
+
+<h3>(4) 反向 + <em>Substitution</em>(隨機抽換物件) · <strong>CANDIDATE(未啟用)</strong></h3>
+<p>訓練時以某機率把物件<em>換成同類別但不同尺寸</em>的真實 asset(從 <code>bank</code> 抽,兩邊同步替換,類別、關係、motif 保持,但尺寸變化)。這是 <em>α<sub>ij</sub></em>(關係彈性)的關鍵訓練訊號 &mdash; 現在同一組類別永遠對應同樣尺寸,model 沒機會學到「相同關係下不同尺寸物件」的分佈。</p>
+<figure>
+  <img src="assets/training_pair_subst.png" alt="Substitution augmentation (candidate, not active)">
+  <figcaption>三個範例中 6&ndash;10 個物件被替換成 bank 裡同類別的不同尺寸 asset(輸入 + GT 同步)。大 sofa 配小 coffee_table vs 小 sofa 配大 coffee_table 都會出現 &mdash; model 學到「同 motif 內的距離該保留還是該延展」。</figcaption>
+</figure>
+
+<h3>訓練分布 —— 現行 pair 的 ref/target 面積比</h3>
+<p>3000 個訓練 pair 抽樣的分布。虛線標記推理測試的 0.75× / 1.0× / 1.35× 對應位置。</p>
+<figure>
+  <img src="assets/train_ratios.png" alt="Training-pair area ratio distribution">
+  <figcaption><strong>p10 = 0.73, p50 = 0.99, p90 = 1.47</strong>。1.35× test 對應 ratio = 0.74,剛好在 p10 附近 &mdash; 只有 10.8 % 訓練樣本觸及這個極端;0.75× test 對應 ratio = 1.33,只有 14.9 % 樣本覆蓋。**這解釋為什麼大房 wall float 學不好** &mdash; 訓練分布在極端稀疏。</figcaption>
+</figure>
+
 <div class="note">
-<strong>觀察:</strong>目前訓練 pair 裡,物件的<em>類別、尺寸、外觀</em>都完全一致 &mdash; 只有位置變。這讓 model 沒機會學到 <em>α<sub>ij</sub></em>(關係彈性:哪些對象間距該剛、哪些該彈)&mdash; 因為同一組類別永遠對應同樣的相對位置,「相同關係下不同尺寸物件」的分佈 model 沒看過。<br><br>
-<strong>解方:</strong>訓練時以某機率把物件<em>換成同類別但不同尺寸</em>的真實 asset(從 <code>bank</code> 抽,類似推理時的 substitution 但用在訓練)。這樣:
+<strong>下輪打算做的:</strong>
 <ul style="margin:6px 0 0">
-  <li>大 sofa 配小 coffee_table vs 小 sofa 配大 coffee_table 都會出現 &mdash; model 學到「同 motif 內的距離該保留還是該延展」</li>
-  <li>不同尺寸物件塞進同一 pseudo-ref 房間會製造合理 &amp; 不合理的碰撞情境 &mdash; model 學到 collision-aware 的距離取捨</li>
+  <li>把 L1 uniform_scale 從 <code>s ∈ [0.7, 1.4]</code> 拉寬到 <code>[0.5, 2.0]</code>,並改成 U 形分布(偏向兩尾)&mdash; 訓練訊號密度直接對齊 test 落點</li>
+  <li>啟用 (3) warp-based pair 加碼放大方向</li>
+  <li>啟用 (4) substitution 教會 α<sub>ij</sub></li>
 </ul>
-下輪 200 epoch(或緊接下一輪)會併入這條。
 </div>
 
 <footer>
