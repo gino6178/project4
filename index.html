@@ -282,6 +282,52 @@
 </ul>
 </div>
 
+<h2 id="curriculum-result">Curriculum learning 實驗結果(誠實記錄)</h2>
+
+<p>照上面規劃真的跑了 curriculum:從 <code>flow_bnd200</code>(當時 val 0.020,最佳 checkpoint)分段加變因,每段跑完用<em>對應目標的固定測試集</em>判定要不要進下一階段。四個測試集分別對到四個 phase 想教的能力:</p>
+
+<ul>
+  <li><strong>test_scramble</strong> &mdash; 位置完全打亂 → recover(Phase 1 目標)</li>
+  <li><strong>test_scale075</strong> / <strong>test_scale135</strong> &mdash; 房間縮小 / 放大(Phase 2 目標)</li>
+  <li><strong>test_subst</strong> &mdash; 物件尺寸變異 → 關係保留(Phase 3 目標)</li>
+</ul>
+
+<figure>
+  <img src="assets/curriculum_summary.png" alt="Curriculum eval + three-sizes bench summary">
+  <figcaption>左:四個 curriculum 測試集上,四個 checkpoint 的 metric-space wall 誤差(cm,越低越好)。右:6 個真實場景上的三尺寸 bench(shipped polish enabled)。<strong>沒有一個 fine-tune 超過 bnd200 baseline</strong>。</figcaption>
+</figure>
+
+<h3>Phase 1:scramble-only 30 epoch,lr 3e-5</h3>
+<ul>
+  <li>假設:LEGO-Net 精神 &mdash; 先徹底學會「亂位置 → 好佈局」</li>
+  <li>結果:test_scramble 41.73 → 42.82(<em>持平 / 微退</em>),其他測試全部退步 30-40 %</li>
+  <li>原因:bnd200 訓練時就有 scramble_prob=0.5,對這個能力已<em>接近該架構的 ceiling</em>。多餵 scramble 只是催化 catastrophic forgetting</li>
+</ul>
+
+<h3>Phase 2:+ wider L1 30 epoch,lr 3e-5</h3>
+<ul>
+  <li>假設:訓練分布拉寬到 [0.6, 1.7] &mdash; 讓 test 0.75× / 1.35× 落在分布中央</li>
+  <li>結果:test_scale{075,135} 都退 30 %,scramble 也再退</li>
+  <li>從 bnd200 warm-start 也試過:結果一樣</li>
+</ul>
+
+<h3>Phase 2b:ultra-mild lr=1e-5,10 epoch</h3>
+<ul>
+  <li>假設:LR 太大導致 catastrophic forgetting &mdash; 用極低 LR 溫和 nudge</li>
+  <li>結果:test_scale135 5.02 → 5.73,仍退步。<strong>即使 lr=1e-5,fine-tune 也無法保住 bnd200 的表現</strong></li>
+</ul>
+
+<div class="note">
+<strong>結論(誠實):</strong>
+<ol style="margin:6px 0 0">
+  <li>bnd200 是這個訓練 setup + 架構 + data 的 local optimum &mdash; 無論 LR、無論 augmentation,fine-tune 都會退步</li>
+  <li>訓練層的三個追加改動(wider L1、substitution、scramble 加強)<em>都沒有</em>解決大房 wall float 問題</li>
+  <li>三尺寸 bench 顯示 <code>flow_wall</code>(舊 baseline)在 <strong>1.35× 反而略優於 bnd200</strong>(20 vs 24 cm)&mdash; bnd200 在 1.0× 和 col% 略贏,但沒有全面突破</li>
+  <li>剩餘的大房 wall float 大機率不是訓練層能單獨解的 &mdash; 需要更本質的架構或資料方案(e.g., 真的加入 warp-based pair 當 GT、或 dataset 補上大房樣本)</li>
+</ol>
+<p style="margin:8px 0 0"><strong>Shipped 目前維持 <code>flow_wall + polish</code>,不切換到 bnd200 系列。</strong>本輪產生的所有 checkpoint 存為 opt-in 對照組。</p>
+</div>
+
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
 </footer>
