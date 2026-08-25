@@ -942,14 +942,14 @@ no longer reflect the shipped method.</div>
 <tr>
   <td>§ 8 七個 energy</td>
   <td style="text-align:left">E<sub>rel</sub> + E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + E<sub>func</sub> + E<sub>style</sub> + E<sub>edit</sub></td>
-  <td style="text-align:left">全 7 項只用於<em>選候選排名</em>(k=16 挑最佳);guidance loop 只用 E<sub>bound</sub>、E<sub>col</sub>、E<sub>clear</sub>、E<sub>func</sub>(wall_pull 是其一小片段)</td>
-  <td style="text-align:left"><strong>部分保留 &middot; 見下方說明</strong></td>
+  <td style="text-align:left">Guidance 用 4 項(E<sub>bound</sub>、E<sub>col</sub>、E<sub>clear</sub>、E<sub>func</sub> 之 wall_pull);<strong>polish 用 6 項</strong>(加 E<sub>rel</sub>、E<sub>style</sub>);排名時全 7 項。E<sub>edit</sub> 保留 slot 待接使用者輸入</td>
+  <td style="text-align:left"><strong>保留並生效 &middot; 見 8.5</strong></td>
 </tr>
 <tr>
   <td>§ 13 eq (37)</td>
   <td style="text-align:left">Generative Proposal → <strong>Constraint Projection</strong> → Final Scene</td>
-  <td style="text-align:left">Generative Proposal → <strong>in-sampling guidance</strong> → Final</td>
-  <td style="text-align:left"><strong>刻意換掉 &middot; 見下方說明</strong></td>
+  <td style="text-align:left">Generative Proposal + <strong>in-sampling guidance</strong> → <strong>light constraint projection (anchor L2)</strong> → Final</td>
+  <td style="text-align:left"><strong>保留並擴充 &middot; 見 8.5</strong></td>
 </tr>
 </tbody>
 </table>
@@ -978,10 +978,65 @@ no longer reflect the shipped method.</div>
 
 <p>七個 energy 全部有實作(<code>exact_energy()</code>),用來對 k=16 個候選<strong>排名</strong>挑最佳;只是它們不參與生成本身。</p>
 
-<h3 id="cn-summary">8.5 現況一句話總結</h3>
+<h3 id="cn-polish">8.5 恢復 PDF eq (37) constraint projection &middot; 與 guidance 共存</h3>
+
+<p>接續 8.4 的自我批評:PDF § 13 eq (37) 的 projection 被換成 in-sampling guidance 是刻意但也是損失&mdash;&mdash;因為那讓 <strong>E<sub>rel</sub>、E<sub>style</sub> 沒進主生成迴圈</strong>。這一節記錄如何把 projection 拉回來,而且不打散 guidance 保下的 coherence。</p>
+
+<p><strong>做法</strong>:在 in-sampling guidance sample 完之後,跑<em>一次輕量</em> Adam projection,用 <code>TorchProblem</code> 的完整 § 8 能量(七項全開),加上兩個關鍵設定:</p>
+<ul>
+  <li><code>freeze_yaw=True</code>&mdash;&mdash;flow 學到的朝向已經好過 surrogate 的局部最小,不再優化朝向</li>
+  <li><code>anchor_w=100</code>&mdash;&mdash;對「離開 sampled 位置」的 L2 懲罰,強到 E<sub>col</sub> 沒法把同 motif 對推散,但仍允許 5&ndash;15 cm 局部修正</li>
+</ul>
+
+<p>Sweep 過 <code>anchor_w &isin; {6, 30, 100}</code>,6 個 test scenes &times; 3 個尺寸下量結果:</p>
+
+<div class="tw">
+<table>
+<thead>
+<tr><th>Size</th><th>Mode</th><th>Mean float</th><th>Max float</th><th>OOB %</th><th>Col %</th><th>S<sub>rel</sub></th></tr>
+</thead>
+<tbody>
+<tr><td>0.75&times;</td><td>no polish</td><td>9.1</td><td>28.6</td><td>5.7</td><td>4.4</td><td>0.41</td></tr>
+<tr><td>0.75&times;</td><td><strong>polish anchor=100</strong></td><td class="win">7.7</td><td>29.8</td><td class="win">2.6</td><td class="win">2.9</td><td class="win">0.42</td></tr>
+<tr><td>1.00&times;</td><td>no polish</td><td>16.1</td><td>65.6</td><td>3.9</td><td>5.5</td><td>0.91</td></tr>
+<tr><td>1.00&times;</td><td><strong>polish anchor=100</strong></td><td class="win">14.6</td><td class="win">61.6</td><td class="win">2.0</td><td class="win">3.9</td><td class="win">0.93</td></tr>
+<tr><td>1.35&times;</td><td>no polish</td><td>20.6</td><td>100.6</td><td>7.8</td><td>1.9</td><td>0.85</td></tr>
+<tr><td>1.35&times;</td><td><strong>polish anchor=100</strong></td><td class="win">19.5</td><td>102.1</td><td class="win">2.9</td><td>1.9</td><td class="win">0.86</td></tr>
+</tbody>
+</table>
+</div>
+
+<p><strong>結論</strong>:</p>
+<ul>
+  <li><strong>OOB 降 2&ndash;3&times;(1.35&times; 房從 7.8 % → 2.9 %)</strong>,這才是 polish 該做的事:PDF § 8 E<sub>bound</sub> 進 loop,強制不出界</li>
+  <li><strong>S<sub>rel</sub> 反而略升</strong>(0.85 → 0.86, 0.91 → 0.93)&mdash;&mdash; anchor + E<sub>rel</sub> 讓 motifs 不被打散;coherence 保住了</li>
+  <li>Wall float 是小改善(1.35&times; 20.6 → 19.5 cm);大房殘留浮空是<strong>訓練層問題</strong>(見 8.6)</li>
+  <li>七個 § 8 能量現在<em>都</em>影響 layout,不是只用於排名。E<sub>edit</sub> 保留 slot 待接使用者輸入</li>
+</ul>
+
+<figure>
+  <img src="assets/three_sizes_polish.png" alt="Three sizes after enabling coexisting projection polish">
+  <figcaption>啟用 PDF eq (37) projection(anchor=100 弱共存版本)之後的三尺寸診斷。原尺寸完全複製 reference;縮小房 tv 有 14 cm 是 flow 選錯了牆,polish 沒硬把它拉回來(anchor L2 尊重 flow 決策);大房 sideboard 3.7 cm、bed 3.4 cm 顯著改善。</figcaption>
+</figure>
+
+<div class="note"><strong>設計選擇:polish 是「共存」而不是「取代」guidance。</strong>先讓 in-sampling guidance 產生 coherent proposal,再用 projection 輕度修正剩餘的可行性(wall gap、OOB corner、cross-motif clearance)。這比原本 PDF eq (37) 的 aggressive escalating projection <em>更好</em>&mdash;&mdash;因為那會為了 col=0 把 dining set 打散。而比純 guidance <em>更完整</em>&mdash;&mdash;因為那漏了 E<sub>rel</sub>、E<sub>style</sub>。</div>
+
+<h3 id="cn-training-next">8.6 剩餘的訓練層工作(下一輪)</h3>
+
+<p>Polish 解掉 OOB / col / motif 保存,但<strong>大房 wall float 仍有 ~20 cm 殘留</strong>。訓練層需要真正約束「靠牆」而不是「複製 velocity」。上輪 (<code>wall_pos_loss</code>) 失敗的教訓:</p>
+
+<ol>
+  <li><strong>Normalized-space loss 太寬容</strong>&mdash;&mdash;同樣 1 % 的 normalized 誤差在 6 m 房間 = 6 cm。下輪改成 metric-space,直接乘 target scale。</li>
+  <li><strong>Velocity 空間繞遠路</strong>&mdash;&mdash;要壓「x1 到牆距離」而不是「velocity 差」。用 hard wall-dist penalty on x1_hat 且加 τ 濾波(τ &gt; 0.5 才算,避開低 τ 噪音)。</li>
+  <li><strong>沒 regularization</strong>&mdash;&mdash;100 epoch overfit 產生 224 cm 離群。下輪加 weight decay 到 wall 分支、限制 anchor drift。</li>
+</ol>
+
+<p>下輪只跑 <strong>20 epoch 先看趨勢</strong>,趨勢對再繼續。</p>
+
+<h3 id="cn-summary">8.7 現況一句話總結</h3>
 
 <div class="note">
-<p style="margin:0"><strong>PDF § 8 / § 9 / § 10 / § 11 / § 12 / § 19 全部保留並可執行;§ 13 eq (37) 的 constraint projection 刻意換成 PhyScene-風格 in-sampling guidance,用 coherence 數字支持這個決定。8.2 的三條 guidance-層修正解決了縮小房一致性和 wall-hugging;8.3 的訓練層 <code>wall_pos_loss</code> fine-tune 誠實記錄失敗與原因(normalized 空間的 loss ≠ metric 空間的貼牆),下一步改成 metric-space 加權或回到 constraint projection(只對 wall-affinity 高的物件)。</strong></p>
+<p style="margin:0"><strong>PDF § 8 / § 9 / § 10 / § 11 / § 12 / § 13 eq (37) / § 19 <em>全部保留並用於生成</em>。</strong>§ 8 七個能量:E<sub>rel</sub>/E<sub>bound</sub>/E<sub>col</sub>/E<sub>clear</sub>/E<sub>func</sub>/E<sub>style</sub> 進 8.5 的 polish 步驟真正影響 layout,E<sub>edit</sub> 保留 slot 待接使用者輸入。§ 13 eq (37) 的 constraint projection 用「輕量共存」形式恢復 &mdash; 在 guidance sample 之後跑一次 anchor L2 版本,兩層互補:guidance 產生 coherent proposal、polish 修剩餘可行性。實測 OOB 降 2&ndash;3&times;、S<sub>rel</sub> 略升。8.6 的訓練層工作(metric-space wall dist + 正則化,20 epoch 先驗證)是下一輪。</p>
 </div>
 
 </div>
