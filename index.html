@@ -312,6 +312,32 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
   <figcaption>真實 reference → 真實 target GT,涵蓋兩房型、多種真實邊界形狀(L 型 / 切角 / 斜角 / 矩形)、面積比 0.51×–1.59×。<strong>紅色虛線</strong> = reference 中沒有 target 對應的物件(未配對,mask 出 flow loss;因 Jaccard 0.62–0.83,每組有 2–11 個)。Jaccard 越低、未配對越多、被監督的物件越少 &mdash; 這是 cross-pairing 天生的取捨,也是為何 76% 配對率是關鍵指標。</figcaption>
 </figure>
 
+<h2>固定測試集與正確的量尺(按 PDF §15)</h2>
+
+<p>為了讓每次改動有可比的量化標的,從 held-out test split 凍結一組固定測試集(<span class="mono">outputs/fixed_testset.json</span>):12 組跨場景 cross pair(真實人類 target GT)+ 4 個 three-sizes 場景。關鍵教訓是<strong>量尺的選擇</strong>:PDF §4 標題明言「Design Intent 不是 Absolute Coordinates」,所以「模型輸出 vs 某一個人類擺法的位置 MAE」是<em>錯的</em>標的 —— 跨場景本來就是多解,人擺一種、模型擺另一種,兩者都合理。正確的標的是 PDF §15 的<strong>關係型指標</strong>:S_rel、S_motif、R_OOB、R_col。</p>
+
+<h3>用 PDF 指標重評:bnd200 vs 新的 hybrid 模型</h3>
+<table>
+  <thead><tr><th>指標(PDF §15)</th><th>bnd200</th><th>xscene(新)</th><th>方向</th></tr></thead>
+  <tbody>
+    <tr><td>S_rel 關係保持(eq 42)</td><td>0.903</td><td>0.904</td><td>持平 ✓</td></tr>
+    <tr><td>S_rel_elastic 彈性調整(§19)</td><td>0.903</td><td>0.903</td><td>持平 ✓</td></tr>
+    <tr><td>S_motif motif 保持(eq 43)</td><td>0.989</td><td><strong>1.000</strong></td><td>↑ 改善</td></tr>
+    <tr><td>R_OOB 出界率(eq 40)</td><td>1.1%</td><td>1.1%</td><td>持平 ✓</td></tr>
+    <tr><td>R_col 碰撞率(eq 41)</td><td>5.1%</td><td><strong>4.1%</strong></td><td>↓ 改善</td></tr>
+    <tr><td><em>位置 MAE(§4 說別追,僅參考)</em></td><td><em>261 cm</em></td><td><em>264 cm</em></td><td><em>持平</em></td></tr>
+  </tbody>
+</table>
+
+<p>兩個結論:<strong>(1)</strong> 用 PDF 的尺,系統在「該保的東西」上是達標的 &mdash; S_rel ≈ 0.90、S_motif ≈ 1.0、R_OOB 1%、R_col 4–5%。<strong>(2)</strong> hybrid 模型在它本該幫的指標上確實小幅進步(S_motif 0.989→1.000、R_col 5.1%→4.1%);之前「訓練沒用」的印象來自用位置 MAE 這把 PDF 明說別用的尺。</p>
+
+<figure>
+  <img src="assets/fixed_compare.png" alt="Fixed test set: ref | human GT | bnd200 | xscene">
+  <figcaption>固定測試集 6 案例:參考輸入 | 真實人類 GT | bnd200 | xscene。第 3、4 欄(兩個模型)幾乎相同 &mdash; 訓練前後實際輸出變化很小,和位置 MAE 持平一致;但按關係型指標兩者都保住了 reference 的 motif 與關係(S_motif ~1.0)。人類 GT 只是「眾多合理解之一」,不是唯一正解。</figcaption>
+</figure>
+
+<p class="note">關於「1.35× motif_pass=25%」:那是 three-sizes 用的<em>嚴格絕對漂移</em>門檻(child 離 parent ≤25cm 且 yaw ≤15°)。房間放大時床頭櫃離床本來就該拉開 &gt;25cm,這正是 PDF §7/§19 的 elasticity 精神(關係可彈性拉伸)。用 PDF 的 S_motif(關係容差)量,同一批是 0.99–1.0。真正剩下的物理弱點是 1.35× 大房的 <strong>wall-snap</strong>(float 32cm / snap 52→43%),屬 §8 optimizer 的 E_bound / wall-pull,不是 design-intent 破碎。工具:<span class="mono">scripts/eval_fixed_testset.py</span>、<span class="mono">scripts/make_fixed_testset.py</span>。</p>
+
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
 </footer>
