@@ -82,6 +82,28 @@
 </tbody>
 </table>
 
+<h2>訓練資料(現在真的產生的樣子)</h2>
+
+<p>每個訓練 sample 都是一對「pseudo-reference → 真實場景」:真實 3D-FRONT 場景保留當 <em>target</em>(自帶 GT layout),<em>reference</em> 反向製造 &mdash; 把場景的 room deform、物件用 affine warp 帶進去,一起餵給 model。天然涵蓋放大 / 縮小兩個方向。</p>
+
+<figure>
+  <img src="assets/training_pair_backward.png" alt="Training pair — backward manufacturing">
+  <figcaption>左 = pseudo-reference(輸入),右 = target = 真實場景(GT)。三個範例分別是 uniform_scale、aspect_ratio、corner_cut 三種 deform level;下方數字是 ref / target 面積比。</figcaption>
+</figure>
+
+<p>另外 50 % 的樣本會啟用 <strong>Scramble 增強</strong>:pseudo-reference 的物件位置完全隨機、朝向也隨機,類別與尺寸保留。強迫 model 從語意訊號(category、motif、wall_affinity、boundary)重建佈局,而不是複製 pseudo。類 LEGO-Net 精神,融進 flow matching。</p>
+
+<figure>
+  <img src="assets/training_pair_scramble.png" alt="Training pair — with scramble augmentation">
+  <figcaption>Scramble 樣本示意:輸入位置全部打亂 → 目標仍是真實場景 layout。</figcaption>
+</figure>
+
+<h3>面積比分布</h3>
+<figure>
+  <img src="assets/train_ratios.png" alt="Ref/target area ratio distribution across 3000 sampled pairs">
+  <figcaption>3000 個訓練 pair 抽樣的 ref / target 面積比分布。虛線標記推理測試的 0.75× / 1.0× / 1.35× 對應位置(ratio = 1.33 / 1.00 / 0.74)。分布峰在 1.0 附近,兩尾(尤其對應大房 1.35× 的 ratio 0.74)相對稀疏 &mdash; 這是剩餘 1.35× bottleneck 的資料層根因。</figcaption>
+</figure>
+
 <h2>剩餘瓶頸</h2>
 
 <div class="note">
