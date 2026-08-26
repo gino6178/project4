@@ -302,19 +302,37 @@
 </ul>
 </div>
 
-<h2 id="anisotropic-polish">方案 1:推理層異方性 Polish + 親子相對錨定(進行中)</h2>
+<h2 id="anisotropic-polish">方案 1:推理層異方性 Polish + 親子相對錨定 ✅ 已上 shipped</h2>
 
-<p>經過 curriculum 全失敗的診斷後,轉向<strong>推理層</strong>解決。根源分析(來自使用者提出):現行 Polish 的 anchor L2 是<em>各向同性、絕對座標</em>的,造成:</p>
-<ol>
+<div class="note" style="background:#fff9ec;border-left-color:#c98b2c">
+<strong>Root cause 診斷(使用者提出):</strong>
+<ol style="margin:8px 0">
   <li><strong>Wall_pull 跟 Anchor L2 的死鎖</strong>:當 flow 生成的候選離牆 20 cm,anchor 強度 100 鎖死位置,wall_pull 梯度推不動</li>
-  <li><strong>絕對座標與關係彈性的結構矛盾</strong>:motif 內成員各自被 anchor 拉回世界座標,parent 動了 child 沒跟</li>
+  <li><strong>絕對座標與關係彈性的結構矛盾</strong>:model 預測全域 xy,motif 內成員各自被 anchor 拉回世界座標,parent 動了 child 沒跟 &mdash; 撕裂關係</li>
+  <li><strong>Fine-tune 的災難性遺忘</strong>:實測 bnd200 已是該架構區域極值,任何微調都退步</li>
 </ol>
+<strong>對應解方(使用者提出的兩個機制):</strong>
+<ol style="margin:8px 0">
+  <li><strong>異方性 Anchor(Anisotropic Anchor L2)</strong>
+    <ul style="margin:4px 0">
+      <li>對 wall-affinity 高的物件,把 anchor L2 拆成<em>切線</em>(權重 100,維持牆邊排列)+ <em>法線非對稱單向</em>(只懲罰往房間中心飄,靠向牆面 0 懲罰)</li>
+      <li>Wall_pull 可以自由推物件靠牆,motif 排列不會被撕裂</li>
+    </ul>
+  </li>
+  <li><strong>親子相對錨定(Parent-Child Relative Anchor)</strong>
+    <ul style="margin:4px 0">
+      <li>Motif 拆成 <em>Parent</em>(head:sofa / bed / tv_stand 等)和 <em>Child</em>(coffee_table、side_table、nightstand)</li>
+      <li>Child 的 anchor 對齊「與 Parent 的相對偏移量 Δp_init」,而不是世界絕對座標</li>
+      <li>當 Parent 被 wall_pull 往外拉 20 cm 貼牆,茶几與地毯像剛體 / 彈性體一樣整組被帶著走 &mdash; 消除浮空、保 S<sub>rel</sub></li>
+    </ul>
+  </li>
+</ol>
+</div>
 
-<p><strong>實作(已上線,驗證中):</strong></p>
+<p><strong>額外我加的補強(過程中發現的實作細節):</strong></p>
 <ul>
-  <li><strong>異方性 anchor</strong>:對 wall-affinity 高的物件,把 anchor L2 拆成<em>切線</em>(權重 100,維持牆邊排列)+ <em>法線非對稱</em>(只懲罰往房間中心飄,靠向牆面 0 懲罰),讓 wall_pull 能自由推物件靠牆</li>
-  <li><strong>親子相對錨定</strong>:motif 子物件的 anchor 不是絕對座標,是「相對 parent 的偏移量」。parent(head)被 wall_pull 拉向牆時,children 整組跟著走,不撕裂</li>
-  <li><strong>參考牆索引匹配</strong>:牆法線方向從 <em>reference 房間裡物件真正靠的牆</em>取得(而非「現在最近的牆」— 這個在 flow 離牆 20 cm 時會判錯),對 uniform_scale 保留 wall count 的情境穩定</li>
+  <li><strong>參考牆索引匹配</strong>:牆法線方向從 <em>reference 房間裡物件真正靠的牆</em>取得,對映到 target 房間同 index 牆(對 uniform_scale 保留 wall count 的情境穩定;比「當前最近牆」在 flow 離牆 20 cm 時判準得多)</li>
+  <li><strong>Signed-area CCW/CW 檢查 + polygon.contains 驗證</strong>:Room 的 polygon 有些是 CW winding,「inward normal」實際指外會讓 asymmetric penalty 反推;加簽面積檢查與探點驗證確保正確方向</li>
 </ul>
 
 <div class="note">
