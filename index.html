@@ -264,6 +264,7 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
   <li><strong>面積比爆量</strong> &mdash; 原始 forward-deform 的切角 / L 切割會產生 target / source 高達 <span class="mono">4.0×</span> 的房間(物件擠一角填不滿),遠超部署範圍。<span class="mono">make_forward_pair</span> 加上面積比重採樣 <span class="mono">[0.5, 2.0]</span> 後,forward 路徑最大降到 <span class="mono">1.68×</span>,整條管線 <span class="mono">100%</span> 落在 <span class="mono">[0.5, 2.0]</span>(中位數 0.99)。</li>
   <li><strong>退化崩塌</strong> &mdash; 偶發(0.3%)一個 motif 被 <span class="mono">motif_rigid_warp</span> 整組投影到邊界同一點,造成 GT 全部出界(OOB 100%)。加上 GT 出界比例守門(<span class="mono">forward &le; 15%</span> 重採樣、<span class="mono">cross &gt; 30%</span> 直接 fallback)後,OOB 最大值 <span class="mono">100% → 14.3%</span>、平均 <span class="mono">0.26%</span>。</li>
   <li><strong>物件戳出牆外</strong> &mdash; 原本只檢查<em>中心點</em>是否出界,但斜牆 / 凹型 / 切角房型下,物件的 <em>footprint(四角)</em>會整片戳出牆(有 25.1% 的物件 footprint 超過 15% 在牆外)。改法:<span class="mono">motif_rigid_warp</span> 不再逐物件裁切中心,而是把整個 motif 以<strong>共享平移(剛體)</strong>往內推到 footprint 進得了房間 &mdash; 保持 motif 內部幾何不變;再加 footprint 溢出守門。forward 路徑「footprint 超過 15% 出牆」的物件比例 <span class="mono">25.1% → 1.1%</span>。</li>
+  <li><strong>物件碰撞</strong> &mdash; 剛體搬運沒有解碰撞,縮小房間時會把家具擠在一起。用 optimizer/guidance 相同的規則稽核碰撞(排除 <span class="mono">NESTABLE_PAIRS</span> 可疊放對、排除不同高度的 z 分離對):forward GT 一度 <span class="mono">2.81</span> 個真碰撞/場景,<em>高於</em>真實來源的 <span class="mono">1.93</span>。加上碰撞守門(deform 不得引入超過來源基線的碰撞,否則重採樣)後,forward 降到 <span class="mono">1.73</span>,已<em>低於</em>真實 3D-FRONT 來源。</li>
 </ul>
 
 <table>
@@ -273,10 +274,26 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
     <tr><td>面積比最大值</td><td>4.00×</td><td><strong>1.96×</strong></td></tr>
     <tr><td>GT 出界比例最大</td><td>100%</td><td><strong>14.3%</strong></td></tr>
     <tr><td>物件 footprint &gt;15% 出牆(forward)</td><td>25.1%</td><td><strong>1.1%</strong></td></tr>
+    <tr><td>真碰撞 / 場景(forward GT)</td><td>2.81</td><td><strong>1.73</strong>(&lt; 來源 1.93)</td></tr>
     <tr><td>motif 拉伸(forward GT)</td><td colspan="2"><strong>3.9 cm</strong>(剛體搬,保持完整)</td></tr>
     <tr><td>motif 拉伸(cross GT)</td><td colspan="2">49.3 cm(兩間真房的人因差異)</td></tr>
   </tbody>
 </table>
+
+<h4>碰撞檢查(哪些重疊是合法的)</h4>
+<p>「重疊」不等於「碰撞」。用 optimizer / guidance 內建的同一套規則分三類:</p>
+<ul>
+  <li><strong style="color:#e23b2e">真碰撞(bug)</strong> &mdash; footprint 相交、<em>且</em>在 z 高度上也重疊、<em>且</em>不是可疊放對。</li>
+  <li><strong style="color:#2a9d3f">可疊放(合法)</strong> &mdash; 屬 <span class="mono">NESTABLE_PAIRS</span>:餐椅↔餐桌、椅↔書桌、床頭櫃↔床、扶手椅↔茶几 等。</li>
+  <li><strong style="color:#3a7ad1">z 分離(合法)</strong> &mdash; footprint 相交但高度不重疊:檯燈在桌上、吊燈、地毯在家具下。</li>
+</ul>
+
+<figure>
+  <img src="assets/collision_check.png" alt="Collision check — overlaps colour-coded">
+  <figcaption>把每對重疊的<em>交集區域</em>填色:<span style="color:#e23b2e">紅=真碰撞</span>、<span style="color:#2a9d3f">綠=可疊放</span>、<span style="color:#3a7ad1">藍=z 分離</span>。此處<strong>刻意挑選含真碰撞的場景</strong>來展示三類同時出現,並非平均狀況。平均而言 forward GT 為 1.73 真碰撞/場景、cross GT 為 1.09,皆低於真實 3D-FRONT 來源的 1.93。</figcaption>
+</figure>
+
+<p class="note">這些殘留的真碰撞是<strong>從真實 3D-FRONT 來源繼承</strong>的(真實資料本身即有家具重疊),我方的變形不再新增碰撞。要完全清零需對 GT 跑一次解碰撞投影,但那會讓 GT 偏離「真實佈局」&mdash; 這是資料哲學上的取捨,目前選擇保留真實分布。稽核工具:<span class="mono">real_collisions()</span> 於 <span class="mono">reroom/generative/xscene.py</span>,規則與 <span class="mono">guidance.NESTABLE_PAIRS</span> / <span class="mono">boxes_overlap_3d</span> 一致。</p>
 
 <p class="note">實作:<span class="mono">HybridPairs</span> 於 <span class="mono">reroom/generative/xscene.py</span>;資料品質守門在 <span class="mono">make_forward_pair</span>(面積比重採樣 + <span class="mono">_gt_oob_frac</span> 守門)與 <span class="mono">make_cross_pair_filtered</span>(出界 fallback);驗證 <span class="mono">scripts/diag_xscene.py</span> + pipeline 抽樣渲染。</p>
 
