@@ -77,7 +77,7 @@
 
 <figure>
   <img src="assets/three_sizes_r2m2full.png" alt="Three-sizes output — ReRoom 2.0 (r2m2full)">
-  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 目前 shipped 模型 <strong>ReRoom 2.0(<span class="mono">flow_r2m2full</span>)+ 規整化投影(Step 1)</strong>。1.0× 幾乎完美重現 reference(S_rel 0.96):draw 貼左上牆、4 張餐椅平行桌邊成套環繞、TV 貼左牆、sofa 貼右牆;1.35× 大房餐桌+椅整組不散架、各件正交貼牆(S_rel 0.91)。詳細指標見下方「ReRoom 2.0」一節。</figcaption>
+  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 目前 shipped 模型 <strong>ReRoom 2.0(<span class="mono">flow_bfresh</span>,含 Step 2 parent-relative)+ 規整化投影(Step 1)</strong>。1.0× 幾乎完美重現 reference、4 張餐椅平行桌邊成套環繞、各件正交貼牆(S_rel 0.92);1.35× 大房餐桌+椅整組不散架、零碰撞(col 0.0%)。詳細指標見下方「ReRoom 2.0」一節。</figcaption>
 </figure>
 
 <h3>6 場景平均實測(早期 planA baseline,供對照)</h3>
@@ -390,7 +390,30 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
   <li><strong>貼牆 flush + 法線朝向</strong> &mdash; 掛畫、衣櫃、電視櫃、床、沙發等貼牆件,背面直接投影到最近牆線、朝向設為該牆內法線,絕不懸空或斜插。</li>
   <li><strong>Manhattan 正交 snap</strong> &mdash; 茶几 / 餐桌 / 邊桌等自由正交件,朝向 snap 到最近牆軸(容差 22°),消除 3–15° 的「微醺」傾斜。</li>
 </ul>
-<p>效果見上方主圖:1.0× 幾乎完美重現 reference,1.35× 大房家具正交貼牆、餐椅整齊環桌。實作 <span class="mono">reroom/retarget/regularity.py</span>,由 <span class="mono">RetargetConfig.regularity_snap</span> 開啟。這是 Step 1(polish 層,最快見效);Step 2(把 motif child 的 flow 輸出改為相對 parent 的 local offset,根本杜絕大房拉扯)為後續。</p>
+<p>效果見上方主圖:1.0× 幾乎完美重現 reference,1.35× 大房家具正交貼牆、餐椅整齊環桌。實作 <span class="mono">reroom/retarget/regularity.py</span>,由 <span class="mono">RetargetConfig.regularity_snap</span> 開啟。這是 Step 1(polish 層,最快見效)。</p>
+
+<h3>Step 2:parent-relative flow &mdash; 從源頭杜絕大房拉散</h3>
+<p>Step 1 在推理時 snap;Step 2 讓 <strong>flow 模型本身</strong>就把 motif 綁緊。做法:motif child(餐椅、床頭櫃)不再預測全域座標,而是預測<strong>相對 parent(桌/床)的度量偏移</strong> <span class="mono">p_child = T_parent · (offset)</span>。因為偏移是<em>度量</em>單位、與房間尺度無關,房間放大 1.35× 時偏移不縮 &mdash; 椅子從 flow 提案階段就黏住桌子,不靠後處理。</p>
+<p>訓練規範(缺一不可,否則欠收斂):<strong>完全棄用 warm-start、從頭訓 180 epoch</strong>;<strong>異質節點 Type-ID</strong>(global anchor vs relative child)並將 child 從牆面 cross-attention 遮罩掉(child 只依賴 parent,不該被外牆拉扯);<strong>child loss 尺度補償</strong> <span class="mono">λ_child ≈ 1/0.3²</span>(child 相對速度在桌身局部尺度,否則梯度被 parent 的房間尺度淹沒)。</p>
+
+<figure>
+  <img src="assets/three_sizes_bfresh_raw.png" alt="bfresh RAW output (no regularity snap)">
+  <figcaption><strong>RAW 輸出(完全沒用規整化 snap)</strong>驗證 flow 本身的能力:1.0× raw S_rel <strong>0.98</strong>;1.35× 大房 4 張餐椅仍緊貼餐桌,沒有散到房間中央。flow 學會了相對空間建模。</figcaption>
+</figure>
+
+<table>
+  <thead><tr><th>指標(raw+polish,無 snap)</th><th>r2m2full</th><th><strong>bfresh(Step 2)</strong></th></tr></thead>
+  <tbody>
+    <tr><td>1.35× motif_pass(child 黏 parent)</td><td>25%</td><td><strong>42%</strong></td></tr>
+    <tr><td>0.75× motif_pass</td><td>50%</td><td><strong>83%</strong></td></tr>
+    <tr><td>1.00× snap</td><td>83%</td><td><strong>92%</strong></td></tr>
+    <tr><td>0.75× float</td><td>8.5cm</td><td><strong>7.8cm</strong></td></tr>
+    <tr><td>val_loss(訓練)</td><td>0.079</td><td><strong>0.058</strong></td></tr>
+    <tr><td>1.35× wall-snap</td><td><strong>64%</strong></td><td>52%</td></tr>
+  </tbody>
+</table>
+<p><strong>motif 從源頭不散架</strong>(1.35× motif_pass 25→42%、0.75× 50→83%,皆 raw 無 snap)。唯一代價是 1.35× 貼牆 snap 略退(child 綁緊 parent 後貼牆自由度降低)&mdash; 這正好由 Step 1 規整化補上。<strong>目前 shipped = <span class="mono">flow_bfresh</span>(Step 2)+ 規整化投影(Step 1)</strong>:motif 從 flow 源頭綁緊、規整化補正交貼牆。實作於 <span class="mono">model.py</span>(<span class="mono">to_relative</span>/<span class="mono">to_world</span> + <span class="mono">e_type</span> 異質節點 + child 牆面遮罩)、<span class="mono">train.py</span>(<span class="mono">parent_relative</span> / <span class="mono">child_loss_weight</span>)。</p>
+<p class="note">曾走過的彎路(誠實記錄):先試 <em>warm-start</em> 版 Step 2(<span class="mono">flow_s2</span>)→ val 0.53 嚴重欠收斂、指標全退。驗證 <span class="mono">to_relative/to_world</span> 可逆(誤差 1e-7)且 scale 不變後,確認不是 bug 而是壞初始化 → 依規範改成<strong>從頭訓 + 異質節點 + 尺度補償</strong>才成功(val 0.058)。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
