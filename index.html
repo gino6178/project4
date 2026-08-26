@@ -263,6 +263,7 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
 <ul>
   <li><strong>面積比爆量</strong> &mdash; 原始 forward-deform 的切角 / L 切割會產生 target / source 高達 <span class="mono">4.0×</span> 的房間(物件擠一角填不滿),遠超部署範圍。<span class="mono">make_forward_pair</span> 加上面積比重採樣 <span class="mono">[0.5, 2.0]</span> 後,forward 路徑最大降到 <span class="mono">1.68×</span>,整條管線 <span class="mono">100%</span> 落在 <span class="mono">[0.5, 2.0]</span>(中位數 0.99)。</li>
   <li><strong>退化崩塌</strong> &mdash; 偶發(0.3%)一個 motif 被 <span class="mono">motif_rigid_warp</span> 整組投影到邊界同一點,造成 GT 全部出界(OOB 100%)。加上 GT 出界比例守門(<span class="mono">forward &le; 15%</span> 重採樣、<span class="mono">cross &gt; 30%</span> 直接 fallback)後,OOB 最大值 <span class="mono">100% → 14.3%</span>、平均 <span class="mono">0.26%</span>。</li>
+  <li><strong>物件戳出牆外</strong> &mdash; 原本只檢查<em>中心點</em>是否出界,但斜牆 / 凹型 / 切角房型下,物件的 <em>footprint(四角)</em>會整片戳出牆(有 25.1% 的物件 footprint 超過 15% 在牆外)。改法:<span class="mono">motif_rigid_warp</span> 不再逐物件裁切中心,而是把整個 motif 以<strong>共享平移(剛體)</strong>往內推到 footprint 進得了房間 &mdash; 保持 motif 內部幾何不變;再加 footprint 溢出守門。forward 路徑「footprint 超過 15% 出牆」的物件比例 <span class="mono">25.1% → 1.1%</span>。</li>
 </ul>
 
 <table>
@@ -271,12 +272,28 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
     <tr><td>面積比 &gt; 2.0× 比例</td><td>10.3%</td><td><strong>0.0%</strong></td></tr>
     <tr><td>面積比最大值</td><td>4.00×</td><td><strong>1.96×</strong></td></tr>
     <tr><td>GT 出界比例最大</td><td>100%</td><td><strong>14.3%</strong></td></tr>
+    <tr><td>物件 footprint &gt;15% 出牆(forward)</td><td>25.1%</td><td><strong>1.1%</strong></td></tr>
     <tr><td>motif 拉伸(forward GT)</td><td colspan="2"><strong>3.9 cm</strong>(剛體搬,保持完整)</td></tr>
     <tr><td>motif 拉伸(cross GT)</td><td colspan="2">49.3 cm(兩間真房的人因差異)</td></tr>
   </tbody>
 </table>
 
 <p class="note">實作:<span class="mono">HybridPairs</span> 於 <span class="mono">reroom/generative/xscene.py</span>;資料品質守門在 <span class="mono">make_forward_pair</span>(面積比重採樣 + <span class="mono">_gt_oob_frac</span> 守門)與 <span class="mono">make_cross_pair_filtered</span>(出界 fallback);驗證 <span class="mono">scripts/diag_xscene.py</span> + pipeline 抽樣渲染。</p>
+
+<h3>所有可能情況一覽</h3>
+<p>兩個策略會產出的完整情況(語料只含 bedroom 與 living_room 兩種房型):</p>
+
+<h4>策略 2 — 前向變形的 5 種 deform level</h4>
+<figure>
+  <img src="assets/strat2_cases.png" alt="Strategy 2 forward-deform — all 5 levels × both room types">
+  <figcaption>5 種變形 level × 兩房型,上=INPUT reference、下=TARGET GT。<span class="mono">L1 uniform_scale</span>(等比縮放,矩形)、<span class="mono">L2 aspect_ratio</span>(長寬比)、<span class="mono">L3 slanted_wall</span>(斜牆 / 梯形)、<span class="mono">L4 corner_cut</span>(切角 / L 型)、<span class="mono">L5 concave</span>(凹型)。面積比涵蓋 0.66×–1.68×(放大與縮小皆有);每格 motif(dining set、bed+床頭櫃)在 input↔target 之間都以剛體保持完整,且以共享平移推進房間(所示各格單一物件最多僅 6% footprint 觸牆)。當某次 cross 配對被過濾器剔除時,pipeline 就 fallback 到這條路徑。</figcaption>
+</figure>
+
+<h4>策略 1 — 跨場景配對的真實情況</h4>
+<figure>
+  <img src="assets/strat1_cases.png" alt="Strategy 1 cross-pairing — real reference to real target, both room types">
+  <figcaption>真實 reference → 真實 target GT,涵蓋兩房型、多種真實邊界形狀(L 型 / 切角 / 斜角 / 矩形)、面積比 0.51×–1.59×。<strong>紅色虛線</strong> = reference 中沒有 target 對應的物件(未配對,mask 出 flow loss;因 Jaccard 0.62–0.83,每組有 2–11 個)。Jaccard 越低、未配對越多、被監督的物件越少 &mdash; 這是 cross-pairing 天生的取捨,也是為何 76% 配對率是關鍵指標。</figcaption>
+</figure>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
