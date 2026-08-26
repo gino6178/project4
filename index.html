@@ -301,6 +301,25 @@
 </ul>
 </div>
 
+<h2 id="anisotropic-polish">方案 1:推理層異方性 Polish + 親子相對錨定(進行中)</h2>
+
+<p>經過 curriculum 全失敗的診斷後,轉向<strong>推理層</strong>解決。根源分析(來自使用者提出):現行 Polish 的 anchor L2 是<em>各向同性、絕對座標</em>的,造成:</p>
+<ol>
+  <li><strong>Wall_pull 跟 Anchor L2 的死鎖</strong>:當 flow 生成的候選離牆 20 cm,anchor 強度 100 鎖死位置,wall_pull 梯度推不動</li>
+  <li><strong>絕對座標與關係彈性的結構矛盾</strong>:motif 內成員各自被 anchor 拉回世界座標,parent 動了 child 沒跟</li>
+</ol>
+
+<p><strong>實作(已上線,驗證中):</strong></p>
+<ul>
+  <li><strong>異方性 anchor</strong>:對 wall-affinity 高的物件,把 anchor L2 拆成<em>切線</em>(權重 100,維持牆邊排列)+ <em>法線非對稱</em>(只懲罰往房間中心飄,靠向牆面 0 懲罰),讓 wall_pull 能自由推物件靠牆</li>
+  <li><strong>親子相對錨定</strong>:motif 子物件的 anchor 不是絕對座標,是「相對 parent 的偏移量」。parent(head)被 wall_pull 拉向牆時,children 整組跟著走,不撕裂</li>
+  <li><strong>參考牆索引匹配</strong>:牆法線方向從 <em>reference 房間裡物件真正靠的牆</em>取得(而非「現在最近的牆」— 這個在 flow 離牆 20 cm 時會判錯),對 uniform_scale 保留 wall count 的情境穩定</li>
+</ul>
+
+<div class="note">
+<strong>初步結果(單 scene 測試,6-scene bench 進行中):</strong>1.35× sofa 從 17.9 cm → 4.6 cm(74 % 改善,驗證這個機制真的能鬆開 wall_pull vs anchor 死鎖)。但個別 case 有波動,還在調參 / 6-scene 平均驗證,結果會覆蓋此段。<em>不重訓、純推理層改動。</em>
+</div>
+
 <h2 id="curriculum-result">Curriculum learning 實驗結果(誠實記錄)</h2>
 
 <p>照上面規劃真的跑了 curriculum:從 <code>flow_bnd200</code>(當時 val 0.020,最佳 checkpoint)分段加變因,每段跑完用<em>對應目標的固定測試集</em>判定要不要進下一階段。四個測試集分別對到四個 phase 想教的能力:</p>
