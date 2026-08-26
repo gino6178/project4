@@ -76,11 +76,11 @@
 <h2>實際輸出</h2>
 
 <figure>
-  <img src="assets/three_sizes_planA.png" alt="Three-sizes shipped output">
-  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 現行 shipped pipeline。</figcaption>
+  <img src="assets/three_sizes_r2m2full.png" alt="Three-sizes output — ReRoom 2.0 (r2m2full)">
+  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 目前 shipped 模型 <strong>ReRoom 2.0(<span class="mono">flow_r2m2full</span>)</strong>。1.0× 高度保留 reference(S_rel 0.96),1.35× 大房 TV 貼左牆、sofa 貼右牆(Module 2 牆面 attention 生效),餐椅隨房間彈性散開(elasticity)。詳細指標見下方「ReRoom 2.0」一節。</figcaption>
 </figure>
 
-<h3>6 場景平均實測</h3>
+<h3>6 場景平均實測(早期 planA baseline,供對照)</h3>
 <table>
 <thead><tr><th>Size</th><th>mean float</th><th>max float</th><th>OOB %</th><th>col %</th><th>S<sub>rel</sub></th><th>Snap %</th><th>Motif err</th></tr></thead>
 <tbody>
