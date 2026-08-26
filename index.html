@@ -4,6 +4,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>ReRoom · 最終做法</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+      integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\(',right:'\)',display:false}],throwOnError:false});"></script>
 <style>
   :root{
     --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a;
@@ -81,6 +88,91 @@
 <tr><td>1.35× 放大</td><td>22.2 cm</td><td>102.5 cm</td><td class="win">0.8 %</td><td>2.3 %</td><td>0.87</td></tr>
 </tbody>
 </table>
+
+<h2>算法細節(公式與變量)</h2>
+
+<p>下面每個 shipped 元件的具體公式。所有距離為<em>米</em>,角度為<em>弧度</em>,座標系為房間 MRR-normalized(u, v ∈ [-1, 1])除非特別註明 metric。</p>
+
+<h3>1. 關係彈性 α<sub>ij</sub></h3>
+<p>每對物件 <em>(i, j)</em> 都有一個彈性係數 α<sub>ij</sub> ∈ [0, 1],由一個 MLP 從關係 context 學出來:</p>
+<p>\( \alpha_{ij} = \sigma\big(\text{MLP}(c_i, c_j, e_{ij})\big) \)</p>
+<ul>
+  <li>\(c_i, c_j\):兩物件的 category one-hot 嵌入 + 尺寸(log)+ motif id + 房間類型</li>
+  <li>\(e_{ij}\):關係向量(distance, 相對角、共牆等)</li>
+  <li><strong>α → 1</strong>:剛性關係,搬房間時距離必須保留(如床頭櫃-床)</li>
+  <li><strong>α → 0</strong>:彈性,距離可隨房間放縮(如 tv-沙發)</li>
+</ul>
+
+<h3>2. Flow matching 訓練 / 取樣</h3>
+<p>State \( x_1 \in \mathbb{R}^{N \times 4} \):每個物件的 (u, v, cos yaw, sin yaw)。</p>
+<p><strong>訓練:</strong> τ ~ Uniform(0, 1), noise \(x_0 \sim \mathcal{N}(0, I)\),</p>
+<p>\( x_\tau = (1-\tau) x_0 + \tau x_1, \quad v_{\text{target}} = x_1 - x_0 \)</p>
+<p>\( \mathcal{L}_{\text{fm}} = \| v_\theta(x_\tau, \tau, G, P_t) - v_{\text{target}} \|^2 \)</p>
+<ul>
+  <li>\(G\):意圖圖(nodes = objects, edges 帶 α 與 relation type)</li>
+  <li>\(P_t\):目標房邊界 32 個取樣點(6 維:u, v, u·h₁, v·h₂, n<sub>u</sub>, n<sub>v</sub>),normalized 位置給形狀 prior、metric 位置給尺度 prior</li>
+</ul>
+<p><strong>取樣:</strong>從 \(x_0 \sim \mathcal{N}(0, I)\) 出發,50 步 Euler,\( x_{\tau + d\tau} = x_\tau + d\tau \cdot v_\theta \)。</p>
+
+<h3>3. In-sampling guidance(§13 eq (37) 前半)</h3>
+<p>每步 ODE 積分後,估計最終位置 \( \hat{x}_1 = x_\tau + (1-\tau) v_\theta \),對可行性打分並反傳梯度:</p>
+<p>\( \Phi(\hat{x}_1) = \lambda_b E_{\text{bound}} + \lambda_c E_{\text{col}}^{\text{nestable-exempt}} + \lambda_l E_{\text{clear}} + \lambda_w E_{\text{wall\_pull}} \)</p>
+<p>\( x_{\tau + d\tau} \leftarrow x_{\tau + d\tau} - d\tau \cdot \text{ramp}(\tau) \cdot \nabla_x \Phi \)</p>
+<ul>
+  <li>\(E_{\text{bound}}\):物件 4 角超出 polygon 的深度懲罰(容忍 12 cm)</li>
+  <li>\(E_{\text{col}}\):非 nestable pair 才算(椅子塞桌下不算碰撞)</li>
+  <li>\(E_{\text{clear}}\):跨 motif 對之間走道</li>
+  <li>\(E_{\text{wall\_pull}}\):對高 wall_affinity 物件(α<sub>wall</sub> 從 reference 學),沿牆法線把背面拉到牆邊</li>
+  <li>\(\text{ramp}(\tau) = \max(0, (\tau - 0.5) / 0.5)\):guidance 只在 τ ≥ 0.5 生效(低 τ 是純噪音,梯度沒意義)</li>
+</ul>
+
+<h3>4. Polish energy(§8 六項,PDF eq (37) 後半)</h3>
+<p>對每個候選 layout,做 25 步 Adam 梯度下降(freeze_yaw),loss 是加權能量和 + anchor L2:</p>
+<p>\( \mathcal{L}_{\text{polish}}(\mathbf{xy}) = \sum_k w_k E_k(\mathbf{xy}) + \mathcal{L}_{\text{anchor}}(\mathbf{xy}) \)</p>
+<div class="tw"><table>
+<thead><tr><th>能量</th><th>形式(概要)</th><th>意義</th><th>weight</th></tr></thead>
+<tbody>
+<tr><td>\(E_{\text{rel}}\)</td><td>\(\sum_{ij} \alpha_{ij} \| \phi(y_i, y_j) - \phi_{ij}^{\text{ref}} \|^2\)</td><td>保留 reference 關係向量(距離、角度、共牆)</td><td>1.0</td></tr>
+<tr><td>\(E_{\text{bound}}\)</td><td>\(\sum_i \max(0, r_i - d_i^{\text{floor}})^2\)</td><td>物件在 floor polygon 內(inscribed radius vs 邊界距離)</td><td>40.0</td></tr>
+<tr><td>\(E_{\text{col}}\)</td><td>\(\sum_{ij \notin \text{nestable}} \max(0, r_i + r_j - d_{ij})^2\)</td><td>非合理疊放物件不重疊</td><td>30.0</td></tr>
+<tr><td>\(E_{\text{clear}}\)</td><td>\(\sum \max(0, \text{corridor} - \text{gap}_{ij})^2\)</td><td>跨 motif 對之間留走道</td><td>4.0</td></tr>
+<tr><td>\(E_{\text{func}}\)</td><td>\(w_{\text{flush}} \sigma((\text{off}-0.04)/0.03) + (\text{dist}-\text{gap})^2 + \ldots\)</td><td>靠牆物件貼牆、朝門開、朝正面留距</td><td>3.0</td></tr>
+<tr><td>\(E_{\text{style}}\)</td><td>retrieval cost 之和</td><td>換上的 asset 越接近參考風格越好</td><td>1.0</td></tr>
+</tbody></table></div>
+<p>(\(E_{\text{edit}}\) slot 保留給使用者手動 constraint,shipped path 沒接故權重 = 0。)</p>
+
+<h3>5. Anisotropic anchor(新:解 wall_pull vs anchor 死鎖)</h3>
+<p>令 \(\boldsymbol{\delta}_i = \mathbf{xy}_i - \mathbf{xy}_i^{\text{sampled}}\) 為 polish 過程中物件 i 相對取樣位置的位移。對高 wall_affinity 物件(\(a_i > 0.3\)):</p>
+<p>\( \delta_i^n = \boldsymbol{\delta}_i \cdot \hat{\mathbf{n}}_i, \quad \delta_i^t = \boldsymbol{\delta}_i \cdot \hat{\mathbf{t}}_i \)</p>
+<p>\( \mathcal{L}_{\text{anchor}}^{(i)} = a_i \cdot \Big[ w_{\text{tan}} (\delta_i^t)^2 + w_{\text{norm}} \big(\text{ReLU}(\delta_i^n)\big)^2 \Big] + (1 - a_i) \cdot w_{\text{free}} \| \boldsymbol{\delta}_i \|^2 \)</p>
+<ul>
+  <li>\(\hat{\mathbf{n}}_i\):物件 i 的 reference 牆的 inward normal(用 reference 房裡真正靠的牆 index 對映到 target,並用 signed-area + polygon.contains 驗證)</li>
+  <li>\(\hat{\mathbf{t}}_i\):牆的切向(\(\perp \hat{\mathbf{n}}_i\))</li>
+  <li>\(w_{\text{tan}} = 100\):切向懲罰強,鎖住牆邊排列</li>
+  <li>\(w_{\text{norm}} = 8\):法線<em>單向</em>懲罰,只懲罰 \(\delta^n > 0\)(往房間中心飄);\(\delta^n < 0\)(靠向牆)0 懲罰,讓 wall_pull 自由推</li>
+  <li>\(w_{\text{free}} = 100\):非靠牆物件用普通 L2</li>
+</ul>
+
+<h3>6. Parent-child relative anchor(新:motif 整組跟 head 動)</h3>
+<p>對 motif 內非 head 的 child \(c\),parent \(p = \text{head}(c)\):</p>
+<p>\( \boldsymbol{\delta}_c^{\text{rel}} = (\mathbf{xy}_c - \mathbf{xy}_p) - (\mathbf{xy}_c^{\text{sampled}} - \mathbf{xy}_p^{\text{sampled}}) \)</p>
+<p>將 \(\boldsymbol{\delta}_c^{\text{rel}}\) 代替 \(\boldsymbol{\delta}_c\) 進入上式 anchor 損失。效果:parent 被 wall_pull 拉向牆時,child 的「相對 parent 偏移」保持不變 → child 跟著整組移動 → motif 不撕裂。</p>
+
+<h3>7. 二階段能量排程(Plan A,新)</h3>
+<p>Polish 的 25 步 Adam 拆兩段。設 \(T_1 = 12\)(50 %):</p>
+<p>Phase 1(\(t &lt; T_1\)):\( w_{\text{col}} \leftarrow 0.15 \cdot w_{\text{col}}^{\text{full}}, \quad w_{\text{tan}} \leftarrow 0.10 \cdot 100 = 10 \)</p>
+<p>Phase 2(\(t \ge T_1\)):恢復所有 weights。</p>
+<p><strong>意義</strong>:Phase 1 讓 wall 物件擺脫 E_col 阻擋 + tangent 死鎖,順暢斜滑到牆;Phase 2 就地消碰撞、貼合。</p>
+
+<h3>8. In-sampling guidance 的 wall_pull 具體形式</h3>
+<p>對高 wall_affinity 物件,計算物件<em>背面</em>到牆的距離:</p>
+<p>\( d_i^{\text{back}} = \max(0, (\mathbf{xy}_i \cdot \hat{\mathbf{n}}_i) - h_i^{\text{normal}} - \delta_{\text{flush}}) \)</p>
+<p>\( E_{\text{wall\_pull}} = \lambda_w(\text{area\_ratio}) \sum_i a_i \cdot (d_i^{\text{back}})^2 \)</p>
+<ul>
+  <li>\(h_i^{\text{normal}}\):物件在牆法線方向的半深度</li>
+  <li>\(\delta_{\text{flush}} = 6\) cm(允許小 tolerance)</li>
+  <li>\(\lambda_w = 2.5\) 當縮小房(area_ratio ≤ 1)、\(1.5\) 當放大房(避免撞飛)</li>
+</ul>
 
 <h2>訓練資料(現在真的產生的樣子)</h2>
 
