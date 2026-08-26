@@ -374,6 +374,45 @@
 <p style="margin:6px 0 0"><strong>Shipped default 維持 25 步。</strong>要繼續壓 1.35× mean float 只剩<em>非推理層</em>路徑:換 dataset(補大房 GT)、架構改動(Wall-relative parameterization)、或從 scratch 重訓 &mdash; 這些方案 2 的成本已寫在下方 curriculum 段落記錄。</p>
 </div>
 
+<h3>使用者建議的 3 個 inference-only tweaks — 測試結果</h3>
+<p>收到使用者建議 3 個不需重訓的改進:(1) Ray-cast warm projection、(2) Dynamic step budget、(3) Huber wall pull。實測記錄如下,誠實對照。</p>
+
+<h4>(1) Ray-cast warm projection</h4>
+<p>把 wall-affinity 物件的 sampled 位置<em>預投影到牆邊 3 cm 內</em>,讓 Adam 只需處理微調而不是長途跋涉。</p>
+<div class="tw">
+<table>
+<thead><tr><th>Size</th><th>Metric</th><th>Shipped(no warm)</th><th>+ Ray-cast warm</th><th>Δ</th></tr></thead>
+<tbody>
+<tr><td>0.75×</td><td>mean float</td><td>6.9 cm</td><td>7.2 cm</td><td>+4 %</td></tr>
+<tr><td>0.75×</td><td>col %</td><td>1.6 %</td><td>2.3 %</td><td>+44 %</td></tr>
+<tr><td>1.00×</td><td>mean float</td><td>13.2 cm</td><td>13.7 cm</td><td>+4 %</td></tr>
+<tr><td>1.35×</td><td>mean float</td><td>22.3 cm</td><td>24.6 cm</td><td>+10 %</td></tr>
+<tr><td>1.35×</td><td>col %</td><td>1.7 %</td><td>1.6 %</td><td>−6 %</td></tr>
+</tbody></table>
+</div>
+<p><strong>結論:輕度退步,未上線</strong>。原因猜測:pre-project 破壞了 flow 的 coherent proposal &mdash; 硬把 sofa 從 sampled 位置(可能已跟 coffee_table 對齊)snap 到牆邊,反而讓後續 Adam 25 步要重建 motif 內部關係。可能的修法是「只 warm-project head object,child 跟著 parent 位移」,但複雜度上升且效益未證。</p>
+
+<h4>(2) & (3) 未實作 &mdash; 前提檢驗不成立</h4>
+<p>建議中的一個關鍵前提是「二次能量 <em>(d − gap)²</em> 遠處梯度衰減,遠拉力小」。但實際微分:</p>
+<pre style="font-size:13px;margin:6px 0">gradient = ∂/∂d [(d − gap)²] = 2·(d − gap)
+  d=54 cm, gap=4 cm  →  gradient = 1.00  ← 大
+  d=10 cm            →  gradient = 0.12
+  d= 5 cm            →  gradient = 0.02  ← 小</pre>
+<p><strong>二次能量遠處梯度<em>越大</em>,近處<em>越小</em></strong>&mdash; 剛好跟建議相反。換成 Huber 的話,遠處梯度會 <em>saturate 到常數 δ ≈ 0.05</em>,反而<em>比 quadratic 弱 20 倍</em>。所以 #3 Huber wall pull 不會改善(會退步),沒實作。</p>
+
+<p>#2 dynamic step budget 也失去意義 &mdash; 之前 polish_steps=50 全域測試已證明「更多步 → E_col 有時間把 wall 物件往內推 → mean float 反漲」。為 1.35× 特別加步只會複製這個問題。</p>
+
+<h4>1.35× 的真正瓶頸(重新診斷)</h4>
+<div class="note">
+Wall_pull 遠處 gradient 已經夠強(1.0)。真正阻礙是<em>其他 energy 在打架</em>:
+<ul style="margin:6px 0">
+  <li><strong>E_col</strong>:給其他物件讓空間,把 wall 物件往內推</li>
+  <li><strong>Anchor L2 tangent</strong>:100 weight 限制切向移動,連帶影響斜向 wall 位移</li>
+  <li><strong>E_rel</strong>:拉回 reference relative position(reference 沒有跨大小的訊號)</li>
+</ul>
+這是「多能量拔河 + Adam 25 步收斂點」的均衡結果 &mdash; 純推理層 tweaks 已到 ceiling。真正解只在<em>訓練層改變 loss 分布</em>(讓 flow 生成階段就把物件放到接近牆邊,而不是靠 polish 補救 50 cm 位移)。這在方案 2 curriculum 段落已充分驗證失敗(bnd200 是架構區域極值)。
+</div>
+
 <h2 id="curriculum-result">Curriculum learning 實驗結果(誠實記錄)</h2>
 
 <p>照上面規劃真的跑了 curriculum:從 <code>flow_bnd200</code>(當時 val 0.020,最佳 checkpoint)分段加變因,每段跑完用<em>對應目標的固定測試集</em>判定要不要進下一階段。四個測試集分別對到四個 phase 想教的能力:</p>
