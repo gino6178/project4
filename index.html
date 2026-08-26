@@ -251,6 +251,33 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
 
 <p class="note">實作:<span class="mono">reroom/generative/xscene.py</span> &mdash; 配對 <span class="mono">build_pair_index_filtered</span>、對齊 <span class="mono">match_objects_spatial</span>、朝向過濾 <span class="mono">anchor_orientation_ok</span>、前向變形 <span class="mono">make_forward_pair</span> / <span class="mono">motif_rigid_warp</span>、真實配對 <span class="mono">make_cross_pair_filtered</span>;驗證與可視化 <span class="mono">scripts/diag_xscene.py</span>。</p>
 
+<h3>資料管線驗證:model 實際訓練的樣本</h3>
+<p>把三個機制組成 <span class="mono">HybridPairs</span> dataset(<span class="mono">70% forward-deform + 30% cross-pairing</span>),直接從它抽樣渲染,確認餵給 model 的 input / target 真的沒問題。</p>
+
+<figure>
+  <img src="assets/pipeline_rooms.png" alt="HybridPairs pipeline — input reference and target GT for 6 rooms">
+  <figcaption>上排 = INPUT reference(輸入的真實 reference 佈局)、下排 = TARGET(GT 佈局)。左四含 forward-deform(藍字,motif 剛體搬)與 cross-pairing(綠字,真實→真實)。標題數字為 target / source 面積比。可見 dining set、bed 等 motif 在 input↔target 之間保持完整,面積比落在實際範圍。</figcaption>
+</figure>
+
+<p>渲染即發現、並修掉兩個資料品質問題:</p>
+<ul>
+  <li><strong>面積比爆量</strong> &mdash; 原始 forward-deform 的切角 / L 切割會產生 target / source 高達 <span class="mono">4.0×</span> 的房間(物件擠一角填不滿),遠超部署範圍。<span class="mono">make_forward_pair</span> 加上面積比重採樣 <span class="mono">[0.5, 2.0]</span> 後,forward 路徑最大降到 <span class="mono">1.68×</span>,整條管線 <span class="mono">100%</span> 落在 <span class="mono">[0.5, 2.0]</span>(中位數 0.99)。</li>
+  <li><strong>退化崩塌</strong> &mdash; 偶發(0.3%)一個 motif 被 <span class="mono">motif_rigid_warp</span> 整組投影到邊界同一點,造成 GT 全部出界(OOB 100%)。加上 GT 出界比例守門(<span class="mono">forward &le; 15%</span> 重採樣、<span class="mono">cross &gt; 30%</span> 直接 fallback)後,OOB 最大值 <span class="mono">100% → 14.3%</span>、平均 <span class="mono">0.26%</span>。</li>
+</ul>
+
+<table>
+  <thead><tr><th>資料品質指標</th><th>修正前</th><th>修正後</th></tr></thead>
+  <tbody>
+    <tr><td>面積比 &gt; 2.0× 比例</td><td>10.3%</td><td><strong>0.0%</strong></td></tr>
+    <tr><td>面積比最大值</td><td>4.00×</td><td><strong>1.96×</strong></td></tr>
+    <tr><td>GT 出界比例最大</td><td>100%</td><td><strong>14.3%</strong></td></tr>
+    <tr><td>motif 拉伸(forward GT)</td><td colspan="2"><strong>3.9 cm</strong>(剛體搬,保持完整)</td></tr>
+    <tr><td>motif 拉伸(cross GT)</td><td colspan="2">49.3 cm(兩間真房的人因差異)</td></tr>
+  </tbody>
+</table>
+
+<p class="note">實作:<span class="mono">HybridPairs</span> 於 <span class="mono">reroom/generative/xscene.py</span>;資料品質守門在 <span class="mono">make_forward_pair</span>(面積比重採樣 + <span class="mono">_gt_oob_frac</span> 守門)與 <span class="mono">make_cross_pair_filtered</span>(出界 fallback);驗證 <span class="mono">scripts/diag_xscene.py</span> + pipeline 抽樣渲染。</p>
+
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
 </footer>
