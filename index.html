@@ -362,25 +362,26 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
 <h3>結果:兩者兼得,物理指標超越 baseline</h3>
 <p>三個模型在固定測試集上比較 &mdash; <span class="mono">bnd200</span>(原 baseline)、<span class="mono">r2</span>(只有 Module 1,朝向 under-correct 導致 snap 掉)、<span class="mono">r2m2</span>(Module 1+2)。</p>
 <table>
-  <thead><tr><th>指標</th><th>bnd200</th><th>r2(只 M1)</th><th><strong>r2m2(M1+M2)</strong></th></tr></thead>
+  <thead><tr><th>指標</th><th>bnd200</th><th>r2(只 M1)</th><th>r2m2(M1+輕量M2)</th><th><strong>r2m2full(M1+完整M2)</strong></th></tr></thead>
   <tbody>
-    <tr><td>S_rel 關係保持</td><td>0.903</td><td>0.875</td><td><strong>0.900</strong></td></tr>
-    <tr><td>S_motif</td><td>0.989</td><td>0.978</td><td><strong>0.989</strong></td></tr>
-    <tr><td>R_col 碰撞</td><td>5.1%</td><td>3.0%</td><td><strong>3.3%</strong></td></tr>
-    <tr><td>0.75× snap</td><td>92%</td><td>71%</td><td><strong>92%</strong></td></tr>
-    <tr><td>1.00× motif_pass</td><td>74%</td><td>62%</td><td><strong>82%</strong></td></tr>
-    <tr><td>1.35× float</td><td>32.1cm</td><td>24.7cm</td><td><strong>23.9cm</strong></td></tr>
-    <tr><td>1.35× snap</td><td>52%</td><td>37%</td><td><strong>58%</strong></td></tr>
+    <tr><td>S_rel 關係保持</td><td>0.903</td><td>0.875</td><td>0.900</td><td><strong>0.908</strong></td></tr>
+    <tr><td>S_motif</td><td>0.989</td><td>0.978</td><td>0.989</td><td><strong>0.989</strong></td></tr>
+    <tr><td>R_col 碰撞</td><td>5.1%</td><td>3.0%</td><td>3.3%</td><td><strong>3.4%</strong></td></tr>
+    <tr><td>0.75× float</td><td>8.8cm</td><td>9.8cm</td><td>9.5cm</td><td><strong>8.5cm</strong></td></tr>
+    <tr><td>1.00× motif_pass</td><td>74%</td><td>62%</td><td><strong>82%</strong></td><td>78%</td></tr>
+    <tr><td>1.35× float</td><td>32.1cm</td><td>24.7cm</td><td><strong>23.9cm</strong></td><td>25.8cm</td></tr>
+    <tr><td>1.35× snap</td><td>52%</td><td>37%</td><td>58%</td><td><strong>64%</strong></td></tr>
+    <tr><td>val_loss(訓練)</td><td>&mdash;</td><td>0.189</td><td>0.105</td><td><strong>0.079</strong></td></tr>
   </tbody>
 </table>
-<p><strong>r2m2 = 兩者兼得</strong>:Module 1 帶來全域定位(大房 float 32→24cm、碰撞 5.1→3.3%),Module 2 把 r2 丟掉的貼牆對齊救回來 &mdash; 而且最難的 <strong>1.35× 大房 snap 58%,還超過 bnd200 的 52%</strong>。同時 design-intent 指標(S_rel/S_motif)守回 baseline 水準。訓練 val_loss 也是最佳(0.105 vs r2 的 0.189)。</p>
+<p><strong>逐步驗證了設計的每一步</strong>:<span class="mono">r2</span>(只加 Module 1 informative prior)全域定位變好但物件歪斜、snap 崩到 37%;<span class="mono">r2m2</span>(加輕量 Module 2 每物件最近牆特徵)把 snap 救回 58%;<span class="mono">r2m2full</span>(完整 Module 2 &mdash; 牆段當獨立 token,家具對所有牆 cross-attention)再把最難的 <strong>1.35× 大房 snap 推到 64%</strong>,且 <strong>S_rel 0.908 反超 bnd200</strong>、val_loss 最佳(0.079)。<span class="mono">r2m2full</span> 為目前 shipped 最佳 checkpoint。</p>
 
 <figure>
   <img src="assets/reroom2_compare.png" alt="ReRoom 2.0: ref | GT | bnd200 | r2m2">
-  <figcaption>固定測試集 6 案例:參考輸入 | 真實人類 GT | bnd200 | <strong>r2m2</strong>(第 4 欄,圖內標題沿用舊字樣)。相比 r2 的物件歪斜,r2m2 靠 Module 2 的牆面相對邊回到軸對齊,同時保住全域定位優勢。</figcaption>
+  <figcaption>固定測試集 6 案例(參考 | 真實 GT | bnd200 | ReRoom 2.0)。相比 r2 的物件歪斜,ReRoom 2.0 靠 Module 2 的牆面相對邊回到軸對齊,同時保住全域定位優勢。完整版(牆 token)與輕量版視覺相近,提升為量化漸進(snap 58→64%)。</figcaption>
 </figure>
 
-<p class="note">實作:Module 1 於 <span class="mono">train.py</span>(<span class="mono">prior_x0</span>/<span class="mono">prior_noise</span>)+ <span class="mono">sample.py</span>;Module 2 於 <span class="mono">model.py</span>(<span class="mono">geo_bias</span>:dense pairwise bias + wall feature);Module 3/4 於 <span class="mono">xscene.py</span> / <span class="mono">train.py</span>(<span class="mono">rel_loss</span>)。<span class="mono">flow_r2m2</span> 為目前最佳 checkpoint。</p>
+<p class="note">實作:Module 1 於 <span class="mono">train.py</span>(<span class="mono">prior_x0</span>/<span class="mono">prior_noise</span>)+ <span class="mono">sample.py</span>;Module 2 於 <span class="mono">model.py</span> &mdash; 輕量版 <span class="mono">geo_bias</span>(dense pairwise bias + 每物件最近牆特徵)、完整版 <span class="mono">wall_tokens</span>(<span class="mono">WallCrossAttention</span>:邊界點為牆 token,家具↔牆 cross-attention + object→wall 邊 bias);Module 3/4 於 <span class="mono">xscene.py</span> / <span class="mono">train.py</span>(<span class="mono">rel_loss</span>)。<span class="mono">flow_r2m2full</span> 為 shipped 最佳 checkpoint。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
