@@ -336,7 +336,51 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
   <figcaption>固定測試集 6 案例:參考輸入 | 真實人類 GT | bnd200 | xscene。第 3、4 欄(兩個模型)幾乎相同 &mdash; 訓練前後實際輸出變化很小,和位置 MAE 持平一致;但按關係型指標兩者都保住了 reference 的 motif 與關係(S_motif ~1.0)。人類 GT 只是「眾多合理解之一」,不是唯一正解。</figcaption>
 </figure>
 
-<p class="note">關於「1.35× motif_pass=25%」:那是 three-sizes 用的<em>嚴格絕對漂移</em>門檻(child 離 parent ≤25cm 且 yaw ≤15°)。房間放大時床頭櫃離床本來就該拉開 &gt;25cm,這正是 PDF §7/§19 的 elasticity 精神(關係可彈性拉伸)。用 PDF 的 S_motif(關係容差)量,同一批是 0.99–1.0。真正剩下的物理弱點是 1.35× 大房的 <strong>wall-snap</strong>(float 32cm / snap 52→43%),屬 §8 optimizer 的 E_bound / wall-pull,不是 design-intent 破碎。工具:<span class="mono">scripts/eval_fixed_testset.py</span>、<span class="mono">scripts/make_fixed_testset.py</span>。</p>
+<p class="note">關於「1.35× motif_pass=25%」:那是 three-sizes 用的<em>嚴格絕對漂移</em>門檻(child 離 parent ≤25cm 且 yaw ≤15°)。房間放大時床頭櫃離床本來就該拉開 &gt;25cm,這正是 PDF §7/§19 的 elasticity 精神(關係可彈性拉伸)。用 PDF 的 S_motif(關係容差)量,同一批是 0.99–1.0。工具:<span class="mono">scripts/eval_fixed_testset.py</span>、<span class="mono">scripts/make_fixed_testset.py</span>。</p>
+
+<h2>ReRoom 2.0:從「盲猜生成」到「幾何整流」(LEGO-Net 借鑑)</h2>
+
+<p>診斷發現一個根因:flow 從<strong>高斯噪聲</strong>起步 = 在 target 房間裡盲猜,optimizer/polish 因此主導了輸出,換不換 flow 幾乎沒差。借鑑 LEGO-Net 的成功經驗,把 flow 從「從零條件生成」重構為「<strong>幾何整流(Relational Retargeting Flow)</strong>」:不從噪聲起步,而是先把 reference 佈局投影進 target,flow 只負責修畸變、貼牆、保 motif。</p>
+
+<table>
+  <thead><tr><th>維度</th><th>現行(盲猜)</th><th>ReRoom 2.0</th></tr></thead>
+  <tbody>
+    <tr><td>生成起點 x₀</td><td>高斯噪聲 N(0, I)</td><td><strong>Reference 投影</strong> T(S_ref, P_tgt) + 噪聲</td></tr>
+    <tr><td>模型任務</td><td>盲猜合規擺放</td><td>修畸變、吸附牆面、保 motif 剛性</td></tr>
+    <tr><td>訓練監督</td><td>無因果的跨房 Hungarian 配對</td><td>幾何變形的<strong>因果</strong>資料對(motif 剛體逆映射)</td></tr>
+  </tbody>
+</table>
+
+<h3>四個模組</h3>
+<ul>
+  <li><strong>Module 1 空間初值投影</strong> &mdash; x₀ = reference 佈局投影進 target 座標系(<span class="mono">cond</span> 已帶的 ref_state)+ 噪聲。train/sample/validate 三處一致,flag 存進 checkpoint 自動對齊。</li>
+  <li><strong>Module 2 全對相對幾何 attention</strong> &mdash; 從當前 state 算全對 Δp/Δθ 的 dense attention bias,加上每物件的牆面特徵(最近牆距離 + 法線失準度)。這是讓模型「感知離牆多遠、和牆多不平行」進而吸附/對齊的關鍵。</li>
+  <li><strong>Module 3 因果資料對</strong> &mdash; 變形 target 多邊形 → 逆映射佈局(motif 剛體保持)= 100% 因果的 (S_ref, P_tgt)→S_tgt。</li>
+  <li><strong>Module 4 幾何正則損失</strong> &mdash; motif 剛性損失(懲罰內部距離拉伸)+ 貼牆法線對齊。</li>
+</ul>
+
+<h3>結果:兩者兼得,物理指標超越 baseline</h3>
+<p>三個模型在固定測試集上比較 &mdash; <span class="mono">bnd200</span>(原 baseline)、<span class="mono">r2</span>(只有 Module 1,朝向 under-correct 導致 snap 掉)、<span class="mono">r2m2</span>(Module 1+2)。</p>
+<table>
+  <thead><tr><th>指標</th><th>bnd200</th><th>r2(只 M1)</th><th><strong>r2m2(M1+M2)</strong></th></tr></thead>
+  <tbody>
+    <tr><td>S_rel 關係保持</td><td>0.903</td><td>0.875</td><td><strong>0.900</strong></td></tr>
+    <tr><td>S_motif</td><td>0.989</td><td>0.978</td><td><strong>0.989</strong></td></tr>
+    <tr><td>R_col 碰撞</td><td>5.1%</td><td>3.0%</td><td><strong>3.3%</strong></td></tr>
+    <tr><td>0.75× snap</td><td>92%</td><td>71%</td><td><strong>92%</strong></td></tr>
+    <tr><td>1.00× motif_pass</td><td>74%</td><td>62%</td><td><strong>82%</strong></td></tr>
+    <tr><td>1.35× float</td><td>32.1cm</td><td>24.7cm</td><td><strong>23.9cm</strong></td></tr>
+    <tr><td>1.35× snap</td><td>52%</td><td>37%</td><td><strong>58%</strong></td></tr>
+  </tbody>
+</table>
+<p><strong>r2m2 = 兩者兼得</strong>:Module 1 帶來全域定位(大房 float 32→24cm、碰撞 5.1→3.3%),Module 2 把 r2 丟掉的貼牆對齊救回來 &mdash; 而且最難的 <strong>1.35× 大房 snap 58%,還超過 bnd200 的 52%</strong>。同時 design-intent 指標(S_rel/S_motif)守回 baseline 水準。訓練 val_loss 也是最佳(0.105 vs r2 的 0.189)。</p>
+
+<figure>
+  <img src="assets/reroom2_compare.png" alt="ReRoom 2.0: ref | GT | bnd200 | r2m2">
+  <figcaption>固定測試集 6 案例:參考輸入 | 真實人類 GT | bnd200 | <strong>r2m2</strong>(第 4 欄,圖內標題沿用舊字樣)。相比 r2 的物件歪斜,r2m2 靠 Module 2 的牆面相對邊回到軸對齊,同時保住全域定位優勢。</figcaption>
+</figure>
+
+<p class="note">實作:Module 1 於 <span class="mono">train.py</span>(<span class="mono">prior_x0</span>/<span class="mono">prior_noise</span>)+ <span class="mono">sample.py</span>;Module 2 於 <span class="mono">model.py</span>(<span class="mono">geo_bias</span>:dense pairwise bias + wall feature);Module 3/4 於 <span class="mono">xscene.py</span> / <span class="mono">train.py</span>(<span class="mono">rel_loss</span>)。<span class="mono">flow_r2m2</span> 為目前最佳 checkpoint。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
