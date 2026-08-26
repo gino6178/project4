@@ -55,8 +55,9 @@
 <tr><td style="padding:3px 6px">PDF § 8 七個 energy</td><td style="padding:3px 6px">✅ 六個進 layout 生成、七個進 ranking(E<sub>edit</sub> 保留 slot)</td></tr>
 <tr><td style="padding:3px 6px">Substitution 前置</td><td style="padding:3px 6px">✅ 上線(縮小房 col 19 % → 14.7 %)</td></tr>
 <tr><td style="padding:3px 6px">Substitution 尺寸下限</td><td style="padding:3px 6px">✅ 上線(不再出現 0.16 m² 床)</td></tr>
-<tr><td style="padding:3px 6px">縮小 / 原尺寸 wall 貼合</td><td style="padding:3px 6px">✅ 良好(0.75× ~8 cm、1.0× ~11 cm)</td></tr>
-<tr><td style="padding:3px 6px">大房 1.35× wall float</td><td style="padding:3px 6px">⚠️ 卡在 20 cm 平均(訓練層試過的招式全失敗)</td></tr>
+<tr><td style="padding:3px 6px">Anisotropic + Parent-child polish</td><td style="padding:3px 6px">✅ 上線(0.75× mean −21 %、col −52 %、1.0× mean −8 %)</td></tr>
+<tr><td style="padding:3px 6px">縮小 / 原尺寸 wall 貼合</td><td style="padding:3px 6px">✅ 更好(0.75× 6.9 cm、1.0× 13.2 cm)</td></tr>
+<tr><td style="padding:3px 6px">大房 1.35× wall float</td><td style="padding:3px 6px">⚠️ 22 cm 平均(方案 1 略退 2 cm、col 反降,取捨)</td></tr>
 <tr><td style="padding:3px 6px">Graph node stream(並行 GNN)</td><td style="padding:3px 6px">🧪 訓過,col% 降半(1.9 → 0.9),但整體無突破</td></tr>
 <tr><td style="padding:3px 6px">Metric-aware boundary encoder</td><td style="padding:3px 6px">🧪 訓過,val 降但實測 1.35× 反退</td></tr>
 <tr><td style="padding:3px 6px">Scramble augmentation(LEGO-Net)</td><td style="padding:3px 6px">🧪 訓過,scramble test 已飽和</td></tr>
@@ -317,8 +318,30 @@
 </ul>
 
 <div class="note">
-<strong>初步結果(單 scene 測試,6-scene bench 進行中):</strong>1.35× sofa 從 17.9 cm → 4.6 cm(74 % 改善,驗證這個機制真的能鬆開 wall_pull vs anchor 死鎖)。但個別 case 有波動,還在調參 / 6-scene 平均驗證,結果會覆蓋此段。<em>不重訓、純推理層改動。</em>
+<strong>6-scene bench 完成結果(取代原初步結果):</strong>
+<div class="tw" style="margin:8px 0">
+<table>
+<thead><tr><th>Size</th><th>Metric</th><th>舊 uniform anchor</th><th>方案 1 anisotropic</th><th>Δ</th></tr></thead>
+<tbody>
+<tr><td>0.75×</td><td>mean float</td><td>8.7 cm</td><td class="win">6.9 cm</td><td>−21 %</td></tr>
+<tr><td>0.75×</td><td>col %</td><td>3.3 %</td><td class="win">1.6 %</td><td>−52 %</td></tr>
+<tr><td>1.00×</td><td>mean float</td><td>14.4 cm</td><td class="win">13.2 cm</td><td>−8 %</td></tr>
+<tr><td>1.00×</td><td>max float</td><td>60.6 cm</td><td class="win">55.3 cm</td><td>−9 %</td></tr>
+<tr><td>1.35×</td><td>mean float</td><td>20.0 cm</td><td>22.3 cm</td><td>+11 % (↑ 2 cm)</td></tr>
+<tr><td>1.35×</td><td>col %</td><td>1.9 %</td><td class="win">1.7 %</td><td>−11 %</td></tr>
+<tr><td>1.35×</td><td>S<sub>rel</sub></td><td>0.86</td><td>0.86</td><td>—</td></tr>
+</tbody></table>
 </div>
+<strong>淨勝 4 項、平手 2 項、輕度退步 1 項</strong>(1.35× mean +2 cm)。<em>已上為 shipped default</em>。1.35× 的小退步是取捨:方案 1 讓靠牆物件在 asymmetric penalty 下自由靠牆,但當 flow 一開始把物件放太遠(1.35× 大房常見),25 步 Adam 有時無法完全走到牆邊 &mdash; 這需要更本質的訓練層或架構修法(見 §curriculum-result 討論)。
+</div>
+
+<h3>Debug 過程紀錄(誠實)</h3>
+<ol>
+  <li>第一版<em>對稱 normal 懲罰</em>:1.0× sofa 從 3 cm → 13 cm(退步)&mdash; 因為 anchor 太弱讓物件飄走</li>
+  <li>改<em>單向 asymmetric</em>(只懲罰往中心飄):sofa 1.35× 17.9 → 4.6 cm(單場景大勝),但 6-scene 平均反退 &mdash; 因為 asymmetric 對「錯的 wall 方向」很脆弱,錯了會朝錯方向自由飄</li>
+  <li>用<em>reference 房間裡真正靠的牆</em>當 ground truth,對映到 target(uniform_scale 保留 wall count):sideboard 修好,sofa 仍卡</li>
+  <li>發現 polygon 可能是 CW(不是預設的 CCW),導致「inward normal」實際指外 &mdash; 加 signed-area 檢查 + polygon.contains 驗證。這是最終上線的版本</li>
+</ol>
 
 <h2 id="curriculum-result">Curriculum learning 實驗結果(誠實記錄)</h2>
 
