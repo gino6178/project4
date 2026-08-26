@@ -28,6 +28,7 @@
   h3{font-size:17.5px;margin:24px 0 6px;font-weight:600}
   p{margin:0 0 14px}
   ul{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
   code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;
        background:var(--panel);padding:1px 5px;border-radius:3px}
   .note{background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;
@@ -206,6 +207,33 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
   <img src="assets/train_ratios.png" alt="Ref/target area ratio distribution across 3000 sampled pairs">
   <figcaption>3000 個訓練 pair 抽樣的 ref / target 面積比分布。虛線標記推理測試的 0.75× / 1.0× / 1.35× 對應位置(ratio = 1.33 / 1.00 / 0.74)。分布峰在 1.0 附近,兩尾(尤其對應大房 1.35× 的 ratio 0.74)相對稀疏 &mdash; 這是剩餘 1.35× bottleneck 的資料層根因。</figcaption>
 </figure>
+
+<h2>新資料策略:跨場景配對(兩邊都是真實房間)</h2>
+
+<p>上面的反向製造有一個根本弱點:<em>reference 是假的</em> &mdash; 用 affine warp 從真實 target 硬帶回去,motif(沙發+茶几、床+床頭櫃)內部間距會被仿射拉伸,model 因此學到「motif 可以被拉變形」這個錯誤先驗。我們改用兩種<strong>真實佈局</strong>來源的配對策略。</p>
+
+<h3>策略 1 — 同風格跨場景配對(Cross-Scene Pairing)</h3>
+<p>在 3D-FRONT 裡找<strong>同房型、物件類別 Jaccard 相似度 &gt; 0.6</strong> 的兩間真實房間 <span class="mono">(S_ref, S_tgt)</span>。以 <span class="mono">S_ref</span> 當輸入 reference,以 <span class="mono">S_tgt</span> 的多邊形邊界當 target <span class="mono">P_t</span>,以 <span class="mono">S_tgt</span> 的<em>真實擺放</em>當 GT。兩邊都是真人、人因合理的佈局,model 學到的是真正的「跨空間設計風格遷移」,而非「還原 affine 變形」。物件用 per-category Hungarian(依尺寸)在兩房間對應,所以 reference 物件 i 的 GT 就是它在 <span class="mono">S_tgt</span> 中對應物件的位置。</p>
+
+<figure>
+  <img src="assets/xscene_pairs.png" alt="Cross-scene pairing examples">
+  <figcaption>每組三格:<strong>左</strong> = 真實 reference(輸入)、<strong>中</strong> = 另一間真實房的邊界 <span class="mono">P_t</span>(含 L 型 / 切角等真實形狀)、<strong>右</strong> = 該真實房的真實 layout(GT)。標題為房型與 Jaccard 相似度。</figcaption>
+</figure>
+
+<ul>
+  <li><strong>配對覆蓋率 98.6%</strong>(7738 / 7848 訓練房間有至少一個 Jaccard&gt;0.6 的夥伴,平均 15 個夥伴)</li>
+  <li><strong>物件配對率 76%</strong>(reference 物件能在 target 找到同類別 GT 對應的比例;無對應者不參與 flow loss)</li>
+</ul>
+
+<h3>策略 2 — Motif-Preserving 前向變形(無配對時的 fallback)</h3>
+<p>剩下 1.4% 沒有夥伴的房間:保持 reference 為真實房間不變形,對 <em>target</em> 多邊形做變形(長寬比縮放、切角、L/T 切割),再把佈局搬進去 &mdash; 但每個 <strong>motif 當成一個剛體</strong>整組搬(head 用仿射映射,成員保留相對 offset 與朝向),確保 motif 內部不被仿射拉伸。這同時也是對現行 affine warp 的直接升級。</p>
+
+<figure>
+  <img src="assets/xscene_stretch.png" alt="Intra-motif stretch by GT-generation strategy">
+  <figcaption>三種 GT 生成策略的 motif 內部拉伸(child→head 距離相對於 reference 的變化,cm)。<strong>Motif-rigid warp 把拉伸從 14.4 cm 降到 3.3 cm(−77%)</strong>。策略 1 的 47 cm 是兩間真實房間本身的人因差異(合理、非我方拉伸造成)。</figcaption>
+</figure>
+
+<p class="note">實作:<span class="mono">reroom/generative/xscene.py</span>(<span class="mono">build_pair_index</span> / <span class="mono">match_objects</span> / <span class="mono">make_cross_pair</span> / <span class="mono">motif_rigid_warp</span>);驗證與可視化 <span class="mono">scripts/diag_xscene.py</span>。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
