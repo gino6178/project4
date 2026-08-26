@@ -46,6 +46,25 @@
 
 <p><strong>核心設計</strong>:設計不是「座標」,而是「關係 + 彈性」。α<sub>ij</sub>(關係彈性)決定每對物件之間哪些距離該保留、哪些可以隨房間變。搬房間時,不動的東西照搬,彈性大的自動放鬆。</p>
 
+<div class="note">
+<p style="margin:0 0 8px"><strong>執行摘要 — 這輪 iteration 的結果</strong>(<a href="#curriculum-result">詳見下方</a>)</p>
+<table style="width:100%;border-collapse:collapse;font-size:14.5px;margin:6px 0">
+<tr><th style="text-align:left;padding:3px 6px;border-bottom:1px solid #ccc">項目</th><th style="text-align:left;padding:3px 6px;border-bottom:1px solid #ccc">狀態</th></tr>
+<tr><td style="padding:3px 6px">Shipped path</td><td style="padding:3px 6px"><code>flow_wall + polish + guidance</code>(見流程圖)</td></tr>
+<tr><td style="padding:3px 6px">PDF eq (37) constraint projection</td><td style="padding:3px 6px">✅ 恢復(anchor L2 輕量版),與 guidance 共存</td></tr>
+<tr><td style="padding:3px 6px">PDF § 8 七個 energy</td><td style="padding:3px 6px">✅ 六個進 layout 生成、七個進 ranking(E<sub>edit</sub> 保留 slot)</td></tr>
+<tr><td style="padding:3px 6px">Substitution 前置</td><td style="padding:3px 6px">✅ 上線(縮小房 col 19 % → 14.7 %)</td></tr>
+<tr><td style="padding:3px 6px">Substitution 尺寸下限</td><td style="padding:3px 6px">✅ 上線(不再出現 0.16 m² 床)</td></tr>
+<tr><td style="padding:3px 6px">縮小 / 原尺寸 wall 貼合</td><td style="padding:3px 6px">✅ 良好(0.75× ~8 cm、1.0× ~11 cm)</td></tr>
+<tr><td style="padding:3px 6px">大房 1.35× wall float</td><td style="padding:3px 6px">⚠️ 卡在 20 cm 平均(訓練層試過的招式全失敗)</td></tr>
+<tr><td style="padding:3px 6px">Graph node stream(並行 GNN)</td><td style="padding:3px 6px">🧪 訓過,col% 降半(1.9 → 0.9),但整體無突破</td></tr>
+<tr><td style="padding:3px 6px">Metric-aware boundary encoder</td><td style="padding:3px 6px">🧪 訓過,val 降但實測 1.35× 反退</td></tr>
+<tr><td style="padding:3px 6px">Scramble augmentation(LEGO-Net)</td><td style="padding:3px 6px">🧪 訓過,scramble test 已飽和</td></tr>
+<tr><td style="padding:3px 6px">Curriculum(scramble → wider L1 → subst)</td><td style="padding:3px 6px">❌ 每 phase 都退步,catastrophic forgetting</td></tr>
+</table>
+<p style="margin:8px 0 0"><strong>結論:</strong>Shipped path 已<em>包含 PDF 主要成分</em>並在小房 / 原尺寸表現良好;大房 wall float 是 dataset limitation(訓練分布裡「同形狀跨大小」樣本佔 1.6-1.8 %),<em>訓練層 fine-tune 無法突破</em>。要進一步得換資料或從 scratch 重訓。</p>
+</div>
+
 <h2>現在的做法(流程圖)</h2>
 
 <figure class="flow">
