@@ -58,7 +58,7 @@
 
 <ol>
   <li><strong>意圖抽取</strong>:參考房影像 → MIDI-3D → 場景 + 物件圖 → 加上關係彈性 α<sub>ij</sub>(神經 MLP 學出來)</li>
-  <li><strong>Summarise & Substitution(§9 § 11)</strong>:房間變小先刪 motif,再從 asset bank 換成塞得下的較小家具(在 flow 之前,避免硬塞被 collision 推散)</li>
+  <li><strong>Summarise & Substitution(§9 § 11)</strong>:房間變小先刪 motif,再從 asset bank 換成塞得下的較小家具(在 flow 之前,避免硬塞被 collision 推散)。<em>Anchor 保護</em>:每個房間類型的核心家具(客廳 sofa、臥室 bed 等)永遠不刪 &mdash; 若塞不下就交給 substitution 換小版本</li>
   <li><strong>Flow Transformer(§13 前半)</strong>:DiT 33 M 參數,意圖圖 + α 進 attention bias,ODE 50 步生成 k=16 個候選佈局。<em>In-sampling guidance</em>:每步都算 E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + wall_pull 的可行性梯度,融進 ODE trajectory</li>
   <li><strong>Polish(§13 eq (37) 後半)</strong>:每個候選跑 25 步 Adam,對 § 8 六個能量做梯度下降,freeze_yaw(朝向由 flow 決定),疊四個機制:
     <ul>
@@ -83,11 +83,12 @@
 <table>
 <thead><tr><th>Size</th><th>mean float</th><th>max float</th><th>OOB %</th><th>col %</th><th>S<sub>rel</sub></th></tr></thead>
 <tbody>
-<tr><td>0.75× 縮小</td><td class="win">6.5 cm</td><td>24.6 cm</td><td>2.1 %</td><td>2.6 %</td><td>0.42</td></tr>
-<tr><td>1.00× 原尺寸</td><td class="win">12.0 cm</td><td>55.9 cm</td><td>0.9 %</td><td>4.8 %</td><td>0.93</td></tr>
-<tr><td>1.35× 放大</td><td>22.2 cm</td><td>102.5 cm</td><td class="win">0.8 %</td><td>2.3 %</td><td>0.87</td></tr>
+<tr><td>0.75× 縮小</td><td>8.2 cm</td><td>40.9 cm</td><td>2.8 %</td><td class="win">2.0 %</td><td>0.41</td></tr>
+<tr><td>1.00× 原尺寸</td><td class="win">11.4 cm</td><td>54.5 cm</td><td>1.7 %</td><td>4.0 %</td><td>0.92</td></tr>
+<tr><td>1.35× 放大</td><td>25.2 cm</td><td>100.0 cm</td><td>1.6 %</td><td>2.2 %</td><td class="win">0.88</td></tr>
 </tbody>
 </table>
+<p style="font-size:14.5px;color:var(--mut);margin:-6px 0 14px">Mean float 略高於單純 Anisotropic + Polish 版本,是因為 <strong>anchor 保護</strong>(客廳的 sofa、臥室的 bed 不會被 summarise 刪除)保留了原本會被丟掉的物件 &mdash; 輸出更完整(sofa 進了 mean 分母),但 S<sub>rel</sub>(motif 保存度)反而 <em>更高</em>(1.35× 0.87 → 0.88)。</p>
 
 <h2>算法細節(公式與變量)</h2>
 
