@@ -233,7 +233,23 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
   <figcaption>三種 GT 生成策略的 motif 內部拉伸(child→head 距離相對於 reference 的變化,cm)。<strong>Motif-rigid warp 把拉伸從 14.4 cm 降到 3.3 cm(−77%)</strong>。策略 1 的 47 cm 是兩間真實房間本身的人因差異(合理、非我方拉伸造成)。</figcaption>
 </figure>
 
-<p class="note">實作:<span class="mono">reroom/generative/xscene.py</span>(<span class="mono">build_pair_index</span> / <span class="mono">match_objects</span> / <span class="mono">make_cross_pair</span> / <span class="mono">motif_rigid_warp</span>);驗證與可視化 <span class="mono">scripts/diag_xscene.py</span>。</p>
+<h3>三個過濾與修正機制</h3>
+<p>純 Jaccard 配對會混進「同一組家具但佈局大不同」的髒樣本(例如沙發突然轉 90°)。加上三道機制讓 cross-pairing 的訊號乾淨、位移合理,並用混合配比兼顧意圖傳承與真實細節。</p>
+
+<ol>
+  <li><strong>核心錨點朝向一致性(Anchor Orientation Filter)</strong> &mdash; 計算兩房核心家具(客廳沙發 / 臥室床)在各自房間座標系下的主朝向差 <span class="mono">Δθ = |θ_ref − θ_tgt|</span>。因 MRR 長軸有 180° 歧義,把差值摺到 <span class="mono">[0°, 90°]</span>(0° 與 180° 皆算對齊),規定 <span class="mono">Δθ ≤ 30°</span>,剔除 45° / 90° 這種突變樣本。<br><span class="mono">覆蓋率 98.6% → 98.1%</span> &mdash; 幾乎不損資料量,只砍掉真正的朝向突變。</li>
+
+  <li><strong>匈牙利演算法做物件對齊(空間 Cost Matrix)</strong> &mdash; 同類別物件(多張椅子、多個床頭櫃)之間,以<em>正規化座標下的空間距離</em>(加尺寸差當次要 tiebreaker)構建 Cost Matrix,做一對一最優分配,確保 <span class="mono">S_ref → S_tgt</span> 的位移向量最短、不交叉。<br>相對於只看尺寸的配對:<span class="mono">平均位移 0.895 → 0.775(−13%)</span>、<span class="mono">交叉率 23.1% → 13.5%(−42%)</span>。</li>
+
+  <li><strong>70% 前向變形 + 30% 嚴格過濾 Cross-Pairing 混合配比</strong> &mdash; 前向變形(70%)以 reference 為主體、變形 target 邊界,motif 剛體搬運,100% 保證意圖傳承;Cross-Pairing(30%)經朝向與拓撲過濾後的真實配對,補充真實設計師在微小幾何變化下的擺放細節。</li>
+</ol>
+
+<figure>
+  <img src="assets/xscene_matching.png" alt="Size-only vs spatial Hungarian matching">
+  <figcaption>物件對齊在正規化房間座標系下比較。<span style="color:#a8412a">●</span> = reference 位置、<span style="color:#2a7a2a">■</span> = target 位置、連線 = 位移。<strong>左(只看尺寸)12 個交叉 → 右(空間 Cost Matrix)6 個交叉</strong>。空間配對讓椅子 / 床頭櫃就近對應,不會互相穿越。</figcaption>
+</figure>
+
+<p class="note">實作:<span class="mono">reroom/generative/xscene.py</span> &mdash; 配對 <span class="mono">build_pair_index_filtered</span>、對齊 <span class="mono">match_objects_spatial</span>、朝向過濾 <span class="mono">anchor_orientation_ok</span>、前向變形 <span class="mono">make_forward_pair</span> / <span class="mono">motif_rigid_warp</span>、真實配對 <span class="mono">make_cross_pair_filtered</span>;驗證與可視化 <span class="mono">scripts/diag_xscene.py</span>。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
