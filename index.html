@@ -196,19 +196,6 @@
   <figcaption>3000 個訓練 pair 抽樣的 ref / target 面積比分布。虛線標記推理測試的 0.75× / 1.0× / 1.35× 對應位置(ratio = 1.33 / 1.00 / 0.74)。分布峰在 1.0 附近,兩尾(尤其對應大房 1.35× 的 ratio 0.74)相對稀疏 &mdash; 這是剩餘 1.35× bottleneck 的資料層根因。</figcaption>
 </figure>
 
-<h2>剩餘瓶頸</h2>
-
-<div class="note">
-<p style="margin:0 0 6px"><strong>1.35× 放大房 sofa 卡在 30 cm 左右</strong>(見圖右下)&mdash; 這是<em>多能量拔河的均衡點</em>:</p>
-<ul style="margin:6px 0">
-  <li>E_col:coffee_table / side_table 反向排斥,把 sofa 頂在半空</li>
-  <li>E_rel:reference 的 sofa-table 相對距離拉大 → 反向力</li>
-  <li>Anchor tangent 100 限制切向 → 阻擋斜向 wall 位移</li>
-  <li>Adam 25 步預算不夠走完 30 cm 位移</li>
-</ul>
-<p style="margin:6px 0 0"><strong>純推理層已到 ceiling。</strong>要繼續突破需<em>從 scratch 重訓</em> + 補「大房專業配置」GT(3D-FRONT 分布裡這類樣本只佔 1.6-1.8 %)。</p>
-</div>
-
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
 </footer>
