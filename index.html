@@ -77,7 +77,7 @@
 
 <figure>
   <img src="assets/three_sizes_r2m2full.png" alt="Three-sizes output — ReRoom 2.0 (r2m2full)">
-  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 目前 shipped 模型 <strong>ReRoom 2.0(<span class="mono">flow_r2m2full</span>)</strong>。1.0× 高度保留 reference(S_rel 0.96),1.35× 大房 TV 貼左牆、sofa 貼右牆(Module 2 牆面 attention 生效),餐椅隨房間彈性散開(elasticity)。詳細指標見下方「ReRoom 2.0」一節。</figcaption>
+  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 目前 shipped 模型 <strong>ReRoom 2.0(<span class="mono">flow_r2m2full</span>)+ 規整化投影(Step 1)</strong>。1.0× 幾乎完美重現 reference(S_rel 0.96):draw 貼左上牆、4 張餐椅平行桌邊成套環繞、TV 貼左牆、sofa 貼右牆;1.35× 大房餐桌+椅整組不散架、各件正交貼牆(S_rel 0.91)。詳細指標見下方「ReRoom 2.0」一節。</figcaption>
 </figure>
 
 <h3>6 場景平均實測(早期 planA baseline,供對照)</h3>
@@ -382,6 +382,15 @@ $$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$
 </figure>
 
 <p class="note">實作:Module 1 於 <span class="mono">train.py</span>(<span class="mono">prior_x0</span>/<span class="mono">prior_noise</span>)+ <span class="mono">sample.py</span>;Module 2 於 <span class="mono">model.py</span> &mdash; 輕量版 <span class="mono">geo_bias</span>(dense pairwise bias + 每物件最近牆特徵)、完整版 <span class="mono">wall_tokens</span>(<span class="mono">WallCrossAttention</span>:邊界點為牆 token,家具↔牆 cross-attention + object→wall 邊 bias);Module 3/4 於 <span class="mono">xscene.py</span> / <span class="mono">train.py</span>(<span class="mono">rel_loss</span>)。<span class="mono">flow_r2m2full</span> 為 shipped 最佳 checkpoint。</p>
+
+<h3>規整化投影(Regularity Projector):讓視覺自動變整齊</h3>
+<p>一個關鍵觀察:連續空間的低 loss / 高 S_rel 容忍 5–10 cm 的<em>非正交偏移</em>,但人眼對「正交、貼合、成套」極度敏感 &mdash; 物件被當成高維空間的自由粒子,而非有人因約束與剛性槽位的設計群組。所以在 polish 後(eq 37 的 constraint projection 之內)加一道<strong>規整化投影</strong>,不需重訓:</p>
+<ul>
+  <li><strong>槽位吸附</strong> &mdash; 餐椅 / 書桌椅吸附到最近的桌邊,並<em>平行桌邊</em>(朝向 snap 到桌子自身的軸,而非朝桌心的對角),整組成套不散架。</li>
+  <li><strong>貼牆 flush + 法線朝向</strong> &mdash; 掛畫、衣櫃、電視櫃、床、沙發等貼牆件,背面直接投影到最近牆線、朝向設為該牆內法線,絕不懸空或斜插。</li>
+  <li><strong>Manhattan 正交 snap</strong> &mdash; 茶几 / 餐桌 / 邊桌等自由正交件,朝向 snap 到最近牆軸(容差 22°),消除 3–15° 的「微醺」傾斜。</li>
+</ul>
+<p>效果見上方主圖:1.0× 幾乎完美重現 reference,1.35× 大房家具正交貼牆、餐椅整齊環桌。實作 <span class="mono">reroom/retarget/regularity.py</span>,由 <span class="mono">RetargetConfig.regularity_snap</span> 開啟。這是 Step 1(polish 層,最快見效);Step 2(把 motif child 的 flow 輸出改為相對 parent 的 local offset,根本杜絕大房拉扯)為後續。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
