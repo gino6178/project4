@@ -361,6 +361,19 @@
   <li>發現 polygon 可能是 CW(不是預設的 CCW),導致「inward normal」實際指外 &mdash; 加 signed-area 檢查 + polygon.contains 驗證。這是最終上線的版本</li>
 </ol>
 
+<h3>1.35× 剩餘 2 cm 追根究底</h3>
+<div class="stale">
+<p style="margin:0 0 6px"><strong>診斷:</strong>方案 1 shipped 之後 1.35× 大房 mean float 從 20 → 22 cm(退步 2 cm)。實測 sofa 起點<em>離牆 54 cm</em>,wall strength=0.7、25 步 × lr 0.02 Adam 只能走 ~35 cm(還是不夠遠)。</p>
+<p style="margin:0 0 6px"><strong>試了 polish_steps 25 → 50(額外時間讓 Adam 走完):</strong></p>
+<ul style="margin:4px 0">
+  <li>col%(1.35×): 1.7 → <strong>0.7 %(-59 %)</strong> ✓</li>
+  <li>OOB%(1.35×): 2.4 → <strong>0.8 %(-67 %)</strong> ✓</li>
+  <li>但 <strong>mean float(1.35×): 22 → 28 cm(+26 %)</strong> ✗</li>
+</ul>
+<p style="margin:0"><strong>反直覺結論:</strong>polish 時間增加,反而讓 E_col 有時間<em>把 wall 物件往內推</em>讓其他物件有空間 &mdash; 這股力壓過 asymmetric anchor 的 8 * (drift)² 懲罰。25 步是「時間夠推向牆、又不長到讓 col 反推」的甜蜜點,保留為 shipped。</p>
+<p style="margin:6px 0 0"><strong>Shipped default 維持 25 步。</strong>要繼續壓 1.35× mean float 只剩<em>非推理層</em>路徑:換 dataset(補大房 GT)、架構改動(Wall-relative parameterization)、或從 scratch 重訓 &mdash; 這些方案 2 的成本已寫在下方 curriculum 段落記錄。</p>
+</div>
+
 <h2 id="curriculum-result">Curriculum learning 實驗結果(誠實記錄)</h2>
 
 <p>照上面規劃真的跑了 curriculum:從 <code>flow_bnd200</code>(當時 val 0.020,最佳 checkpoint)分段加變因,每段跑完用<em>對應目標的固定測試集</em>判定要不要進下一階段。四個測試集分別對到四個 phase 想教的能力:</p>
