@@ -56,8 +56,9 @@
 <tr><td style="padding:3px 6px">Substitution 前置</td><td style="padding:3px 6px">✅ 上線(縮小房 col 19 % → 14.7 %)</td></tr>
 <tr><td style="padding:3px 6px">Substitution 尺寸下限</td><td style="padding:3px 6px">✅ 上線(不再出現 0.16 m² 床)</td></tr>
 <tr><td style="padding:3px 6px">Anisotropic + Parent-child polish</td><td style="padding:3px 6px">✅ 上線(0.75× mean −21 %、col −52 %、1.0× mean −8 %)</td></tr>
-<tr><td style="padding:3px 6px">縮小 / 原尺寸 wall 貼合</td><td style="padding:3px 6px">✅ 更好(0.75× 6.9 cm、1.0× 13.2 cm)</td></tr>
-<tr><td style="padding:3px 6px">大房 1.35× wall float</td><td style="padding:3px 6px">⚠️ 22 cm 平均(方案 1 略退 2 cm、col 反降,取捨)</td></tr>
+<tr><td style="padding:3px 6px">二階段能量排程(Plan A)</td><td style="padding:3px 6px">✅ 上線(疊加在 Anisotropic 上;1.35× OOB −67 %、Srel 0.86 → 0.87)</td></tr>
+<tr><td style="padding:3px 6px">縮小 / 原尺寸 wall 貼合</td><td style="padding:3px 6px">✅ 更好(0.75× 6.5 cm、1.0× 12.0 cm)</td></tr>
+<tr><td style="padding:3px 6px">大房 1.35× wall float</td><td style="padding:3px 6px">⚠️ 22 cm 平均;OOB 大改善(2.4→0.8 %)&mdash; mean 卡在能量拔河均衡</td></tr>
 <tr><td style="padding:3px 6px">Graph node stream(並行 GNN)</td><td style="padding:3px 6px">🧪 訓過,col% 降半(1.9 → 0.9),但整體無突破</td></tr>
 <tr><td style="padding:3px 6px">Metric-aware boundary encoder</td><td style="padding:3px 6px">🧪 訓過,val 降但實測 1.35× 反退</td></tr>
 <tr><td style="padding:3px 6px">Scramble augmentation(LEGO-Net)</td><td style="padding:3px 6px">🧪 訓過,scramble test 已飽和</td></tr>
@@ -410,7 +411,49 @@ Wall_pull 遠處 gradient 已經夠強(1.0)。真正阻礙是<em>其他 energy �
   <li><strong>Anchor L2 tangent</strong>:100 weight 限制切向移動,連帶影響斜向 wall 位移</li>
   <li><strong>E_rel</strong>:拉回 reference relative position(reference 沒有跨大小的訊號)</li>
 </ul>
-這是「多能量拔河 + Adam 25 步收斂點」的均衡結果 &mdash; 純推理層 tweaks 已到 ceiling。真正解只在<em>訓練層改變 loss 分布</em>(讓 flow 生成階段就把物件放到接近牆邊,而不是靠 polish 補救 50 cm 位移)。這在方案 2 curriculum 段落已充分驗證失敗(bnd200 是架構區域極值)。
+</div>
+
+<h3>使用者建議的「多能量拔河」三方案 &mdash; 全測完</h3>
+
+<p>收到使用者針對能量拔河的三個 Polish 內部方案:(A) 二階段能量排程、(B) 距離門控切向拘束、(C) Motif 階層梯度傳遞。A 跟 B 皆已實作測試。</p>
+
+<h4>Plan A ✅ 上為 shipped default:二階段能量排程</h4>
+<p>把 25 步 Adam 拆成 Phase 1(前 12 步,巨觀就位)+ Phase 2(後 13 步,局部消碰):</p>
+<ul>
+  <li>Phase 1:<code>E_col × 0.15</code>、<code>tangent anchor × 0.10</code> &mdash; 讓 wall-affinity 物件帶著 motif 順暢<em>斜向滑</em>到牆邊,不被 col 阻擋或 tangent 死鎖</li>
+  <li>Phase 2:恢復全能量 &mdash; 就地微調間隙、消穿透</li>
+</ul>
+
+<h4>Plan B ❌ 未上(單獨或與 A 合用都退步):距離門控切向拘束</h4>
+<p>切向 anchor 隨離牆距離動態調整(遠 → 10、近 → 100)。單獨測試比 shipped 差,與 A 合併也拖後腿。原因:概念上與 A 的 Phase 1 tangent 放鬆重疊,兩者疊加反而破壞 Phase 2 的恢復效應。</p>
+
+<h4>Plan C ⏸️ 未實作:Motif 階層梯度傳遞</h4>
+<p>沿 motif edge 依 (1-α<sub>ij</sub>) 衰減把 wall_pull 傳給 child 物件。Plan A 已用 parent-child relative anchor 隱式達成類似效果(child 跟著 parent 動),重複實作可能有相同的疊加負效。暫緩,等 A 上線觀察一段時間再評估。</p>
+
+<h4>四變種對照(6-scene bench)</h4>
+<div class="tw">
+<table>
+<thead><tr><th>Size</th><th>Metric</th><th>Ani(舊 shipped)</th><th class="win">Plan A(新 shipped)</th><th>Plan A + B</th><th>Plan B alone</th></tr></thead>
+<tbody>
+<tr><td>0.75×</td><td>mean float</td><td>6.9</td><td class="win">6.5</td><td>7.0</td><td>7.2</td></tr>
+<tr><td>0.75×</td><td>col %</td><td>1.6</td><td>2.6</td><td>2.5</td><td>2.2</td></tr>
+<tr><td>1.00×</td><td>mean float</td><td>13.2</td><td class="win">12.0</td><td>13.9</td><td>14.5</td></tr>
+<tr><td>1.00×</td><td>OOB %</td><td>1.3</td><td class="win">0.9</td><td>1.4</td><td>1.2</td></tr>
+<tr><td>1.35×</td><td>mean float</td><td>22.3</td><td>22.2</td><td>24.8</td><td>22.5</td></tr>
+<tr><td>1.35×</td><td><strong>OOB %</strong></td><td>2.4</td><td class="win"><strong>0.8</strong></td><td>2.0</td><td>1.8</td></tr>
+<tr><td>1.35×</td><td>S<sub>rel</sub></td><td>0.86</td><td class="win">0.87</td><td>0.87</td><td>0.87</td></tr>
+</tbody>
+</table>
+</div>
+
+<div class="note">
+<strong>Shipped default 從 Ani 升級為 Plan A(Ani + 二階段排程):</strong>
+<ul style="margin:6px 0">
+  <li>Mean float:0.75× -6 %、1.0× -9 %、1.35× 持平</li>
+  <li><strong>OOB:1.35× 從 2.4 % 降到 0.8 %(-67 %)</strong> &mdash; 大房出界物件變 1/3</li>
+  <li>S<sub>rel</sub>:1.35× 0.86 → 0.87(略升)</li>
+  <li>取捨:col% 略退(0.75× 1.6 → 2.6、1.35× 1.7 → 2.3),因 Phase 1 關掉 col、Phase 2 只 13 步救不完</li>
+</ul>
 </div>
 
 <h2 id="curriculum-result">Curriculum learning 實驗結果(誠實記錄)</h2>
