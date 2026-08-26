@@ -3,565 +3,96 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReRoom · 目前的做法</title>
+<title>ReRoom · 最終做法</title>
 <style>
   :root{
     --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a;
-    --panel:#f7f7f7; --amber:#c98b2c; --amber-bg:#fff9ec;
+    --panel:#f7f7f7;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:#fff;color:var(--ink);
        font:17px/1.75 -apple-system,"PingFang TC","Noto Sans TC",BlinkMacSystemFont,"Segoe UI",sans-serif;
        -webkit-font-smoothing:antialiased}
-  .wrap{max-width:820px;margin:0 auto;padding:32px 22px 80px}
+  .wrap{max-width:820px;margin:0 auto;padding:32px 22px 60px}
   h1{font-size:32px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
-  .sub{color:var(--mut);font-size:17px;margin:0 0 32px}
-  h2{font-size:23px;margin:56px 0 12px;font-weight:600;letter-spacing:-.005em}
-  h3{font-size:18px;margin:32px 0 8px;font-weight:600}
+  .sub{color:var(--mut);font-size:17px;margin:0 0 28px}
+  h2{font-size:22px;margin:44px 0 12px;font-weight:600}
+  h3{font-size:17.5px;margin:24px 0 6px;font-weight:600}
   p{margin:0 0 14px}
-  ul{margin:0 0 14px;padding-left:24px} li{margin-bottom:6px}
+  ul{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
   code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;
        background:var(--panel);padding:1px 5px;border-radius:3px}
-  em{color:#333}
-  .note{background:var(--panel);border-left:3px solid var(--acc);padding:14px 18px;
-        border-radius:0 3px 3px 0;font-size:16px;margin:22px 0;color:#3c3c3c}
+  .note{background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;
+        border-radius:0 3px 3px 0;font-size:15.5px;margin:20px 0;color:#3c3c3c}
   .note strong{color:var(--ink)}
-  figure{margin:22px 0}
+  figure{margin:20px 0}
   figure img{width:100%;display:block;border-radius:3px;background:#fff}
-  figcaption{color:var(--mut);font-size:14.5px;margin-top:10px;line-height:1.6}
-  .flow{margin:22px 0} .flow svg{width:100%;height:auto;display:block}
-  footer{margin:60px 0 0;padding-top:22px;border-top:1px solid var(--line);
-         color:var(--mut);font-size:14.5px}
+  figcaption{color:var(--mut);font-size:14.5px;margin-top:8px;line-height:1.6}
+  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:8px 0 16px}
+  th,td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:right}
+  th:first-child,td:first-child{text-align:left}
+  thead th{font-weight:600;border-bottom:1.5px solid var(--ink)}
+  .win{font-weight:700}
+  footer{margin:48px 0 0;padding-top:20px;border-top:1px solid var(--line);
+         color:var(--mut);font-size:14px}
   footer a{color:var(--acc)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<h1>ReRoom · 目前的做法</h1>
-<p class="sub">參考導向的 3D 室內設計 retargeting &mdash; 現行 shipped pipeline(中文說明)</p>
+<h1>ReRoom · 最終做法</h1>
+<p class="sub">參考導向的 3D 室內設計 retargeting &mdash; 最終 shipped pipeline</p>
 
-<p><strong>問題</strong>:給一張使用者喜歡的房間設計、跟一個形狀 / 大小可能完全不同的目標房間,自動把設計「搬」過去 &mdash; 保留原本的關係與 motif,但佈局要符合新房間的幾何。</p>
+<p><strong>問題</strong>:給一張使用者喜歡的房間設計 + 一個形狀 / 大小可能完全不同的目標房間,自動把設計搬過去 &mdash; 保留原本的關係與 motif,佈局符合新房間幾何。</p>
 
-<p><strong>核心設計</strong>:設計不是「座標」,而是「關係 + 彈性」。α<sub>ij</sub>(關係彈性)決定每對物件之間哪些距離該保留、哪些可以隨房間變。搬房間時,不動的東西照搬,彈性大的自動放鬆。</p>
+<h2>Pipeline</h2>
 
-<div class="note">
-<p style="margin:0 0 8px"><strong>執行摘要 — 這輪 iteration 的結果</strong>(<a href="#curriculum-result">詳見下方</a>)</p>
-<table style="width:100%;border-collapse:collapse;font-size:14.5px;margin:6px 0">
-<tr><th style="text-align:left;padding:3px 6px;border-bottom:1px solid #ccc">項目</th><th style="text-align:left;padding:3px 6px;border-bottom:1px solid #ccc">狀態</th></tr>
-<tr><td style="padding:3px 6px">Shipped path</td><td style="padding:3px 6px"><code>flow_wall + polish + guidance</code>(見流程圖)</td></tr>
-<tr><td style="padding:3px 6px">PDF eq (37) constraint projection</td><td style="padding:3px 6px">✅ 恢復(anchor L2 輕量版),與 guidance 共存</td></tr>
-<tr><td style="padding:3px 6px">PDF § 8 七個 energy</td><td style="padding:3px 6px">✅ 六個進 layout 生成、七個進 ranking(E<sub>edit</sub> 保留 slot)</td></tr>
-<tr><td style="padding:3px 6px">Substitution 前置</td><td style="padding:3px 6px">✅ 上線(縮小房 col 19 % → 14.7 %)</td></tr>
-<tr><td style="padding:3px 6px">Substitution 尺寸下限</td><td style="padding:3px 6px">✅ 上線(不再出現 0.16 m² 床)</td></tr>
-<tr><td style="padding:3px 6px">Anisotropic + Parent-child polish</td><td style="padding:3px 6px">✅ 上線(0.75× mean −21 %、col −52 %、1.0× mean −8 %)</td></tr>
-<tr><td style="padding:3px 6px">二階段能量排程(Plan A)</td><td style="padding:3px 6px">✅ 上線(疊加在 Anisotropic 上;1.35× OOB −67 %、Srel 0.86 → 0.87)</td></tr>
-<tr><td style="padding:3px 6px">縮小 / 原尺寸 wall 貼合</td><td style="padding:3px 6px">✅ 更好(0.75× 6.5 cm、1.0× 12.0 cm)</td></tr>
-<tr><td style="padding:3px 6px">大房 1.35× wall float</td><td style="padding:3px 6px">⚠️ 22 cm 平均;OOB 大改善(2.4→0.8 %)&mdash; mean 卡在能量拔河均衡</td></tr>
-<tr><td style="padding:3px 6px">Graph node stream(並行 GNN)</td><td style="padding:3px 6px">🧪 訓過,col% 降半(1.9 → 0.9),但整體無突破</td></tr>
-<tr><td style="padding:3px 6px">Metric-aware boundary encoder</td><td style="padding:3px 6px">🧪 訓過,val 降但實測 1.35× 反退</td></tr>
-<tr><td style="padding:3px 6px">Scramble augmentation(LEGO-Net)</td><td style="padding:3px 6px">🧪 訓過,scramble test 已飽和</td></tr>
-<tr><td style="padding:3px 6px">Curriculum(scramble → wider L1 → subst)</td><td style="padding:3px 6px">❌ 每 phase 都退步,catastrophic forgetting</td></tr>
-</table>
-<p style="margin:8px 0 0"><strong>結論:</strong>Shipped path 已<em>包含 PDF 主要成分</em>並在小房 / 原尺寸表現良好;大房 wall float 是 dataset limitation(訓練分布裡「同形狀跨大小」樣本佔 1.6-1.8 %),<em>訓練層 fine-tune 無法突破</em>。要進一步得換資料或從 scratch 重訓。</p>
-</div>
-
-<h2>現在的做法(流程圖)</h2>
-
-<figure class="flow">
-<svg viewBox="0 0 720 960" xmlns="http://www.w3.org/2000/svg"
-     font-family="-apple-system,'PingFang TC','Noto Sans TC',BlinkMacSystemFont,'Segoe UI',sans-serif">
-  <defs>
-    <marker id="ah" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-      <path d="M0,0 L7,4 L0,8 Z" fill="#7a7a7a"/>
-    </marker>
-  </defs>
-  <style>
-    .b{fill:#f7f7f7;stroke:#d8d8d8;stroke-width:1.2}
-    .core{fill:#f9ece8;stroke:#a8412a;stroke-width:1.6}
-    .amber{fill:#fff9ec;stroke:#c98b2c;stroke-width:1.6}
-    .out{fill:#efe2dd;stroke:#a8412a;stroke-width:1.6}
-    .t{fill:#1a1a1a;font-size:15px;font-weight:600}
-    .s{fill:#5c5c5c;font-size:12.5px}
-    .sec{fill:#8a8a8a;font-size:10.5px}
-    .tag{fill:#a8412a;font-size:10.5px;font-weight:700;letter-spacing:.04em}
-    .amtag{fill:#c98b2c;font-size:10.5px;font-weight:700;letter-spacing:.04em}
-    .e{stroke:#7a7a7a;stroke-width:1.4;fill:none}
-  </style>
-
-  <!-- 1. 輸入 -->
-  <rect class="b" x="60" y="20" width="280" height="52" rx="8"/>
-  <text class="t" x="200" y="42" text-anchor="middle">參考房間影像</text>
-  <text class="s" x="200" y="60" text-anchor="middle">使用者喜歡的設計</text>
-  <rect class="b" x="380" y="20" width="280" height="52" rx="8"/>
-  <text class="t" x="520" y="42" text-anchor="middle">目標地面多邊形 P_t</text>
-  <text class="s" x="520" y="60" text-anchor="middle">任意形狀:L 形、斜牆、凹角</text>
-
-  <!-- 2. 感知 -->
-  <path class="e" d="M200,72 L200,100" marker-end="url(#ah)"/>
-  <rect class="b" x="60" y="102" width="280" height="52" rx="8"/>
-  <text class="t" x="200" y="124" text-anchor="middle">感知(MIDI-3D)</text>
-  <text class="s" x="200" y="142" text-anchor="middle">從影像抽物件 + 房間;或直接吃 3D-FRONT graph</text>
-
-  <!-- 3. 意圖圖 + α -->
-  <path class="e" d="M200,154 L200,182" marker-end="url(#ah)"/>
-  <rect class="b" x="60" y="184" width="600" height="68" rx="8"/>
-  <text class="tag" x="76" y="204">LEARNED</text>
-  <text class="sec" x="644" y="204" text-anchor="end">§19</text>
-  <text class="t" x="360" y="216" text-anchor="middle">設計意圖圖 + 關係彈性 α<tspan font-size="11" dy="-2">ij</tspan></text>
-  <text class="s" x="360" y="238" text-anchor="middle">物件 · 關係 · 階層 motifs · α:剛性關係保留,彈性關係隨房間變</text>
-
-  <!-- 目標邊界虛線通到 flow -->
-  <path class="e" d="M520,72 L520,90 L680,90 L680,455" stroke-dasharray="4 3" fill="none"/>
-  <text class="s" x="684" y="280" transform="rotate(90 684 280)" fill="#8a8a8a" font-style="italic">目標邊界作為 flow 的條件輸入</text>
-
-  <!-- 4. 精簡 -->
-  <path class="e" d="M360,252 L360,282" marker-end="url(#ah)"/>
-  <rect class="b" x="120" y="284" width="480" height="52" rx="8"/>
-  <text class="sec" x="584" y="302" text-anchor="end">§9</text>
-  <text class="t" x="360" y="306" text-anchor="middle">Summarise:房間變小就刪 motif</text>
-  <text class="s" x="360" y="324" text-anchor="middle">按面積比 &amp; 密度預算,決定丟哪些整組 motif 或裁掉 motif 內部</text>
-
-  <!-- 5. 資產替換(前置,橘色) -->
-  <path class="e" d="M360,336 L360,366" marker-end="url(#ah)"/>
-  <rect class="amber" x="120" y="368" width="480" height="60" rx="8"/>
-  <text class="amtag" x="140" y="388">flow 之前</text>
-  <text class="sec" x="584" y="388" text-anchor="end">§11</text>
-  <text class="t" x="360" y="402" text-anchor="middle">Substitution:換成更小的真實資產(縮小房)</text>
-  <text class="s" x="360" y="420" text-anchor="middle">shrink-only + 尺寸下限;先換再 flow,避免硬塞被 collision 推散</text>
-
-  <!-- 6. Flow + guidance (生成核心) -->
-  <path class="e" d="M360,428 L360,458" marker-end="url(#ah)"/>
-  <rect class="core" x="60" y="460" width="600" height="150" rx="10"/>
-  <text class="tag" x="76" y="482">生成核心 · LEARNED</text>
-  <text class="sec" x="644" y="482" text-anchor="end">§13 eq (37) 前半</text>
-  <text class="t" x="360" y="502" text-anchor="middle">Flow Transformer(DiT,33 M 參數)</text>
-  <text class="s" x="360" y="522" text-anchor="middle">意圖圖 &amp; α 進入每條 edge 的 attention bias &rarr; 生成 k 個候選佈局</text>
-  <rect x="88" y="538" width="544" height="60" rx="6" fill="#fff" stroke="#e3c9c0"/>
-  <text class="t" x="360" y="558" text-anchor="middle" fill="#a8412a">ODE 每步:in-sampling 物理 guidance</text>
-  <text class="s" x="360" y="578" text-anchor="middle">E<tspan font-style="italic">bound</tspan> + E<tspan font-style="italic">col</tspan>(nestable pairs 豁免) + E<tspan font-style="italic">clear</tspan></text>
-  <text class="s" x="360" y="594" text-anchor="middle">+ wall_pull(靠牆物件依 area_ratio 自適應)</text>
-
-  <!-- 7. Polish (橘色,擴展成三小步) -->
-  <path class="e" d="M360,610 L360,638" marker-end="url(#ah)"/>
-  <rect class="amber" x="30" y="640" width="660" height="140" rx="8"/>
-  <text class="amtag" x="46" y="660">恢復 PDF eq (37) projection + 使用者建議機制</text>
-  <text class="sec" x="674" y="660" text-anchor="end">§13 eq (37) 後半 &middot; §8</text>
-  <text class="t" x="360" y="678" text-anchor="middle">Polish:三機制堆疊(freeze_yaw + anchor + 二階段排程)</text>
-  <text class="s" x="360" y="697" text-anchor="middle">Adam 25 步,對 § 8 六個能量做梯度下降 &mdash; anchor 保住 motif</text>
-  <text class="s" x="360" y="712" text-anchor="middle"><b>① 異方性 anchor</b>:tangent 100 + normal 單向(只懲罰往中心飄)</text>
-  <text class="s" x="360" y="727" text-anchor="middle"><b>② 親子相對 anchor</b>:motif child 對齊「相對 parent 偏移」,parent 動則跟</text>
-  <text class="s" x="360" y="742" text-anchor="middle"><b>③ Phase 1(前 12 步)</b>:E_col × 0.15、tangent × 0.10 → 斜滑到牆</text>
-  <text class="s" x="360" y="757" text-anchor="middle"><b>④ Phase 2(後 13 步)</b>:恢復全能量 → 消碰撞、貼合</text>
-  <text class="s" x="360" y="772" text-anchor="middle" fill="#8a8a8a"><em>覆蓋:E_rel+E_bound+E_col+E_clear+E_func+E_style</em></text>
-
-  <!-- 8. Population -->
-  <path class="e" d="M360,780 L360,808" marker-end="url(#ah)"/>
-  <rect class="b" x="120" y="810" width="480" height="52" rx="8"/>
-  <text class="sec" x="584" y="828" text-anchor="end">§10</text>
-  <text class="t" x="360" y="832" text-anchor="middle">Population:房間變大時新增家具</text>
-  <text class="s" x="360" y="850" text-anchor="middle">依 co-occurrence 提議;_vet_additions 守門(加入後成本不能變)</text>
-
-  <!-- 9. 排名 + 輸出 -->
-  <path class="e" d="M360,862 L360,888" marker-end="url(#ah)"/>
-  <rect class="out" x="120" y="890" width="480" height="52" rx="8"/>
-  <text class="sec" x="584" y="908" text-anchor="end">§8 全 7 能量</text>
-  <text class="t" x="360" y="912" text-anchor="middle">Ranking + 輸出:可編輯 3D 場景 S_t</text>
-  <text class="s" x="360" y="930" text-anchor="middle">全 7 個能量 E(Y) 挑最佳候選;E<tspan font-style="italic">edit</tspan> slot 保留待接使用者輸入</text>
-</svg>
-<figcaption>橘色框 = 相對原本(PDF / 早期實作)有調整的關鍵步驟:資產替換<em>前置</em>、Polish 步驟<em>恢復 eq (37)</em> 但用 anchor L2 版本以免打散 coherence。</figcaption>
-</figure>
-
-<h2>每一步在做什麼</h2>
-
-<h3>1&ndash;3. 意圖抽取</h3>
-<ul>
-  <li><strong>感知</strong>:從一張影像用 MIDI-3D 抽出物件框、房間輪廓;或直接吃 3D-FRONT 的 graph 當 oracle</li>
-  <li><strong>意圖圖 + α</strong>:把場景整理成 (物件, 關係, motifs) 三層。α<sub>ij</sub> 由一個 MLP 學,表示每條關係「該有多剛」&mdash; 沙發和茶几之間的距離很剛,沙發和邊角櫃之間彈性大</li>
-</ul>
-
-<h3>4&ndash;5. 挑選 · 縮小</h3>
-<ul>
-  <li><strong>Summarise</strong>:如果目標房比 reference 小,先按面積 / 密度預算刪掉整組 motif(例如刪掉整組對話沙發)</li>
-  <li><strong>Substitution(前置)</strong>:每件 keep 的家具換成 bank 裡最接近但<em>能塞進去</em>的真實資產。順序關鍵 &mdash; 這一步在 flow <em>之前</em> 做,避免 flow 被要求塞放不下的家具、再被 collision guidance 推散</li>
-</ul>
-
-<h3>6. 生成核心(flow + in-sampling guidance)</h3>
-<ul>
-  <li>Flow Transformer 從高斯噪音出發,50 步 ODE 積分,每步對每個物件預測 velocity</li>
-  <li>意圖圖 (relations + α) 進入每條 edge 的 attention bias,以及每個物件的 conditioning 特徵</li>
-  <li><strong>In-sampling guidance</strong>:每步都算 x1_hat 的可行性(E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + 靠牆物件的 wall_pull),把 feasibility gradient 塞進 ODE trajectory &mdash; 這是 PhyScene 的 classifier-guidance 精神移植到 flow matching</li>
-  <li>產出 k = 16 個候選 layouts</li>
-</ul>
-
-<h3>7. Polish(輕量投影 + 三機制)</h3>
-<ul>
-  <li>對每個候選跑 25 步 Adam,對 TorchProblem 六個能量(E<sub>rel</sub> + E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + E<sub>func</sub> + E<sub>style</sub>)做梯度下降,freeze_yaw(朝向由 flow 決定,polish 只改位置)</li>
-  <li><strong>① 異方性 anchor</strong>:對 wall-affinity 高的物件,把 anchor L2 拆成<em>切線</em>(權重 100,維持牆邊排列)+ <em>法線非對稱單向</em>(只懲罰往房間中心飄,靠向牆面 0 懲罰)。解除「wall_pull vs anchor 死鎖」</li>
-  <li><strong>② 親子相對 anchor</strong>:motif child 的 anchor 對齊「相對 parent 偏移」而非世界絕對座標。當 parent 被 wall_pull 拉向牆,children 整組跟著移,不撕裂 motif</li>
-  <li><strong>③ 二階段能量排程(Plan A)</strong>:</li>
-  <ul>
-    <li>Phase 1(前 12 步,巨觀就位):<code>E_col × 0.15</code>、<code>tangent × 0.10</code> → wall 物件帶著 motif 順暢斜滑到牆</li>
-    <li>Phase 2(後 13 步,局部消碰):恢復全能量 → 就地微調間隙</li>
-  </ul>
-  <li>額外補強:<strong>參考牆索引匹配</strong>(牆法線用 reference 房間真正靠的牆對映到 target)+ <strong>CCW/CW winding 驗證</strong>(用 signed-area 檢查 + polygon.contains 探點防止「inward normal 實際指外」)</li>
-  <li><strong>anchor L2</strong>:每個位置對「sampled 位置」加 L2 束縛,強度 100 &mdash; 這是<em>共存</em>的關鍵:E<sub>col</sub> 不會把同 motif 對推散,只能小幅修正到牆邊 / 出界的可行性殘留</li>
-  <li>PDF eq (37) 的 constraint projection 用這個「共存」形式恢復</li>
-</ul>
-
-<h3>8&ndash;9. 生長 · 排名 · 輸出</h3>
-<ul>
-  <li><strong>Population</strong>:如果目標房比 reference 大,依 co-occurrence 模型提議新家具;<code>_vet_additions</code> 守門 &mdash; 加入後 layout 成本不能變才收</li>
-  <li><strong>Ranking</strong>:全 7 個能量(含 E<sub>rel</sub>、E<sub>style</sub>、E<sub>edit</sub>)算 E(Y),k 個候選挑最低</li>
-  <li>輸出可編輯的 3D 場景</li>
-</ul>
-
-<h2 id="actual-output">實際輸出(現行 shipped)</h2>
-
-<figure>
-  <img src="assets/three_sizes_planA.png" alt="Three-sizes shipped output (Plan A)">
-  <figcaption>同一份 22 m² L 形客廳 reference,分別放入 0.75× / 1.0× / 1.35× 房間,用<strong>現行 shipped pipeline(Anisotropic + Parent-child + Plan A 二階段)</strong>輸出。原尺寸幾乎完全複製 reference(S<sub>rel</sub> ~ 1.00);縮小房 wall 邊物件都貼牆(0.75× tv 22 cm 是個案:tv 被指派到 wall#3 而非 reference 的 wall#0,是離散選擇問題);<strong>放大房 sofa 30 cm 浮空</strong>是最後未解的 residual(見下方問題分析)。</figcaption>
-</figure>
-
-<h3 id="per-object-numbers">單一場景各物件實測數字(same scene)</h3>
-<p>下表列出每個 wall-affinity 物件在三個尺寸下對<em>它在 reference 靠的牆</em>的 gap 跟朝向:</p>
-<div class="tw">
-<table>
-<thead><tr><th>Size</th><th>Object</th><th>Wall</th><th>Gap</th><th>Skew</th></tr></thead>
-<tbody>
-<tr><td rowspan="4">Reference</td><td>tv_stand</td><td>#0</td><td>4.8 cm</td><td>0.0°</td></tr>
-<tr><td>sofa</td><td>#2</td><td>2.3 cm</td><td>1.0°</td></tr>
-<tr><td>sideboard</td><td>#2</td><td>0.7 cm</td><td>0.0°</td></tr>
-<tr><td>double_bed</td><td>#3</td><td>2.0 cm</td><td>0.0°</td></tr>
-<tr><td rowspan="3">0.75× (small)</td><td>tv_stand</td><td>#3 ← 移到別牆</td><td>22.4 cm ↑</td><td>1.4°</td></tr>
-<tr><td>sideboard</td><td>#0 ← 也移了</td><td>9.8 cm</td><td>0.1°</td></tr>
-<tr><td>double_bed</td><td>#2</td><td class="win">1.2 cm</td><td>0.2°</td></tr>
-<tr><td rowspan="4">1.00× (same)</td><td>tv_stand</td><td>#0 ✓</td><td class="win">5.9 cm</td><td>0.1°</td></tr>
-<tr><td>sofa</td><td>#2 ✓</td><td class="win">7.2 cm</td><td>0.9°</td></tr>
-<tr><td>sideboard</td><td>#2 ✓</td><td class="win">0.2 cm</td><td>0.2°</td></tr>
-<tr><td>double_bed</td><td>#3 ✓</td><td class="win">1.6 cm</td><td>0.2°</td></tr>
-<tr><td rowspan="4">1.35× (large)</td><td>tv_stand</td><td>#0 ✓</td><td class="win">6.2 cm</td><td>0.1°</td></tr>
-<tr><td>sofa</td><td>#2 ✓</td><td>30.0 cm ↑</td><td>1.2°</td></tr>
-<tr><td>sideboard</td><td>#2 ✓</td><td>9.1 cm</td><td>0.2°</td></tr>
-<tr><td>double_bed</td><td>#3 ✓</td><td class="win">1.8 cm</td><td>0.1°</td></tr>
-</tbody></table>
-</div>
-
-<h3 id="problem-analysis">問題分析(hard bounds & 剩餘瓶頸)</h3>
-
-<div class="note">
-<strong>三個層級的失敗模式,由淺到深:</strong>
-
-<h4 style="margin:8px 0 6px">層級 1 — Discrete wall assignment(flow 選錯牆)</h4>
-<p>0.75× 縮小房下,tv 從 reference 的 wall#0 跑到 wall#3(gap 22 cm)。這不是 wall_pull 沒力氣,而是 flow 從一開始就把 tv 放到房間中央、然後 polish 依「當前最近牆」選錯目標牆。<strong>這是離散選擇問題,不是連續優化能解</strong>。</p>
-<p><em>可能的解</em>:polish 之前用 reference wall 明確 assign target wall(而非 polish 內部才判);或訓練時 flow 生成階段加「靠 reference 對應牆」的 loss。</p>
-
-<h4 style="margin:8px 0 6px">層級 2 — Multi-energy 拔河均衡點(1.35× sofa 30 cm)</h4>
-<p>放大房 sofa 卡在離牆 30 cm 這種數字,是<em>能量合力歸零</em>而非某一項太弱:</p>
-<ul style="margin:6px 0">
-  <li><b>E_col</b>:sofa 附近的 coffee_table、side_table 產生反向排斥力,把 sofa 頂在半空</li>
-  <li><b>E_rel</b>:reference 裡 sofa-coffee_table 的相對距離已在 α 學了「彈性中等」,pull sofa 靠牆會拉大這個距離 → 反向力</li>
-  <li><b>Anchor L2 tangent</b>:100 weight 限制切向移動,連斜向 wall 位移都被阻擋部分</li>
-  <li><b>Adam 25 步預算</b>:即使 wall_pull 遠處梯度 = 2·(0.30 − 0.04) = 0.52,25 步 × lr 0.02 × 平均 gradient 0.3 只能位移 15 cm</li>
-</ul>
-<p>Plan A 二階段排程已把 Phase 1 col 降到 15 %、tangent 降到 10 %,但 Phase 2 恢復後 col 立刻把 sofa 推回。<strong>純 Polish 已到 ceiling</strong>。</p>
-
-<h4 style="margin:8px 0 6px">層級 3 — 訓練分布本身缺 GT(fundamental limit)</h4>
-<p>3D-FRONT 分布裡「同形狀跨大小」的樣本只佔 1.6-1.8 %(見 §<a href="#training-pairs">訓練 pair</a>)。1.35× 大房 wall_pull 學不好,不是訓練 loss 沒設計對,是<strong>訓練資料裡就沒足夠的「大房 + 專業 wall 貼合」GT 供 model 抄</strong>。 Curriculum 全失敗(見下方)也證實了這條路走不通。</p>
-<p><em>唯一可能的突破</em>:合成 warp-based pseudo-GT 補放大方向、或用 Wall-relative 輸出參數化讓 wall 物件天然「吸附」牆邊(不再是 xy 全域座標)&mdash; 兩者都需要從 scratch 重訓,成本 3-5 天以上。</p>
-
-<strong>結論:</strong>Shipped pipeline 已在<em>推理層</em>把每個能量拔河與 anchor 死鎖都解掉,剩餘 residual 屬於「訓練資料本身 GT 稀疏」的 fundamental limit &mdash; 這輪 iteration 到此收尾。
-</div>
-
-<div class="note">
-<strong>已知限制</strong>:大房間(&gt;1.3&times;)wall 物件仍有 ~10&ndash;20 cm 平均浮空;這是<em>訓練層</em>的問題 &mdash; flow 學到的是「照 reference 等比擺」,牆位置變了它不會自動重新貼牆,而 in-sampling guidance 只能軟推。修這個要在訓練 loss + 架構上動,見下方 <a href="#train-experiments">訓練層實驗</a>。</div>
-
-<h2 id="train-experiments">訓練層實驗(正在 iterate)</h2>
-
-<p>Shipped path 仍是 <code>flow_wall</code> baseline + polish;下面幾個訓練層改動<strong>正在跑 / 已跑過</strong>,累積成一條驗證後才會替換 shipped 的路線。</p>
-
-<h3>1. 訓練 loss:<code>wall_metric_loss</code>(metric-space 版位置損失)</h3>
-<ul>
-  <li>對「參考裡靠牆」的物件,直接在 metric 空間壓 <code>|x1_hat − x1_target|²</code>(乘以 target 房間的 metric 半徑)</li>
-  <li>只在 &tau; &gt; 0.5 計算,避開低 &tau; 噪音</li>
-  <li>20 epoch fine-tune:val 從 0.02 → 0.011(2&times;),實測 1.35&times; mean float 降 11 %(19.5 → 17.4 cm)</li>
-  <li>方向對,幅度不夠</li>
-</ul>
-
-<h3>2. 架構:並行 <em>graph node stream</em>(GraphGPS 風格)</h3>
-<ul>
-  <li>Box stream(現有 DiT)吃 state,學幾何 / 碰撞</li>
-  <li>新增 graph stream:吃 category + motif + edge features,GNN 三層 message passing,產出每個物件的<em>語意先驗</em> embedding</li>
-  <li>Per-block adaLN 融合:每層 DiT 都吃到 graph 訊號,不會被稀釋(用 zero-init fuse 保證 warm-start 相容)</li>
-  <li>20 epoch:val 跟 metric20 差不多(0.011),但 1.35&times; <strong>col 從 1.9 % 降到 0.9 %</strong>(baseline 的一半)&mdash; graph stream 學到了「什麼類別不該碰」的語意</li>
-</ul>
-
-<h3>3. 訓練資料:<em>scramble</em>(打亂位置 → 學習 reference 樣子)</h3>
-<ul>
-  <li>訓練時 50 % 的樣本:pseudo-reference 的位置<em>完全打亂</em>(整個房間內 uniform 隨機,yaw 隨機),類別 / motif / 尺寸保留</li>
-  <li>目標仍是真實 layout,強迫 model 從 <code>cat + wall_affinity + graph 語意 + boundary</code> 重建位置</li>
-  <li>類 LEGO-Net,但融進 flow matching(而不是 iterative denoising)</li>
-  <li>Train loss 從 0.06 跳到 5.96(任務真的變難),val 20 epoch 內從 5.96 → 0.17(還在下降,20 epoch 明顯不夠)</li>
-  <li>LEGO-Net 訓 500 k iterations,我們現在的 setup 等價 ~2 900 epoch;20 epoch 只是看趨勢</li>
-</ul>
-
-<h3>4. Boundary encoder:<em>metric-aware set-transformer</em>(正在跑)</h3>
-<ul>
-  <li>Boundary points 從 4 維(u, v, n_u, n_v)升到 <strong>6 維</strong>:加入每點的 metric 位置 (u&times;h₁, v&times;h₂)</li>
-  <li>Encoder 從單層 MLP + mean pool 升級成 <strong>2 層 set-transformer</strong>(邊界點彼此 self-attention,學房型 spatial 結構)</li>
-  <li>目的:讓 model 直接看到「這面牆在 3 米、那面在 6 米」的絕對距離 &mdash; 這是 baseline 無法區分 3 m 牆 vs 6 m 牆的根源</li>
-  <li>200 epoch 多 GPU(3&times; L40 DataParallel)訓練中,warm-start 自 scramble20;跑完再上網頁</li>
-</ul>
-
-<div class="note">
-<strong>為什麼不直接抄 LEGO-Net 的 PointNet?</strong>LEGO-Net 用 PointNet 編絕對 metric 座標的 floor plan,對<em>單一房間 denoising</em> 有效,但對<em>跨房間 retargeting</em> 反而是災難 &mdash; 相同形狀不同尺寸會被當兩個房型學。所以我們把 boundary 拆成兩路:normalized(u, v)給形狀先驗,metric(u&times;h₁, v&times;h₂)給尺度先驗,一起餵給 set-transformer。</div>
-
-<h2 id="training-pairs">訓練 pair 怎麼做的(所有配置圖示備查)</h2>
-
-<p>下面四種 pair 是**現在有的、或候選要加**的所有訓練配置。每張左邊都是 model 的<em>輸入</em>、右邊是 model 學習的<em>目標</em>。同一份 22 m² L 形客廳跨三種 deform level(L1 uniform_scale、L2 aspect_ratio、L4 corner_cut)分別驗證,確認每種配置真的能生出合理樣本。</p>
-
-<h3>(1) 反向 pair · <strong>CURRENT DEFAULT</strong></h3>
-<p>真實 3D-FRONT 場景保留當 target(自帶 GT layout),reference 反向製造:把場景的 room deform,再把物件 affine warp 進去。天然涵蓋放大和縮小兩個方向 &mdash; L1 這例是 ref 1.54× target(縮小訊號),L2 是 0.83×(放大訊號)。</p>
-<figure>
-  <img src="assets/training_pair_backward.png" alt="Backward-manufactured training pair (current default)">
-  <figcaption>左 = pseudo-reference(輸入),右 = target = 真實場景(GT)。這是 <code>RetargetPairs.__getitem__</code> 目前預設走的路徑。</figcaption>
-</figure>
-
-<h3>(2) 反向 + <em>Scramble</em> · <strong>CURRENTLY ACTIVE(50 % 樣本)</strong></h3>
-<p>在反向 pair 的基礎上,50 % 樣本的 pseudo-reference 位置<em>完全隨機</em>(uniform 內部取樣,yaw 也隨機),類別 / motif / 尺寸保留。強迫 model 從語意 token(cat + motif + wall_affinity + graph stream + boundary)重建佈局,不能靠「複製 pseudo-ref」偷懶。</p>
-<figure>
-  <img src="assets/training_pair_scramble.png" alt="Scramble augmentation (currently active)">
-  <figcaption>左 = 位置全部打亂的 pseudo-reference,右 = 真實場景 GT。類 LEGO-Net 的 iterative denoising 精神,但融進 flow matching。</figcaption>
-</figure>
-
-<h3>(3) Warp-based pseudo-GT pair · <strong>CANDIDATE(未啟用)</strong></h3>
-<p>反向對稱:reference 保留真實不動,target 房間 deform,GT layout 用 affine warp 當 bootstrap。GT 不完美(只是仿射投影),但直接教 model「reference → 不同大小 target」這個方向,補足現行 pair 對放大方向的訊號密度。</p>
-<figure>
-  <img src="assets/training_pair_warp.png" alt="Warp-based pseudo-GT training pair (candidate, not active)">
-  <figcaption>左 = 真實 reference(不動),右 = deformed target + affine warp 的 pseudo-GT。若下輪 200 epoch 大房仍不理想會啟用。</figcaption>
-</figure>
-
-<h3>(4) 反向 + <em>Substitution</em>(隨機抽換物件) · <strong>CANDIDATE(未啟用)</strong></h3>
-<p>訓練時以某機率把物件<em>換成同類別但不同尺寸</em>的真實 asset(從 <code>bank</code> 抽,兩邊同步替換,類別、關係、motif 保持,但尺寸變化)。這是 <em>α<sub>ij</sub></em>(關係彈性)的關鍵訓練訊號 &mdash; 現在同一組類別永遠對應同樣尺寸,model 沒機會學到「相同關係下不同尺寸物件」的分佈。</p>
-<figure>
-  <img src="assets/training_pair_subst.png" alt="Substitution augmentation (candidate, not active)">
-  <figcaption>三個範例中 6&ndash;10 個物件被替換成 bank 裡同類別的不同尺寸 asset(輸入 + GT 同步)。大 sofa 配小 coffee_table vs 小 sofa 配大 coffee_table 都會出現 &mdash; model 學到「同 motif 內的距離該保留還是該延展」。</figcaption>
-</figure>
-
-<h3>訓練分布 —— 現行 pair 的 ref/target 面積比</h3>
-<p>3000 個訓練 pair 抽樣的分布。虛線標記推理測試的 0.75× / 1.0× / 1.35× 對應位置。</p>
-<figure>
-  <img src="assets/train_ratios.png" alt="Training-pair area ratio distribution">
-  <figcaption><strong>p10 = 0.73, p50 = 0.99, p90 = 1.47</strong>。1.35× test 對應 ratio = 0.74,剛好在 p10 附近 &mdash; 只有 10.8 % 訓練樣本觸及這個極端;0.75× test 對應 ratio = 1.33,只有 14.9 % 樣本覆蓋。**這解釋為什麼大房 wall float 學不好** &mdash; 訓練分布在極端稀疏。</figcaption>
-</figure>
-
-<div class="note">
-<strong>下輪打算做的:</strong>
-<ul style="margin:6px 0 0">
-  <li>把 L1 uniform_scale 從 <code>s ∈ [0.7, 1.4]</code> 拉寬到 <code>[0.5, 2.0]</code>,並改成 U 形分布(偏向兩尾)&mdash; 訓練訊號密度直接對齊 test 落點</li>
-  <li>啟用 (3) warp-based pair 加碼放大方向</li>
-  <li>啟用 (4) substitution 教會 α<sub>ij</sub></li>
-</ul>
-</div>
-
-<h2 id="anisotropic-polish">方案 1:推理層異方性 Polish + 親子相對錨定 ✅ 已上 shipped</h2>
-
-<div class="note" style="background:#fff9ec;border-left-color:#c98b2c">
-<strong>Root cause 診斷(使用者提出):</strong>
-<ol style="margin:8px 0">
-  <li><strong>Wall_pull 跟 Anchor L2 的死鎖</strong>:當 flow 生成的候選離牆 20 cm,anchor 強度 100 鎖死位置,wall_pull 梯度推不動</li>
-  <li><strong>絕對座標與關係彈性的結構矛盾</strong>:model 預測全域 xy,motif 內成員各自被 anchor 拉回世界座標,parent 動了 child 沒跟 &mdash; 撕裂關係</li>
-  <li><strong>Fine-tune 的災難性遺忘</strong>:實測 bnd200 已是該架構區域極值,任何微調都退步</li>
-</ol>
-<strong>對應解方(使用者提出的兩個機制):</strong>
-<ol style="margin:8px 0">
-  <li><strong>異方性 Anchor(Anisotropic Anchor L2)</strong>
-    <ul style="margin:4px 0">
-      <li>對 wall-affinity 高的物件,把 anchor L2 拆成<em>切線</em>(權重 100,維持牆邊排列)+ <em>法線非對稱單向</em>(只懲罰往房間中心飄,靠向牆面 0 懲罰)</li>
-      <li>Wall_pull 可以自由推物件靠牆,motif 排列不會被撕裂</li>
-    </ul>
-  </li>
-  <li><strong>親子相對錨定(Parent-Child Relative Anchor)</strong>
-    <ul style="margin:4px 0">
-      <li>Motif 拆成 <em>Parent</em>(head:sofa / bed / tv_stand 等)和 <em>Child</em>(coffee_table、side_table、nightstand)</li>
-      <li>Child 的 anchor 對齊「與 Parent 的相對偏移量 Δp_init」,而不是世界絕對座標</li>
-      <li>當 Parent 被 wall_pull 往外拉 20 cm 貼牆,茶几與地毯像剛體 / 彈性體一樣整組被帶著走 &mdash; 消除浮空、保 S<sub>rel</sub></li>
-    </ul>
-  </li>
-</ol>
-</div>
-
-<p><strong>額外我加的補強(過程中發現的實作細節):</strong></p>
-<ul>
-  <li><strong>參考牆索引匹配</strong>:牆法線方向從 <em>reference 房間裡物件真正靠的牆</em>取得,對映到 target 房間同 index 牆(對 uniform_scale 保留 wall count 的情境穩定;比「當前最近牆」在 flow 離牆 20 cm 時判準得多)</li>
-  <li><strong>Signed-area CCW/CW 檢查 + polygon.contains 驗證</strong>:Room 的 polygon 有些是 CW winding,「inward normal」實際指外會讓 asymmetric penalty 反推;加簽面積檢查與探點驗證確保正確方向</li>
-</ul>
-
-<div class="note">
-<strong>6-scene bench 完成結果(取代原初步結果):</strong>
-<div class="tw" style="margin:8px 0">
-<table>
-<thead><tr><th>Size</th><th>Metric</th><th>舊 uniform anchor</th><th>方案 1 anisotropic</th><th>Δ</th></tr></thead>
-<tbody>
-<tr><td>0.75×</td><td>mean float</td><td>8.7 cm</td><td class="win">6.9 cm</td><td>−21 %</td></tr>
-<tr><td>0.75×</td><td>col %</td><td>3.3 %</td><td class="win">1.6 %</td><td>−52 %</td></tr>
-<tr><td>1.00×</td><td>mean float</td><td>14.4 cm</td><td class="win">13.2 cm</td><td>−8 %</td></tr>
-<tr><td>1.00×</td><td>max float</td><td>60.6 cm</td><td class="win">55.3 cm</td><td>−9 %</td></tr>
-<tr><td>1.35×</td><td>mean float</td><td>20.0 cm</td><td>22.3 cm</td><td>+11 % (↑ 2 cm)</td></tr>
-<tr><td>1.35×</td><td>col %</td><td>1.9 %</td><td class="win">1.7 %</td><td>−11 %</td></tr>
-<tr><td>1.35×</td><td>S<sub>rel</sub></td><td>0.86</td><td>0.86</td><td>—</td></tr>
-</tbody></table>
-</div>
-<strong>淨勝 4 項、平手 2 項、輕度退步 1 項</strong>(1.35× mean +2 cm)。<em>已上為 shipped default</em>。1.35× 的小退步是取捨:方案 1 讓靠牆物件在 asymmetric penalty 下自由靠牆,但當 flow 一開始把物件放太遠(1.35× 大房常見),25 步 Adam 有時無法完全走到牆邊 &mdash; 這需要更本質的訓練層或架構修法(見 §curriculum-result 討論)。
-</div>
-
-<h3>Debug 過程紀錄(誠實)</h3>
 <ol>
-  <li>第一版<em>對稱 normal 懲罰</em>:1.0× sofa 從 3 cm → 13 cm(退步)&mdash; 因為 anchor 太弱讓物件飄走</li>
-  <li>改<em>單向 asymmetric</em>(只懲罰往中心飄):sofa 1.35× 17.9 → 4.6 cm(單場景大勝),但 6-scene 平均反退 &mdash; 因為 asymmetric 對「錯的 wall 方向」很脆弱,錯了會朝錯方向自由飄</li>
-  <li>用<em>reference 房間裡真正靠的牆</em>當 ground truth,對映到 target(uniform_scale 保留 wall count):sideboard 修好,sofa 仍卡</li>
-  <li>發現 polygon 可能是 CW(不是預設的 CCW),導致「inward normal」實際指外 &mdash; 加 signed-area 檢查 + polygon.contains 驗證。這是最終上線的版本</li>
+  <li><strong>意圖抽取</strong>:參考房影像 → MIDI-3D → 場景 + 物件圖 → 加上關係彈性 α<sub>ij</sub>(神經 MLP 學出來)</li>
+  <li><strong>Summarise & Substitution(§9 § 11)</strong>:房間變小先刪 motif,再從 asset bank 換成塞得下的較小家具(在 flow 之前,避免硬塞被 collision 推散)</li>
+  <li><strong>Flow Transformer(§13 前半)</strong>:DiT 33 M 參數,意圖圖 + α 進 attention bias,ODE 50 步生成 k=16 個候選佈局。<em>In-sampling guidance</em>:每步都算 E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + wall_pull 的可行性梯度,融進 ODE trajectory</li>
+  <li><strong>Polish(§13 eq (37) 後半)</strong>:每個候選跑 25 步 Adam,對 § 8 六個能量做梯度下降,freeze_yaw(朝向由 flow 決定),疊四個機制:
+    <ul>
+      <li>① 異方性 anchor:tangent 100 + normal 單向(只懲罰往房間中心飄)</li>
+      <li>② 親子相對 anchor:motif child 對齊「相對 parent 偏移」,parent 動則整組跟</li>
+      <li>③ Phase 1(前 12 步):E_col × 0.15、tangent × 0.10 → wall 物件斜滑到牆</li>
+      <li>④ Phase 2(後 13 步):恢復全能量 → 消碰撞、貼合</li>
+    </ul>
+  </li>
+  <li><strong>Population(§10)</strong>:房間變大時依 co-occurrence 新增家具,守門要求「加入後成本不變」</li>
+  <li><strong>Ranking</strong>:全 7 個 §8 能量算 E(Y),k 個候選挑最佳</li>
 </ol>
 
-<h3>1.35× 剩餘 2 cm 追根究底</h3>
-<div class="stale">
-<p style="margin:0 0 6px"><strong>診斷:</strong>方案 1 shipped 之後 1.35× 大房 mean float 從 20 → 22 cm(退步 2 cm)。實測 sofa 起點<em>離牆 54 cm</em>,wall strength=0.7、25 步 × lr 0.02 Adam 只能走 ~35 cm(還是不夠遠)。</p>
-<p style="margin:0 0 6px"><strong>試了 polish_steps 25 → 50(額外時間讓 Adam 走完):</strong></p>
-<ul style="margin:4px 0">
-  <li>col%(1.35×): 1.7 → <strong>0.7 %(-59 %)</strong> ✓</li>
-  <li>OOB%(1.35×): 2.4 → <strong>0.8 %(-67 %)</strong> ✓</li>
-  <li>但 <strong>mean float(1.35×): 22 → 28 cm(+26 %)</strong> ✗</li>
-</ul>
-<p style="margin:0"><strong>反直覺結論:</strong>polish 時間增加,反而讓 E_col 有時間<em>把 wall 物件往內推</em>讓其他物件有空間 &mdash; 這股力壓過 asymmetric anchor 的 8 * (drift)² 懲罰。25 步是「時間夠推向牆、又不長到讓 col 反推」的甜蜜點,保留為 shipped。</p>
-<p style="margin:6px 0 0"><strong>Shipped default 維持 25 步。</strong>要繼續壓 1.35× mean float 只剩<em>非推理層</em>路徑:換 dataset(補大房 GT)、架構改動(Wall-relative parameterization)、或從 scratch 重訓 &mdash; 這些方案 2 的成本已寫在下方 curriculum 段落記錄。</p>
-</div>
+<h2>實際輸出</h2>
 
-<h3>使用者建議的 3 個 inference-only tweaks — 測試結果</h3>
-<p>收到使用者建議 3 個不需重訓的改進:(1) Ray-cast warm projection、(2) Dynamic step budget、(3) Huber wall pull。實測記錄如下,誠實對照。</p>
+<figure>
+  <img src="assets/three_sizes_planA.png" alt="Three-sizes shipped output">
+  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 現行 shipped pipeline。</figcaption>
+</figure>
 
-<h4>(1) Ray-cast warm projection</h4>
-<p>把 wall-affinity 物件的 sampled 位置<em>預投影到牆邊 3 cm 內</em>,讓 Adam 只需處理微調而不是長途跋涉。</p>
-<div class="tw">
+<h3>6 場景平均實測</h3>
 <table>
-<thead><tr><th>Size</th><th>Metric</th><th>Shipped(no warm)</th><th>+ Ray-cast warm</th><th>Δ</th></tr></thead>
+<thead><tr><th>Size</th><th>mean float</th><th>max float</th><th>OOB %</th><th>col %</th><th>S<sub>rel</sub></th></tr></thead>
 <tbody>
-<tr><td>0.75×</td><td>mean float</td><td>6.9 cm</td><td>7.2 cm</td><td>+4 %</td></tr>
-<tr><td>0.75×</td><td>col %</td><td>1.6 %</td><td>2.3 %</td><td>+44 %</td></tr>
-<tr><td>1.00×</td><td>mean float</td><td>13.2 cm</td><td>13.7 cm</td><td>+4 %</td></tr>
-<tr><td>1.35×</td><td>mean float</td><td>22.3 cm</td><td>24.6 cm</td><td>+10 %</td></tr>
-<tr><td>1.35×</td><td>col %</td><td>1.7 %</td><td>1.6 %</td><td>−6 %</td></tr>
-</tbody></table>
-</div>
-<p><strong>結論:輕度退步,未上線</strong>。原因猜測:pre-project 破壞了 flow 的 coherent proposal &mdash; 硬把 sofa 從 sampled 位置(可能已跟 coffee_table 對齊)snap 到牆邊,反而讓後續 Adam 25 步要重建 motif 內部關係。可能的修法是「只 warm-project head object,child 跟著 parent 位移」,但複雜度上升且效益未證。</p>
-
-<h4>(2) & (3) 未實作 &mdash; 前提檢驗不成立</h4>
-<p>建議中的一個關鍵前提是「二次能量 <em>(d − gap)²</em> 遠處梯度衰減,遠拉力小」。但實際微分:</p>
-<pre style="font-size:13px;margin:6px 0">gradient = ∂/∂d [(d − gap)²] = 2·(d − gap)
-  d=54 cm, gap=4 cm  →  gradient = 1.00  ← 大
-  d=10 cm            →  gradient = 0.12
-  d= 5 cm            →  gradient = 0.02  ← 小</pre>
-<p><strong>二次能量遠處梯度<em>越大</em>,近處<em>越小</em></strong>&mdash; 剛好跟建議相反。換成 Huber 的話,遠處梯度會 <em>saturate 到常數 δ ≈ 0.05</em>,反而<em>比 quadratic 弱 20 倍</em>。所以 #3 Huber wall pull 不會改善(會退步),沒實作。</p>
-
-<p>#2 dynamic step budget 也失去意義 &mdash; 之前 polish_steps=50 全域測試已證明「更多步 → E_col 有時間把 wall 物件往內推 → mean float 反漲」。為 1.35× 特別加步只會複製這個問題。</p>
-
-<h4>1.35× 的真正瓶頸(重新診斷)</h4>
-<div class="note">
-Wall_pull 遠處 gradient 已經夠強(1.0)。真正阻礙是<em>其他 energy 在打架</em>:
-<ul style="margin:6px 0">
-  <li><strong>E_col</strong>:給其他物件讓空間,把 wall 物件往內推</li>
-  <li><strong>Anchor L2 tangent</strong>:100 weight 限制切向移動,連帶影響斜向 wall 位移</li>
-  <li><strong>E_rel</strong>:拉回 reference relative position(reference 沒有跨大小的訊號)</li>
-</ul>
-</div>
-
-<h3>使用者建議的「多能量拔河」三方案 &mdash; 全測完</h3>
-
-<p>收到使用者針對能量拔河的三個 Polish 內部方案:(A) 二階段能量排程、(B) 距離門控切向拘束、(C) Motif 階層梯度傳遞。A 跟 B 皆已實作測試。</p>
-
-<h4>Plan A ✅ 上為 shipped default:二階段能量排程</h4>
-<p>把 25 步 Adam 拆成 Phase 1(前 12 步,巨觀就位)+ Phase 2(後 13 步,局部消碰):</p>
-<ul>
-  <li>Phase 1:<code>E_col × 0.15</code>、<code>tangent anchor × 0.10</code> &mdash; 讓 wall-affinity 物件帶著 motif 順暢<em>斜向滑</em>到牆邊,不被 col 阻擋或 tangent 死鎖</li>
-  <li>Phase 2:恢復全能量 &mdash; 就地微調間隙、消穿透</li>
-</ul>
-
-<h4>Plan B ❌ 未上(單獨或與 A 合用都退步):距離門控切向拘束</h4>
-<p>切向 anchor 隨離牆距離動態調整(遠 → 10、近 → 100)。單獨測試比 shipped 差,與 A 合併也拖後腿。原因:概念上與 A 的 Phase 1 tangent 放鬆重疊,兩者疊加反而破壞 Phase 2 的恢復效應。</p>
-
-<h4>Plan C ⏸️ 未實作:Motif 階層梯度傳遞</h4>
-<p>沿 motif edge 依 (1-α<sub>ij</sub>) 衰減把 wall_pull 傳給 child 物件。Plan A 已用 parent-child relative anchor 隱式達成類似效果(child 跟著 parent 動),重複實作可能有相同的疊加負效。暫緩,等 A 上線觀察一段時間再評估。</p>
-
-<h4>四變種對照(6-scene bench)</h4>
-<div class="tw">
-<table>
-<thead><tr><th>Size</th><th>Metric</th><th>Ani(舊 shipped)</th><th class="win">Plan A(新 shipped)</th><th>Plan A + B</th><th>Plan B alone</th></tr></thead>
-<tbody>
-<tr><td>0.75×</td><td>mean float</td><td>6.9</td><td class="win">6.5</td><td>7.0</td><td>7.2</td></tr>
-<tr><td>0.75×</td><td>col %</td><td>1.6</td><td>2.6</td><td>2.5</td><td>2.2</td></tr>
-<tr><td>1.00×</td><td>mean float</td><td>13.2</td><td class="win">12.0</td><td>13.9</td><td>14.5</td></tr>
-<tr><td>1.00×</td><td>OOB %</td><td>1.3</td><td class="win">0.9</td><td>1.4</td><td>1.2</td></tr>
-<tr><td>1.35×</td><td>mean float</td><td>22.3</td><td>22.2</td><td>24.8</td><td>22.5</td></tr>
-<tr><td>1.35×</td><td><strong>OOB %</strong></td><td>2.4</td><td class="win"><strong>0.8</strong></td><td>2.0</td><td>1.8</td></tr>
-<tr><td>1.35×</td><td>S<sub>rel</sub></td><td>0.86</td><td class="win">0.87</td><td>0.87</td><td>0.87</td></tr>
+<tr><td>0.75× 縮小</td><td class="win">6.5 cm</td><td>24.6 cm</td><td>2.1 %</td><td>2.6 %</td><td>0.42</td></tr>
+<tr><td>1.00× 原尺寸</td><td class="win">12.0 cm</td><td>55.9 cm</td><td>0.9 %</td><td>4.8 %</td><td>0.93</td></tr>
+<tr><td>1.35× 放大</td><td>22.2 cm</td><td>102.5 cm</td><td class="win">0.8 %</td><td>2.3 %</td><td>0.87</td></tr>
 </tbody>
 </table>
-</div>
+
+<h2>剩餘瓶頸</h2>
 
 <div class="note">
-<strong>Shipped default 從 Ani 升級為 Plan A(Ani + 二階段排程):</strong>
+<p style="margin:0 0 6px"><strong>1.35× 放大房 sofa 卡在 30 cm 左右</strong>(見圖右下)&mdash; 這是<em>多能量拔河的均衡點</em>:</p>
 <ul style="margin:6px 0">
-  <li>Mean float:0.75× -6 %、1.0× -9 %、1.35× 持平</li>
-  <li><strong>OOB:1.35× 從 2.4 % 降到 0.8 %(-67 %)</strong> &mdash; 大房出界物件變 1/3</li>
-  <li>S<sub>rel</sub>:1.35× 0.86 → 0.87(略升)</li>
-  <li>取捨:col% 略退(0.75× 1.6 → 2.6、1.35× 1.7 → 2.3),因 Phase 1 關掉 col、Phase 2 只 13 步救不完</li>
+  <li>E_col:coffee_table / side_table 反向排斥,把 sofa 頂在半空</li>
+  <li>E_rel:reference 的 sofa-table 相對距離拉大 → 反向力</li>
+  <li>Anchor tangent 100 限制切向 → 阻擋斜向 wall 位移</li>
+  <li>Adam 25 步預算不夠走完 30 cm 位移</li>
 </ul>
-</div>
-
-<h2 id="curriculum-result">Curriculum learning 實驗結果(誠實記錄)</h2>
-
-<p>照上面規劃真的跑了 curriculum:從 <code>flow_bnd200</code>(當時 val 0.020,最佳 checkpoint)分段加變因,每段跑完用<em>對應目標的固定測試集</em>判定要不要進下一階段。四個測試集分別對到四個 phase 想教的能力:</p>
-
-<ul>
-  <li><strong>test_scramble</strong> &mdash; 位置完全打亂 → recover(Phase 1 目標)</li>
-  <li><strong>test_scale075</strong> / <strong>test_scale135</strong> &mdash; 房間縮小 / 放大(Phase 2 目標)</li>
-  <li><strong>test_subst</strong> &mdash; 物件尺寸變異 → 關係保留(Phase 3 目標)</li>
-</ul>
-
-<figure>
-  <img src="assets/curriculum_summary.png" alt="Curriculum eval + three-sizes bench summary">
-  <figcaption>左:四個 curriculum 測試集上,四個 checkpoint 的 metric-space wall 誤差(cm,越低越好)。右:6 個真實場景上的三尺寸 bench(shipped polish enabled)。<strong>沒有一個 fine-tune 超過 bnd200 baseline</strong>。</figcaption>
-</figure>
-
-<h3>Phase 1:scramble-only 30 epoch,lr 3e-5</h3>
-<ul>
-  <li>假設:LEGO-Net 精神 &mdash; 先徹底學會「亂位置 → 好佈局」</li>
-  <li>結果:test_scramble 41.73 → 42.82(<em>持平 / 微退</em>),其他測試全部退步 30-40 %</li>
-  <li>原因:bnd200 訓練時就有 scramble_prob=0.5,對這個能力已<em>接近該架構的 ceiling</em>。多餵 scramble 只是催化 catastrophic forgetting</li>
-</ul>
-
-<h3>Phase 2:+ wider L1 30 epoch,lr 3e-5</h3>
-<ul>
-  <li>假設:訓練分布拉寬到 [0.6, 1.7] &mdash; 讓 test 0.75× / 1.35× 落在分布中央</li>
-  <li>結果:test_scale{075,135} 都退 30 %,scramble 也再退</li>
-  <li>從 bnd200 warm-start 也試過:結果一樣</li>
-</ul>
-
-<h3>Phase 2b:ultra-mild lr=1e-5,10 epoch</h3>
-<ul>
-  <li>假設:LR 太大導致 catastrophic forgetting &mdash; 用極低 LR 溫和 nudge</li>
-  <li>結果:test_scale135 5.02 → 5.73,仍退步。<strong>即使 lr=1e-5,fine-tune 也無法保住 bnd200 的表現</strong></li>
-</ul>
-
-<div class="note">
-<strong>結論(誠實):</strong>
-<ol style="margin:6px 0 0">
-  <li>bnd200 是這個訓練 setup + 架構 + data 的 local optimum &mdash; 無論 LR、無論 augmentation,fine-tune 都會退步</li>
-  <li>訓練層的三個追加改動(wider L1、substitution、scramble 加強)<em>都沒有</em>解決大房 wall float 問題</li>
-  <li>三尺寸 bench 顯示 <code>flow_wall</code>(舊 baseline)在 <strong>1.35× 反而略優於 bnd200</strong>(20 vs 24 cm)&mdash; bnd200 在 1.0× 和 col% 略贏,但沒有全面突破</li>
-  <li>剩餘的大房 wall float 大機率不是訓練層能單獨解的 &mdash; 需要更本質的架構或資料方案(e.g., 真的加入 warp-based pair 當 GT、或 dataset 補上大房樣本)</li>
-</ol>
-<p style="margin:8px 0 0"><strong>Shipped 目前維持 <code>flow_wall + polish</code>,不切換到 bnd200 系列。</strong>本輪產生的所有 checkpoint 存為 opt-in 對照組。</p>
+<p style="margin:6px 0 0"><strong>純推理層已到 ceiling。</strong>要繼續突破需<em>從 scratch 重訓</em> + 補「大房專業配置」GT(3D-FRONT 分布裡這類樣本只佔 1.6-1.8 %)。</p>
 </div>
 
 <footer>
