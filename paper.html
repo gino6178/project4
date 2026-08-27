@@ -70,6 +70,19 @@
   .mini .k{font-family:ui-monospace,monospace;font-size:11px;color:#fff;background:var(--acc2);padding:2px 7px;border-radius:4px;white-space:nowrap}
   footer{margin:56px 0 0;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:14px}
   footer a{color:var(--acc)}
+  /* figures: svg diagrams + motion teaser */
+  .fig{border:1px solid var(--line);border-radius:6px;background:#fff;padding:14px;margin:20px 0}
+  .fig svg{display:block;width:100%;height:auto}
+  .teaser{border:1px solid var(--line);border-radius:6px;background:#fbfbfa;padding:12px 12px 8px;margin:14px 0 6px;overflow:hidden}
+  .teaser svg{display:block;width:100%;height:auto}
+  .tctl{display:flex;gap:10px;align-items:center;justify-content:center;margin-top:6px;font-size:13px;color:var(--mut)}
+  .tctl .phase{font-family:ui-monospace,monospace;font-weight:600;color:var(--acc)}
+  .tctl button{font:inherit;font-size:12.5px;border:1px solid var(--line);background:#fff;color:var(--ink);
+    border-radius:5px;padding:3px 10px;cursor:pointer}
+  .tctl button:hover{border-color:var(--acc);color:var(--acc)}
+  .svglabel{font:600 11px ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--mut)}
+  .svgnum{font:700 11px ui-monospace,monospace;fill:#fff}
+  @media (prefers-reduced-motion:reduce){.teaser .anim{animation:none !important}}
 </style>
 </head>
 <body>
@@ -79,6 +92,79 @@
 <p class="sub">論文敘事頁 &mdash; 把 shipped 系統寫成 CVPR / SIGGRAPH 級技術貢獻:理論主軸 + 架構亮點 + 可執行實測。</p>
 <p class="links"><a href="index.html">← Shipped 做法(中文完整)</a><a href="experiments.html">實驗頁</a><a href="https://github.com/gino6178/project4">Repo</a></p>
 <p class="lead">核心問題:<em>在任意非均勻邊界形變下,如何同時保證場景拓撲不變性與物理硬幾何約束,且無需耗時的測試期優化?</em></p>
+
+<div class="teaser">
+  <svg id="teaser" viewBox="0 0 480 300" role="img" aria-label="retargeting motion: prior to flow to projection">
+    <rect x="0" y="0" width="480" height="300" fill="#fbfbfa"/>
+    <!-- room shell -->
+    <path id="room" d="M20 20 H460 V280 H20 Z" fill="#ffffff" stroke="#111" stroke-width="3"/>
+    <g id="objs" font-family="-apple-system,PingFang TC,sans-serif" font-size="12" font-weight="600" text-anchor="middle"></g>
+    <text id="plabel" x="240" y="296" text-anchor="middle" class="svglabel" fill="#a8412a">prior</text>
+  </svg>
+  <div class="tctl"><span>移動示意:<span class="phase" id="tphase">整流流</span></span>
+    <button id="tbtn" type="button">⏸ 暫停</button></div>
+</div>
+<figcaption style="margin-top:2px"><strong>Teaser（移動圖）.</strong> 從仿射先驗(餐椅被拉散、沙發浮離牆面)→ <span style="color:#a8412a;font-weight:600">① 整流流</span>把 Motif 相對關係拉回 → <span style="color:#2a7a2a;font-weight:600">② 可微投影 \(\Pi_\theta\)</span>單步把沙發貼牆、餐桌轉正。物件<em>只平移微調、不互換</em> —— 即拓撲保持。示意動畫,座標為概念示範。</figcaption>
+<script>
+(function(){
+  var O=[
+   // id,w,h,color,label, [x,y,rot] prior / flow / final
+   ["bed",118,52,"#cf7f7f","床",   [95,70,0],[95,54,0],[95,52,0]],
+   ["sofa",40,92,"#6aa96a","沙發", [372,196,10],[418,196,6],[435,196,0]],
+   ["tab",92,44,"#e0c94e","餐桌", [268,118,8],[275,113,5],[275,112,0]],
+   ["c1",24,24,"#b98fc0","",      [214,64,0],[236,80,0],[238,80,0]],
+   ["c2",24,24,"#b98fc0","",      [336,64,0],[314,80,0],[312,80,0]],
+   ["c3",24,24,"#b98fc0","",      [214,168,0],[236,146,0],[238,146,0]],
+   ["c4",24,24,"#b98fc0","",      [336,168,0],[314,146,0],[312,146,0]],
+   ["tv",16,72,"#5a8fc0","",      [44,150,0],[30,150,0],[28,150,0]]
+  ];
+  var g=document.getElementById("objs"), nodes=[];
+  O.forEach(function(o){
+    var el=document.createElementNS("http://www.w3.org/2000/svg","g");
+    var r=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    r.setAttribute("x",-o[1]/2);r.setAttribute("y",-o[2]/2);r.setAttribute("width",o[1]);r.setAttribute("height",o[2]);
+    r.setAttribute("rx",3);r.setAttribute("fill",o[3]);r.setAttribute("stroke","#00000022");
+    el.appendChild(r);
+    if(o[4]){var t=document.createElementNS("http://www.w3.org/2000/svg","text");t.setAttribute("y",4);t.setAttribute("fill","#3a2a2a");t.textContent=o[4];el.appendChild(t);}
+    g.appendChild(el);nodes.push(el);
+  });
+  function ss(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10);}
+  function lerp(a,b,u){return a+(b-a)*u;}
+  var T=4600, running=true, t0=performance.now(), raf;
+  var pl=document.getElementById("plabel"), ph=document.getElementById("tphase");
+  function frame(now){
+    var t=((now-t0)%T)/T*4.6; // seconds within period
+    var phase, seg, u;
+    if(t<0.5){phase=0;u=0;} // hold prior
+    else if(t<2.3){phase=0;u=ss((t-0.5)/1.8);} // prior->flow
+    else if(t<3.1){phase=1;u=ss((t-2.3)/0.8);} // flow->final
+    else {phase=1;u=1;} // hold final
+    O.forEach(function(o,i){
+      var a=o[5],b=o[6],c=o[7];
+      var x,y,r;
+      if(phase===0){x=lerp(a[0],b[0],u);y=lerp(a[1],b[1],u);r=lerp(a[2],b[2],u);}
+      else {x=lerp(b[0],c[0],u);y=lerp(b[1],c[1],u);r=lerp(b[2],c[2],u);}
+      nodes[i].setAttribute("transform","translate("+x.toFixed(1)+","+y.toFixed(1)+") rotate("+r.toFixed(1)+")");
+    });
+    if(t<0.5){pl.textContent="① 仿射先驗";pl.setAttribute("fill","#a8412a");ph.textContent="仿射先驗";}
+    else if(t<2.3){pl.textContent="① 整流流 rectified flow";pl.setAttribute("fill","#a8412a");ph.textContent="整流流";}
+    else if(t<3.1){pl.textContent="② 可微投影 Πθ";pl.setAttribute("fill","#2a7a2a");ph.textContent="可微投影 Πθ";}
+    else {pl.textContent="✓ 輸出 result";pl.setAttribute("fill","#2a7a2a");ph.textContent="輸出";}
+    if(running) raf=requestAnimationFrame(frame);
+  }
+  raf=requestAnimationFrame(frame);
+  var btn=document.getElementById("tbtn");
+  btn.addEventListener("click",function(){
+    running=!running;
+    if(running){t0=performance.now()-((performance.now()-t0)%T);btn.textContent="⏸ 暫停";raf=requestAnimationFrame(frame);}
+    else{cancelAnimationFrame(raf);btn.textContent="▶ 播放";}
+  });
+  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches){running=false;cancelAnimationFrame(raf);
+    // render final frame statically
+    O.forEach(function(o,i){var c=o[7];nodes[i].setAttribute("transform","translate("+c[0]+","+c[1]+") rotate("+c[2]+")");});
+    btn.textContent="▶ 播放";}
+})();
+</script>
 
 <!-- 摘要 -->
 <h2>摘要 <span class="tag b">Abstract</span></h2>
@@ -160,15 +246,102 @@ $$z_h=x_h,\qquad z_c=\tfrac{1}{\lambda}R(-\theta_{\pi(c)})\big(x_c-x_{\pi(c)}\bi
 <p><em>各向異性縮放 \(A=\mathrm{diag}(s_x,s_y)\) 下,child 度量偏移被 parent 絕對座標吸收,相對編碼尺度無關:</em></p>
 $$z_c(A\!\cdot\!P_t)=z_c(P_t)\;\Rightarrow\;\lVert x_c-x_{\pi(c)}\rVert\ \text{保持(至多至 parent 位姿)}.$$
 <p>房間拉伸時 Motif 不散架。<strong>證據</strong>:0.6 m 偏移在 3 m 與 4.5 m 房都給 \(z=0.2\);1.35× motif 保持 25→42%;1.0× raw \(S_\text{rel}=0.98\)。</p>
+<div class="fig">
+<svg viewBox="0 0 480 226" font-family="-apple-system,PingFang TC,sans-serif">
+  <!-- reference motif -->
+  <text x="70" y="16" text-anchor="middle" class="svglabel" fill="#111">參考 Motif</text>
+  <rect x="18" y="26" width="104" height="120" fill="#fff" stroke="#111" stroke-width="2.5"/>
+  <rect x="46" y="52" width="48" height="26" rx="2" fill="#e0c94e" stroke="#00000022"/>
+  <text x="70" y="69" text-anchor="middle" font-size="10" fill="#3a2a2a">桌</text>
+  <rect x="58" y="104" width="24" height="24" rx="2" fill="#b98fc0" stroke="#00000022"/>
+  <line x1="70" y1="65" x2="70" y2="116" stroke="#a8412a" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="78" y="96" font-size="10" fill="#a8412a">d</text>
+  <!-- arrow -->
+  <line x1="132" y1="86" x2="178" y2="86" stroke="#555" stroke-width="2" marker-end="url(#ah)"/>
+  <text x="155" y="76" text-anchor="middle" font-size="10.5" fill="#333">各向異性</text>
+  <text x="155" y="102" text-anchor="middle" font-size="10.5" fill="#333">A=diag(s_x,s_y)</text>
+  <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#555"/></marker></defs>
+  <!-- global-coord (baseline): torn -->
+  <text x="330" y="16" text-anchor="middle" class="svglabel" fill="#a8412a">全域座標流(baseline)</text>
+  <rect x="196" y="26" width="180" height="82" fill="#fff" stroke="#111" stroke-width="2.5"/>
+  <rect x="230" y="52" width="72" height="26" rx="2" fill="#e0c94e" stroke="#00000022"/>
+  <text x="266" y="69" text-anchor="middle" font-size="10" fill="#3a2a2a">桌</text>
+  <rect x="330" y="60" width="24" height="24" rx="2" fill="#b98fc0" stroke="#00000022"/>
+  <line x1="302" y1="65" x2="342" y2="72" stroke="#a8412a" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="322" y="100" text-anchor="middle" font-size="10" fill="#a8412a">d → s_x·d ✗ 散架</text>
+  <!-- parent-relative (ours): preserved -->
+  <text x="330" y="132" text-anchor="middle" class="svglabel" fill="#2a7a2a">Parent-relative(ours)</text>
+  <rect x="196" y="142" width="180" height="72" fill="#fff" stroke="#111" stroke-width="2.5"/>
+  <rect x="252" y="160" width="48" height="24" rx="2" fill="#e0c94e" stroke="#00000022"/>
+  <text x="276" y="176" text-anchor="middle" font-size="10" fill="#3a2a2a">桌</text>
+  <rect x="264" y="186" width="22" height="20" rx="2" fill="#b98fc0" stroke="#00000022"/>
+  <line x1="276" y1="172" x2="275" y2="196" stroke="#2a7a2a" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="330" y="206" text-anchor="middle" font-size="10" fill="#2a7a2a">z_c 不變 ✓ d 保持</text>
+</svg>
+<figcaption><strong>圖 2.</strong> 命題 1 直觀。房間受各向異性拉伸 \(A\) 後,<span style="color:#a8412a">全域座標流</span>預測的 child 偏移隨房間放大 → Motif 被拉散;<span style="color:#2a7a2a">parent-relative</span> 度量編碼 \(z_c\) 與房間尺度無關 → 桌椅間距 \(d\) 保持不變。</figcaption>
+</div>
 <p>骨幹為<strong>異質 Transformer DiT</strong>:Type-ID 區分全域錨點與相對子節點;dense pairwise bias 注入相對位移 / 角度;<strong>WallCrossAttention</strong> 把 32 邊界點設為牆 token(child 遮罩外牆注意力,\(P_t\) 才不會把椅子從桌邊扯走);child 損失權重 \(\lambda_\text{child}=10\approx1/\sigma^2\) 補償局部 / 全域尺度梯度。</p>
 <h3>命題 2 — 絕對空間能量的 Jacobian 拉回</h3>
 <p>可行性能量 \(\Phi=w_b E_\text{bound}+w_c E_\text{col}+w_{cl} E_\text{clear}+w_{wp} E_\text{wall}\) 定義在絕對空間;流在重參數化流形,故引導須拉回:</p>
 $$z\leftarrow z+d\tau\,v_\theta-d\tau\,\mathrm{ramp}(\tau)\,\nabla_z\Phi\big(\Psi_\mathcal{G}(\hat z_1)\big),\qquad \nabla_z\Phi=J_{\Psi_\mathcal{G}}^{\top}\,\nabla_x\Phi.$$
 <p>Jacobian 對 child 含 parent-motion 項 &mdash; 即「動 parent 帶動 child」的鏈式法則。實作即 <span class="mono">decode → nudge → encode</span>。</p>
+<div class="fig">
+<svg viewBox="0 0 480 138" font-family="-apple-system,PingFang TC,sans-serif" font-size="11">
+  <defs><marker id="a4" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a6f7a"/></marker></defs>
+  <rect x="20" y="40" width="86" height="42" rx="6" fill="#eef3f4" stroke="#2a6f7a" stroke-width="1.5"/>
+  <text x="63" y="58" text-anchor="middle" font-weight="600" fill="#2a6f7a">z(相對)</text>
+  <text x="63" y="73" text-anchor="middle" fill="#2a6f7a">流形空間</text>
+  <rect x="196" y="40" width="96" height="42" rx="6" fill="#fff" stroke="#111" stroke-width="1.5"/>
+  <text x="244" y="58" text-anchor="middle" font-weight="600">x = Ψ_G(z)</text>
+  <text x="244" y="73" text-anchor="middle" fill="#555">世界 / 絕對座標</text>
+  <rect x="372" y="40" width="92" height="42" rx="6" fill="#fff" stroke="#111" stroke-width="1.5"/>
+  <text x="418" y="58" text-anchor="middle" font-weight="600">x − ∇ₓΦ</text>
+  <text x="418" y="73" text-anchor="middle" fill="#555">可行性微調</text>
+  <line x1="106" y1="61" x2="190" y2="61" stroke="#2a6f7a" stroke-width="2" marker-end="url(#a4)"/>
+  <text x="148" y="52" text-anchor="middle" class="svglabel" fill="#2a6f7a">decode Ψ_G</text>
+  <line x1="292" y1="61" x2="366" y2="61" stroke="#2a6f7a" stroke-width="2" marker-end="url(#a4)"/>
+  <text x="329" y="52" text-anchor="middle" class="svglabel" fill="#2a6f7a">nudge −∇ₓΦ</text>
+  <path d="M418 84 Q244 128 63 84" fill="none" stroke="#2a6f7a" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#a4)"/>
+  <text x="244" y="124" text-anchor="middle" font-size="10.5" fill="#2a6f7a">encode Φ_G:∇_zΦ = J_Ψᵀ ∇ₓΦ（Jacobian pullback，parent 帶動 child）</text>
+</svg>
+<figcaption><strong>圖 3b.</strong> 命題 2 的流形拉回。能量 \(\Phi\) 定義在絕對座標,故每步 <span class="mono">解碼→世界座標施力→編碼回流形</span>,梯度經 \(J_\Psi^\top\) 拉回;child 的 parent-motion 項讓「動 parent 連帶更新 child」。</figcaption>
+</div>
 <h3>命題 3' — 端到端可微近端投影 \(\Pi_\theta\)(核心)<span class="tag">core</span></h3>
 <p>幾何規整(貼牆 flush、朝向、Manhattan、非碰撞)寫成錨定於提案 \(x_0\) 的<strong>近端目標</strong>,投影為 \(K\) 步展開梯度算子:</p>
 $$\Pi_\theta(x_0)=\underset{K\text{ 步展開}}{\arg\min}\;\underbrace{w_a\lVert x-x_0\rVert^2}_{\text{錨定提案}}+w_f E_\text{flush}+w_o E_\text{ortho}+w_c E_\text{col}.$$
 <p>每步可微,故 flow-matching loss 能<em>穿透</em>投影反傳 &mdash; DiT 學會輸出已近 \(\Pi_\theta\) 不動點的佈局(OptNet / implicit-diff 精神,以顯式展開實現、無外部依賴)。得一個自洽的<strong>神經生成器 + 凸式投影</strong>系統。</p>
+<div class="fig">
+<svg viewBox="0 0 480 196" font-family="-apple-system,PingFang TC,sans-serif">
+  <defs>
+    <marker id="a2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#555"/></marker>
+    <marker id="a3" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a7a2a"/></marker>
+  </defs>
+  <!-- DiT -->
+  <rect x="12" y="66" width="66" height="44" rx="6" fill="#f2efe9" stroke="#a8412a" stroke-width="1.5"/>
+  <text x="45" y="84" text-anchor="middle" font-size="12" font-weight="600" fill="#a8412a">DiT</text>
+  <text x="45" y="99" text-anchor="middle" font-size="11" fill="#a8412a">v_θ</text>
+  <line x1="80" y1="88" x2="104" y2="88" stroke="#555" stroke-width="2" marker-end="url(#a2)"/>
+  <!-- unrolled nodes -->
+  <g font-size="11" text-anchor="middle">
+    <circle cx="120" cy="88" r="15" fill="#fff" stroke="#111" stroke-width="2"/><text x="120" y="92">x₀</text>
+    <circle cx="212" cy="88" r="15" fill="#fff" stroke="#111" stroke-width="2"/><text x="212" y="92">x₁</text>
+    <circle cx="304" cy="88" r="15" fill="#fff" stroke="#111" stroke-width="2"/><text x="304" y="92">x₂</text>
+    <circle cx="404" cy="88" r="16" fill="#eaf4ee" stroke="#2a7a2a" stroke-width="2.5"/><text x="404" y="92" fill="#2a7a2a" font-weight="600">x*</text>
+  </g>
+  <line x1="135" y1="88" x2="197" y2="88" stroke="#555" stroke-width="2" marker-end="url(#a2)"/>
+  <line x1="227" y1="88" x2="289" y2="88" stroke="#555" stroke-width="2" marker-end="url(#a2)"/>
+  <line x1="319" y1="88" x2="388" y2="88" stroke="#555" stroke-width="2" stroke-dasharray="2 3" marker-end="url(#a2)"/>
+  <text x="262" y="112" text-anchor="middle" font-size="10.5" fill="#333">x ← x − η∇ₓ[ E_flush+E_ortho+E_col + w_a‖x−x₀‖² ]</text>
+  <text x="242" y="52" text-anchor="middle" class="svglabel" fill="#111">K 步展開式可微梯度算子  Π_θ</text>
+  <!-- anchor spring hint -->
+  <path d="M120 73 Q262 40 404 72" fill="none" stroke="#a8412a" stroke-width="1.2" stroke-dasharray="3 3"/>
+  <text x="262" y="34" text-anchor="middle" font-size="10" fill="#a8412a">錨定提案 w_a‖·−x₀‖² → 只到最近可行點</text>
+  <!-- backprop -->
+  <path d="M404 108 Q240 176 60 116" fill="none" stroke="#2a7a2a" stroke-width="1.8" stroke-dasharray="5 4" marker-end="url(#a3)"/>
+  <text x="240" y="172" text-anchor="middle" font-size="10.5" fill="#2a7a2a">端到端可微:∂ℒ/∂θ 反傳<em>穿透</em>投影層</text>
+</svg>
+<figcaption><strong>圖 3.</strong> 命題 3' 的可微投影 \(\Pi_\theta\)。把幾何規整寫成錨定於提案 \(x_0\) 的近端能量,以 \(K\) 步<em>展開式</em>梯度實現(上路徑);因每步可微,訓練損失可<em>穿透</em>投影反傳到 DiT(下方綠色路徑),讓網路預見投影。</figcaption>
+</div>
 <div class="note"><strong>性質(拓撲保持)</strong>:錨定項把投影位移限在微觀尺度(均 19 cm),故 \(\Pi_\theta\) 只修小角度 / 貼牆偏差,不改拓撲:\(\lvert S_\text{rel}(\Pi(x))-S_\text{rel}(x)\rvert\le 0.005\)。少了錨定,純能量下降會漂移、扯散 motif(\(S_\text{rel}\!\to\!0.566\))。</div>
 
 <!-- 五、資料 -->
@@ -215,6 +388,17 @@ $$\Pi_\theta(x_0)=\underset{K\text{ 步展開}}{\arg\min}\;\underbrace{w_a\lVert
 <p>仿射<em>trivially</em> 拉滿關係保持(它是線性映射,\(S_\text{rel}=0.93\))但<strong>物理不可行</strong>(碰撞 4.6%、貼牆 67%)且不能改變物件數。在存活物件上 Ours 追平它(\(S_\text{rel}^\text{kept}=0.91\) vs 0.93),同時碰撞少 <strong>3.3×</strong>、貼牆多 <strong>17 個百分點</strong>,並能減件適配。raw \(S_\text{rel}\) 的差(0.70 vs 0.93)幾乎全來自 Ours 在 0.75× <em>減件</em> &mdash; 被丟端點在全關係計 0 &mdash; 而非拓撲丟失,\(S_\text{rel}^\text{kept}\) 已證。仿射的 1 ms 是「不做任何幾何處理」的代價;Ours 的延遲分解見表 1。</p>
 
 <h3>6.4 定性結果</h3>
+<div class="fig" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:center">
+  <div style="flex:1;min-width:190px;max-width:290px;text-align:center">
+    <img src="assets/render_theirs.png" style="width:100%;border:1px solid var(--line);border-radius:4px" alt="直接縮放 baseline 3D 渲染">
+    <div style="font-size:12.5px;color:var(--acc);margin-top:5px;font-weight:600">直接縮放 baseline</div>
+  </div>
+  <div style="flex:1;min-width:190px;max-width:290px;text-align:center">
+    <img src="assets/render_ours.png" style="width:100%;border:1px solid var(--line);border-radius:4px" alt="Ours 3D 渲染">
+    <div style="font-size:12.5px;color:var(--good);margin-top:5px;font-weight:600">Ours(flow + Π_θ)</div>
+  </div>
+</div>
+<figcaption><strong>圖 6.（渲染)</strong> 用真實 3D-FUTURE 貼圖網格 repose 進目標房的<em>照片級渲染</em> &mdash; 與上方 top-down 指標同一管線,只是換成貼圖視角。左:直接縮放搬移;右:Ours &mdash; 床頭櫃夾床、貼牆件緊貼牆、朝向正確。</figcaption>
 <figure>
   <img src="assets/three_sizes_r2m2full.png" alt="同一參考在 0.75x / 1.0x / 1.35x 的遷移">
   <figcaption><strong>圖 3.</strong> 同一參考(L 型、22 m²、14 件)跨尺度遷移:<strong>0.75×</strong> 減件以容納;<strong>1.0×</strong> 重構(\(S_\text{rel}=0.97\));<strong>1.35×</strong> 床 / 沙發與餐桌 Motif 不散架(\(S_\text{rel}=0.91\)) &mdash; 命題 1 度量-相對編碼之效。每格印有指標。</figcaption>
