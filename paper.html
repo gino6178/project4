@@ -93,78 +93,10 @@
 <p class="links"><a href="index.html">← Shipped 做法(中文完整)</a><a href="experiments.html">實驗頁</a><a href="https://github.com/gino6178/project4">Repo</a></p>
 <p class="lead">核心問題:<em>在任意非均勻邊界形變下,如何同時保證場景拓撲不變性與物理硬幾何約束,且無需耗時的測試期優化?</em></p>
 
-<div class="teaser">
-  <svg id="teaser" viewBox="0 0 480 300" role="img" aria-label="retargeting motion: prior to flow to projection">
-    <rect x="0" y="0" width="480" height="300" fill="#fbfbfa"/>
-    <!-- room shell -->
-    <path id="room" d="M20 20 H460 V280 H20 Z" fill="#ffffff" stroke="#111" stroke-width="3"/>
-    <g id="objs" font-family="-apple-system,PingFang TC,sans-serif" font-size="12" font-weight="600" text-anchor="middle"></g>
-    <text id="plabel" x="240" y="296" text-anchor="middle" class="svglabel" fill="#a8412a">prior</text>
-  </svg>
-  <div class="tctl"><span>移動示意:<span class="phase" id="tphase">整流流</span></span>
-    <button id="tbtn" type="button">⏸ 暫停</button></div>
-</div>
-<figcaption style="margin-top:2px"><strong>Teaser（移動圖）.</strong> 從仿射先驗(餐椅被拉散、沙發浮離牆面)→ <span style="color:#a8412a;font-weight:600">① 整流流</span>把 Motif 相對關係拉回 → <span style="color:#2a7a2a;font-weight:600">② 可微投影 \(\Pi_\theta\)</span>單步把沙發貼牆、餐桌轉正。物件<em>只平移微調、不互換</em> —— 即拓撲保持。示意動畫,座標為概念示範。</figcaption>
-<script>
-(function(){
-  var O=[
-   // id,w,h,color,label, [x,y,rot] prior / flow / final
-   ["bed",118,52,"#cf7f7f","床",   [95,70,0],[95,54,0],[95,52,0]],
-   ["sofa",40,92,"#6aa96a","沙發", [372,196,10],[418,196,6],[435,196,0]],
-   ["tab",92,44,"#e0c94e","餐桌", [268,118,8],[275,113,5],[275,112,0]],
-   ["c1",24,24,"#b98fc0","",      [214,64,0],[236,80,0],[238,80,0]],
-   ["c2",24,24,"#b98fc0","",      [336,64,0],[314,80,0],[312,80,0]],
-   ["c3",24,24,"#b98fc0","",      [214,168,0],[236,146,0],[238,146,0]],
-   ["c4",24,24,"#b98fc0","",      [336,168,0],[314,146,0],[312,146,0]],
-   ["tv",16,72,"#5a8fc0","",      [44,150,0],[30,150,0],[28,150,0]]
-  ];
-  var g=document.getElementById("objs"), nodes=[];
-  O.forEach(function(o){
-    var el=document.createElementNS("http://www.w3.org/2000/svg","g");
-    var r=document.createElementNS("http://www.w3.org/2000/svg","rect");
-    r.setAttribute("x",-o[1]/2);r.setAttribute("y",-o[2]/2);r.setAttribute("width",o[1]);r.setAttribute("height",o[2]);
-    r.setAttribute("rx",3);r.setAttribute("fill",o[3]);r.setAttribute("stroke","#00000022");
-    el.appendChild(r);
-    if(o[4]){var t=document.createElementNS("http://www.w3.org/2000/svg","text");t.setAttribute("y",4);t.setAttribute("fill","#3a2a2a");t.textContent=o[4];el.appendChild(t);}
-    g.appendChild(el);nodes.push(el);
-  });
-  function ss(t){t=Math.max(0,Math.min(1,t));return t*t*t*(t*(t*6-15)+10);}
-  function lerp(a,b,u){return a+(b-a)*u;}
-  var T=4600, running=true, t0=performance.now(), raf;
-  var pl=document.getElementById("plabel"), ph=document.getElementById("tphase");
-  function frame(now){
-    var t=((now-t0)%T)/T*4.6; // seconds within period
-    var phase, seg, u;
-    if(t<0.5){phase=0;u=0;} // hold prior
-    else if(t<2.3){phase=0;u=ss((t-0.5)/1.8);} // prior->flow
-    else if(t<3.1){phase=1;u=ss((t-2.3)/0.8);} // flow->final
-    else {phase=1;u=1;} // hold final
-    O.forEach(function(o,i){
-      var a=o[5],b=o[6],c=o[7];
-      var x,y,r;
-      if(phase===0){x=lerp(a[0],b[0],u);y=lerp(a[1],b[1],u);r=lerp(a[2],b[2],u);}
-      else {x=lerp(b[0],c[0],u);y=lerp(b[1],c[1],u);r=lerp(b[2],c[2],u);}
-      nodes[i].setAttribute("transform","translate("+x.toFixed(1)+","+y.toFixed(1)+") rotate("+r.toFixed(1)+")");
-    });
-    if(t<0.5){pl.textContent="① 仿射先驗";pl.setAttribute("fill","#a8412a");ph.textContent="仿射先驗";}
-    else if(t<2.3){pl.textContent="① 整流流 rectified flow";pl.setAttribute("fill","#a8412a");ph.textContent="整流流";}
-    else if(t<3.1){pl.textContent="② 可微投影 Πθ";pl.setAttribute("fill","#2a7a2a");ph.textContent="可微投影 Πθ";}
-    else {pl.textContent="✓ 輸出 result";pl.setAttribute("fill","#2a7a2a");ph.textContent="輸出";}
-    if(running) raf=requestAnimationFrame(frame);
-  }
-  raf=requestAnimationFrame(frame);
-  var btn=document.getElementById("tbtn");
-  btn.addEventListener("click",function(){
-    running=!running;
-    if(running){t0=performance.now()-((performance.now()-t0)%T);btn.textContent="⏸ 暫停";raf=requestAnimationFrame(frame);}
-    else{cancelAnimationFrame(raf);btn.textContent="▶ 播放";}
-  });
-  if(window.matchMedia&&window.matchMedia("(prefers-reduced-motion:reduce)").matches){running=false;cancelAnimationFrame(raf);
-    // render final frame statically
-    O.forEach(function(o,i){var c=o[7];nodes[i].setAttribute("transform","translate("+c[0]+","+c[1]+") rotate("+c[2]+")");});
-    btn.textContent="▶ 播放";}
-})();
-</script>
+<figure>
+  <img src="assets/flow_traj.gif" alt="真實 flow 軌跡動畫:仿射先驗 → 整流流 → 可微投影" style="max-width:520px;margin:0 auto">
+  <figcaption><strong>Teaser（真實軌跡動畫).</strong> 這是模型<em>真實</em>的 50 步 ODE 軌跡:從<span style="color:#a8412a;font-weight:600">仿射先驗</span>(Motif 被度量拉散)→ <span style="color:#a8412a;font-weight:600">整流流</span>逐步把關係拉回 → 末端 <span style="color:#2a7a2a;font-weight:600">可微投影 \(\Pi_\theta\)</span> 單步貼牆轉正。1.35× 大房、seed 6;每幀為真實中間態 \(x_t\) 解碼後的 top-down 佈局。</figcaption>
+</figure>
 
 <!-- 摘要 -->
 <h2>摘要 <span class="tag b">Abstract</span></h2>
@@ -388,17 +320,10 @@ $$\Pi_\theta(x_0)=\underset{K\text{ 步展開}}{\arg\min}\;\underbrace{w_a\lVert
 <p>仿射<em>trivially</em> 拉滿關係保持(它是線性映射,\(S_\text{rel}=0.93\))但<strong>物理不可行</strong>(碰撞 4.6%、貼牆 67%)且不能改變物件數。在存活物件上 Ours 追平它(\(S_\text{rel}^\text{kept}=0.91\) vs 0.93),同時碰撞少 <strong>3.3×</strong>、貼牆多 <strong>17 個百分點</strong>,並能減件適配。raw \(S_\text{rel}\) 的差(0.70 vs 0.93)幾乎全來自 Ours 在 0.75× <em>減件</em> &mdash; 被丟端點在全關係計 0 &mdash; 而非拓撲丟失,\(S_\text{rel}^\text{kept}\) 已證。仿射的 1 ms 是「不做任何幾何處理」的代價;Ours 的延遲分解見表 1。</p>
 
 <h3>6.4 定性結果</h3>
-<div class="fig" style="display:flex;gap:12px;flex-wrap:wrap;align-items:flex-start;justify-content:center">
-  <div style="flex:1;min-width:190px;max-width:290px;text-align:center">
-    <img src="assets/render_theirs.png" style="width:100%;border:1px solid var(--line);border-radius:4px" alt="直接縮放 baseline 3D 渲染">
-    <div style="font-size:12.5px;color:var(--acc);margin-top:5px;font-weight:600">直接縮放 baseline</div>
-  </div>
-  <div style="flex:1;min-width:190px;max-width:290px;text-align:center">
-    <img src="assets/render_ours.png" style="width:100%;border:1px solid var(--line);border-radius:4px" alt="Ours 3D 渲染">
-    <div style="font-size:12.5px;color:var(--good);margin-top:5px;font-weight:600">Ours(flow + Π_θ)</div>
-  </div>
-</div>
-<figcaption><strong>圖 6.（渲染)</strong> 用真實 3D-FUTURE 貼圖網格 repose 進目標房的<em>照片級渲染</em> &mdash; 與上方 top-down 指標同一管線,只是換成貼圖視角。左:直接縮放搬移;右:Ours &mdash; 床頭櫃夾床、貼牆件緊貼牆、朝向正確。</figcaption>
+<figure>
+  <img src="assets/3d_sheet.png" alt="真實 3D box 渲染:reference 與 0.75x/1.0x/1.35x">
+  <figcaption><strong>圖 6.（3D 渲染)</strong> 由 <span class="mono">render_scene3d</span> 產生的<em>真實</em> 3D 透視渲染(matplotlib box render,無需 3D-FUTURE 貼圖網格、GL-free)。同一參考在 0.75× / 1.0× / 1.35× 的 flow 輸出:貼牆件貼牆、Motif 不散架、朝向正確。</figcaption>
+</figure>
 <figure>
   <img src="assets/three_sizes_r2m2full.png" alt="同一參考在 0.75x / 1.0x / 1.35x 的遷移">
   <figcaption><strong>圖 3.</strong> 同一參考(L 型、22 m²、14 件)跨尺度遷移:<strong>0.75×</strong> 減件以容納;<strong>1.0×</strong> 重構(\(S_\text{rel}=0.97\));<strong>1.35×</strong> 床 / 沙發與餐桌 Motif 不散架(\(S_\text{rel}=0.91\)) &mdash; 命題 1 度量-相對編碼之效。每格印有指標。</figcaption>
