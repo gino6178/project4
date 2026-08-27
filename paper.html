@@ -94,8 +94,8 @@
 <p class="lead">核心問題:<em>在任意非均勻邊界形變下,如何同時保證場景拓撲不變性與物理硬幾何約束,且無需耗時的測試期優化?</em></p>
 
 <figure>
-  <img src="assets/flow_traj.gif" alt="真實 flow 軌跡動畫:仿射先驗 → 整流流 → 可微投影" style="max-width:520px;margin:0 auto">
-  <figcaption><strong>Teaser（真實軌跡動畫).</strong> 這是模型<em>真實</em>的 50 步 ODE 軌跡:從<span style="color:#a8412a;font-weight:600">仿射先驗</span>(Motif 被度量拉散)→ <span style="color:#a8412a;font-weight:600">整流流</span>逐步把關係拉回 → 末端 <span style="color:#2a7a2a;font-weight:600">可微投影 \(\Pi_\theta\)</span> 單步貼牆轉正。1.35× 大房、seed 6;每幀為真實中間態 \(x_t\) 解碼後的 top-down 佈局。</figcaption>
+  <img src="assets/flow_traj_tex.gif" alt="真實 flow 軌跡・3D-FUTURE 貼圖渲染" style="max-width:560px;margin:0 auto">
+  <figcaption><strong>Teaser（真實軌跡動畫).</strong> 這是模型<em>真實</em>的 50 步 ODE 軌跡:從<span style="color:#a8412a;font-weight:600">仿射先驗</span>(Motif 被度量拉散)→ <span style="color:#a8412a;font-weight:600">整流流</span>逐步把關係拉回 → 末端 <span style="color:#2a7a2a;font-weight:600">可微投影 \(\Pi_\theta\)</span> 單步貼牆轉正。1.35× 大房、seed 6;每幀為真實中間態 \(x_t\) 解碼後、以<em>真實 3D-FUTURE 貼圖網格</em> pyrender/EGL 渲染。</figcaption>
 </figure>
 
 <!-- 摘要 -->
