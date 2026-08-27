@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="en">
+<html lang="zh-Hant">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReRoom — Topology-Preserving Hierarchical Flow</title>
+<title>ReRoom · 論文敘事頁</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
       integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
@@ -13,448 +13,249 @@
         onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
 <style>
   :root{
-    --bg:#ffffff; --panel:#f7f8fa; --ink:#141824; --mut:#5a6172; --faint:#8b93a5;
-    --line:#e4e7ee; --line2:#eef0f4;
-    --acc:#0f766e; --acc-soft:#0f766e14; --acc-ink:#0b5b54;
-    --warn:#b1483c; --warn-soft:#b1483c12;
-    --grid:#e7eaf0;
-  }
-  @media (prefers-color-scheme: dark){
-    :root:not([data-theme="light"]){
-      --bg:#0d0f14; --panel:#151923; --ink:#e7eaf0; --mut:#9aa3b5;
-      --faint:#697086; --line:#242a37; --line2:#1c212c;
-      --acc:#3fbfb0; --acc-soft:#3fbfb01f; --acc-ink:#7fe0d3;
-      --warn:#e0796c; --warn-soft:#e0796c1c; --grid:#1b2130;
-    }
-  }
-  :root[data-theme="dark"]{
-    --bg:#0d0f14; --panel:#151923; --ink:#e7eaf0; --mut:#9aa3b5; --faint:#697086;
-    --line:#242a37; --line2:#1c212c; --acc:#3fbfb0; --acc-soft:#3fbfb01f;
-    --acc-ink:#7fe0d3; --warn:#e0796c; --warn-soft:#e0796c1c; --grid:#1b2130;
+    --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a; --acc2:#2a6f7a;
+    --panel:#f7f7f7; --good:#2a7a2a;
   }
   *{box-sizing:border-box}
-  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
-  body{margin:0;background:var(--bg);color:var(--ink);
-    font-family:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
-    line-height:1.62;font-size:17px;-webkit-font-smoothing:antialiased}
-  .serif{font-family:"Iowan Old Style","Charter","Palatino Linotype",Palatino,Georgia,"Times New Roman",serif}
-  .mono{font-family:ui-monospace,SFMono-Regular,"JetBrains Mono",Menlo,Consolas,monospace}
-  a{color:var(--acc-ink);text-decoration:none}
-  a:hover{text-decoration:underline}
-  .wrap{max-width:840px;margin:0 auto;padding:0 22px}
-
-  header.hero{position:relative;border-bottom:1px solid var(--line);overflow:hidden}
-  header.hero::before{content:"";position:absolute;inset:0;
-    background-image:linear-gradient(var(--grid) 1px,transparent 1px),linear-gradient(90deg,var(--grid) 1px,transparent 1px);
-    background-size:34px 34px;mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,#000 35%,transparent 75%);
-    -webkit-mask-image:radial-gradient(ellipse 80% 70% at 50% 0%,#000 35%,transparent 75%);opacity:.7;pointer-events:none}
-  .hero .wrap{position:relative;padding:60px 22px 46px}
-  .eyebrow{font-size:12.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--acc-ink);
-    font-weight:600;margin:0 0 20px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-  .eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--acc)}
-  h1.title{font-size:clamp(29px,5vw,48px);line-height:1.08;margin:0 0 20px;font-weight:600;
-    letter-spacing:-.012em;text-wrap:balance}
-  h1 .em{color:var(--acc-ink)}
-  .thesis{font-size:19px;color:var(--mut);margin:0 0 26px;max-width:66ch;text-wrap:pretty}
-  .byline{display:flex;gap:16px;flex-wrap:wrap;align-items:center;font-size:14px;color:var(--faint);
-    border-top:1px solid var(--line);padding-top:18px;margin-top:6px}
-  .byline .who{color:var(--ink)}
-  .pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;
-    padding:4px 11px;border-radius:100px;background:var(--acc-soft);color:var(--acc-ink);letter-spacing:.02em}
-  .links{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
-  .links a{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:500;
-    padding:9px 15px;border:1px solid var(--line);border-radius:9px;color:var(--ink);background:var(--panel)}
-  .links a:hover{border-color:var(--acc);color:var(--acc-ink);text-decoration:none}
-
-  nav.toc{position:sticky;top:0;z-index:10;background:color-mix(in srgb,var(--bg) 88%,transparent);
-    backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
-  nav.toc .wrap{display:flex;gap:2px;flex-wrap:wrap;padding:10px 22px;font-size:13px}
-  nav.toc a{color:var(--mut);padding:5px 9px;border-radius:7px;font-weight:500}
-  nav.toc a:hover{background:var(--acc-soft);color:var(--acc-ink);text-decoration:none}
-
-  section{padding:14px 0;scroll-margin-top:56px}
-  h2.sec{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--faint);
-    font-weight:700;margin:46px 0 6px;display:flex;align-items:center;gap:12px}
-  h2.sec .no{font-family:ui-monospace,monospace;color:var(--acc-ink);font-size:12px}
-  h2.sec::after{content:"";flex:1;height:1px;background:var(--line)}
-  h3.big{font-size:25px;line-height:1.22;margin:6px 0 16px;font-weight:600;letter-spacing:-.01em;text-wrap:balance}
-  h4.sub{font-size:18px;margin:26px 0 8px;font-weight:600}
-  p{margin:0 0 15px}
-  .lead{font-size:18.5px}
-  ul.tight{margin:0 0 15px;padding-left:20px}
-  ul.tight li{margin:0 0 7px;color:var(--mut)}
-  ul.tight li strong{color:var(--ink)}
-  em{font-style:italic}
-  .katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0}
-
-  .spine{position:relative;margin:24px 0 4px;padding-left:34px}
-  .spine::before{content:"";position:absolute;left:9px;top:8px;bottom:30px;width:2px;
-    background:linear-gradient(var(--warn),var(--acc))}
-  .step{position:relative;margin:0 0 22px}
-  .step .node{position:absolute;left:-34px;top:1px;width:20px;height:20px;border-radius:50%;
-    background:var(--bg);border:2px solid var(--line);display:grid;place-items:center;
-    font-size:11px;font-weight:700;color:var(--faint)}
-  .step.k1 .node,.step.k2 .node{border-color:var(--warn);color:var(--warn)}
-  .step.k3 .node,.step.k4 .node{border-color:var(--acc);color:var(--acc-ink)}
-  .step .kicker{font-size:12px;letter-spacing:.1em;text-transform:uppercase;font-weight:700;margin:0 0 4px}
-  .step.k1 .kicker,.step.k2 .kicker{color:var(--warn)}
-  .step.k3 .kicker,.step.k4 .kicker{color:var(--acc-ink)}
-  .step h4{font-size:18px;margin:0 0 6px;font-weight:600}
-  .step p{margin:0 0 6px;color:var(--mut);font-size:15.5px}
-  .step p strong{color:var(--ink)}
-
-  .prop{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px 22px;margin:16px 0}
-  .prop .tag{display:inline-flex;align-items:center;gap:8px;font-size:12px;font-weight:700;
-    letter-spacing:.03em;color:var(--acc-ink);margin:0 0 9px}
-  .prop .tag .n{font-family:ui-monospace,monospace;background:var(--acc-soft);color:var(--acc-ink);
-    padding:2px 8px;border-radius:6px;font-size:12px}
-  .prop h4{font-size:18px;margin:0 0 10px;font-weight:600}
-  .prop p{font-size:15.5px;color:var(--mut);margin:0 0 10px}
-  .prop p strong{color:var(--ink)}
-  .prop.hi{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
-  .caveat{font-size:13.5px;color:var(--faint);margin:8px 0 0}
-
-  /* architecture diagram */
-  .arch{border:1px solid var(--line);border-radius:14px;background:var(--panel);padding:20px;margin:18px 0}
-  .abox{border:1px solid var(--line);border-radius:11px;background:var(--bg);padding:13px 16px;margin:0 auto;max-width:640px}
-  .abox .h{font-size:12px;letter-spacing:.06em;text-transform:uppercase;font-weight:700;margin:0 0 4px;color:var(--faint)}
-  .abox .t{font-size:15.5px;font-weight:600;margin:0 0 6px}
-  .abox ul{margin:0;padding-left:17px;font-size:13.5px;color:var(--mut)}
-  .abox.io{max-width:none;display:flex;gap:12px;justify-content:center;flex-wrap:wrap;background:transparent;border:none;padding:0}
-  .abox.io .chip{border:1px dashed var(--line);border-radius:9px;padding:9px 15px;background:var(--bg);
-    font-size:14px;font-weight:600}
-  .abox.stage1{border-left:3px solid var(--warn)}
-  .abox.stage2{border-left:3px solid var(--acc)}
-  .abox.core{border:1px solid var(--acc);background:var(--acc-soft);max-width:600px;margin-top:10px}
-  .arrow{text-align:center;color:var(--faint);font-size:13px;margin:9px 0;line-height:1}
-  .arrow b{color:var(--acc-ink);font-weight:600}
-  .flowrow{display:grid;gap:8px;margin:10px auto;max-width:600px}
-  .flowrow .mini{border:1px solid var(--line);border-radius:9px;background:var(--bg);padding:9px 13px;
-    font-size:13.5px;display:flex;align-items:center;gap:9px}
-  .flowrow .mini .k{font-family:ui-monospace,monospace;font-size:11px;color:var(--acc-ink);
-    background:var(--acc-soft);padding:2px 7px;border-radius:5px;white-space:nowrap}
-
-  figure{margin:20px 0}
-  figure img{width:100%;height:auto;display:block;border:1px solid var(--line);border-radius:12px;background:#fff}
-  figcaption{font-size:14px;color:var(--mut);margin-top:9px;line-height:1.55}
-  figcaption strong{color:var(--ink)}
-
-  .tw{overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin:16px 0;background:var(--panel)}
-  table{border-collapse:collapse;width:100%;font-size:15px;min-width:600px}
-  thead th{text-align:right;font-weight:600;color:var(--faint);font-size:12.5px;letter-spacing:.03em;
-    padding:12px 15px;border-bottom:1px solid var(--line);white-space:nowrap}
-  thead th:first-child{text-align:left}
-  tbody td{padding:11px 15px;border-bottom:1px solid var(--line2);text-align:right;
-    font-variant-numeric:tabular-nums;white-space:nowrap}
-  tbody td:first-child{text-align:left;color:var(--ink)}
-  tbody tr:last-child td{border-bottom:none}
-  tr.ours{background:var(--acc-soft)}
-  tr.ours td{font-weight:600}
-  tr.ours td:first-child{color:var(--acc-ink)}
-  .win{color:var(--acc-ink);font-weight:700}
-  .bad{color:var(--warn)}
-
-  .frame{border:1px solid var(--line);border-left:3px solid var(--acc);border-radius:0 12px 12px 0;
-    background:var(--panel);padding:16px 20px;margin:14px 0}
-  .frame .q{font-size:13px;font-weight:700;letter-spacing:.02em;color:var(--faint);margin:0 0 9px;text-transform:uppercase}
-  .frame .ng{color:var(--warn);font-size:14.5px;margin:0 0 6px}
-  .frame .ok{font-size:15.5px;margin:0}
-  .frame .ok strong{color:var(--acc-ink)}
-  .frame .badge{font-family:ui-monospace,monospace;font-size:11px;padding:1px 6px;border-radius:4px;
-    background:var(--warn-soft);color:var(--warn);margin-right:6px}
-  .frame .badge.g{background:var(--acc-soft);color:var(--acc-ink)}
-
-  pre.bib{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:16px 18px;
-    overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.7;
-    color:var(--ink);margin:12px 0}
-  pre.bib .k{color:var(--acc-ink)}
-  .note{background:var(--acc-soft);border-radius:10px;padding:13px 17px;font-size:14.5px;color:var(--mut);margin:15px 0}
+  html{-webkit-text-size-adjust:100%}
+  body{margin:0;background:#fff;color:var(--ink);
+       font:17px/1.75 -apple-system,"PingFang TC","Noto Sans TC",BlinkMacSystemFont,"Segoe UI",sans-serif;
+       -webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 22px 60px}
+  h1{font-size:30px;margin:0 0 6px;font-weight:700;letter-spacing:-.01em;line-height:1.24}
+  .sub{color:var(--mut);font-size:17px;margin:0 0 14px}
+  h2{font-size:23px;margin:52px 0 12px;font-weight:700;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+  h3{font-size:18px;margin:28px 0 6px;font-weight:600}
+  h4{font-size:16px;margin:20px 0 4px;font-weight:600;color:#333}
+  p{margin:0 0 14px}
+  ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:6px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
+       background:var(--panel);padding:1px 5px;border-radius:3px}
+  .note{background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;
+        border-radius:0 3px 3px 0;font-size:15px;margin:20px 0;color:#3c3c3c}
   .note strong{color:var(--ink)}
-  .warnnote{background:var(--warn-soft);border-radius:10px;padding:13px 17px;font-size:14px;color:var(--mut);margin:15px 0}
-  .warnnote strong{color:var(--warn)}
-
-  footer{border-top:1px solid var(--line);margin-top:52px;padding:28px 0 60px;font-size:14px;color:var(--faint)}
-  footer a{color:var(--acc-ink)}
-  footer .row{display:flex;gap:20px;flex-wrap:wrap;justify-content:space-between;align-items:center}
+  .note.warn{border-left-color:#b0752a}
+  .tag{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:10px;
+       background:var(--acc);color:#fff;vertical-align:middle;margin-left:6px}
+  .tag.g{background:var(--good)} .tag.b{background:var(--acc2)}
+  figure{margin:22px 0}
+  figure img{width:100%;display:block;border-radius:3px;background:#fff;border:1px solid var(--line)}
+  figcaption{color:var(--mut);font-size:14px;margin-top:8px;line-height:1.6}
+  figcaption strong{color:var(--ink)}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 16px}
+  .tw{overflow-x:auto}
+  th,td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left;white-space:normal}
+  thead th{font-weight:600;border-bottom:1.5px solid var(--ink)}
+  tbody tr:hover{background:#fafafa}
+  tr.ours td{background:#fbf3f0}
+  .win{font-weight:700;color:var(--good)}
+  .bad{color:var(--acc)}
+  .lead{font-size:15px;color:var(--mut);margin:-2px 0 16px}
+  .links{margin:6px 0 8px;font-size:14.5px}
+  .links a{color:var(--acc);margin-right:14px}
+  /* pipeline diagram — harmonised with index palette */
+  .arch{border:1px solid var(--line);border-radius:6px;background:var(--panel);padding:18px;margin:20px 0}
+  .abox{border:1px solid var(--line);border-radius:5px;background:#fff;padding:11px 15px;max-width:600px;margin:0 auto}
+  .abox .h{font-size:11.5px;letter-spacing:.05em;text-transform:uppercase;font-weight:700;color:var(--mut);margin:0 0 3px}
+  .abox .t{font-weight:600;margin:0 0 5px;font-size:15px}
+  .abox ul{margin:0;padding-left:17px;font-size:13.5px;color:var(--mut)} .abox ul li{margin:0 0 3px}
+  .abox.s1{border-left:3px solid var(--acc2)} .abox.s2{border-left:3px solid var(--acc)}
+  .abox.core{border:1px solid var(--acc);background:#fbf3f0;max-width:560px;margin-top:9px}
+  .arw{text-align:center;color:var(--mut);margin:8px 0;font-size:13.5px} .arw b{color:var(--acc)}
+  .io{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .chip{border:1px dashed #cfcfcf;border-radius:5px;padding:8px 13px;background:#fff;font-weight:600;font-size:14px}
+  .mini{border:1px solid var(--line);border-radius:5px;background:#fff;padding:8px 12px;font-size:13.5px;margin:6px 0;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  .mini .k{font-family:ui-monospace,monospace;font-size:11px;color:#fff;background:var(--acc2);padding:2px 7px;border-radius:4px;white-space:nowrap}
+  footer{margin:56px 0 0;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:14px}
+  footer a{color:var(--acc)}
 </style>
 </head>
 <body>
+<div class="wrap">
 
-<header class="hero">
-  <div class="wrap">
-    <p class="eyebrow"><span class="dot"></span>3D Scene Retargeting · Continuous Flow · Differentiable Projection</p>
-    <h1 class="title serif">ReRoom: Reference-Guided 3D Scene Retargeting via Topology-Preserving Hierarchical Flow and <span class="em">Differentiable Geometric Projection</span></h1>
-    <p class="thesis">How can we achieve <em>topology-preserving</em> and <em>physically-constrained</em> scene retargeting under arbitrary non-uniform boundary deformation — with a <em>single</em> forward pass, and no test-time optimization?</p>
-    <div class="links">
-      <a href="index.html">← Shipped method &amp; walkthrough</a>
-      <a href="experiments.html">Experiments</a>
-      <a href="https://github.com/gino6178/project4">Code</a>
-      <a href="#bibtex">BibTeX</a>
-    </div>
-    <div class="byline">
-      <span class="pill">Paper draft · in preparation</span>
-      <span><span class="who">ReRoom Project</span> · single network + single-step differentiable projection</span>
-    </div>
+<h1>ReRoom: Reference-Guided 3D Scene Retargeting via Topology-Preserving Hierarchical Flow and Differentiable Geometric Projection</h1>
+<p class="sub">論文敘事頁 &mdash; 把 shipped 系統寫成 CVPR / SIGGRAPH 級技術貢獻:理論主軸 + 架構亮點 + 可執行實測。</p>
+<p class="links"><a href="index.html">← Shipped 做法(中文完整)</a><a href="experiments.html">實驗頁</a><a href="https://github.com/gino6178/project4">Repo</a></p>
+<p class="lead">核心問題:<em>在任意非均勻邊界形變下,如何同時保證場景拓撲不變性與物理硬幾何約束,且無需耗時的測試期優化?</em></p>
+
+<!-- 摘要 -->
+<h2>摘要 <span class="tag b">Abstract</span></h2>
+<p>室內設計的身分在於<strong>空間關係與功能組合(Motif)</strong>,而非絕對座標。本文定義<strong>參考導向的 3D 室內場景遷移</strong>:給定使用者偏好的參考設計 \(S_\text{ref}\) 與形狀 / 面積 / 長寬比任意變化的目標房間邊界 \(P_t\),自動完成佈局遷移。</p>
+<p>任務有內在矛盾 &mdash; 既要保留參考的物件組成、空間關係、Motif 與風格,又要符合新房間的硬幾何(貼牆、不出界、不碰撞)。全域座標生成會破壞意圖;仿射形變會拉散 Motif;測試期多步優化耗時且陷入局部極小;硬吸附後處理則撕裂流形拓撲並誘發次生碰撞。我們提出:</p>
+<ul>
+<li><strong>層級度量流(Topology-Preserving Hierarchical Flow)</strong> &mdash; 度量重參數化流形 \(\Phi_\mathcal{G}\),證明 Motif 在各向異性形變下的拓撲不變性(命題 1),並推導流形拉回(Pullback Jacobian)的可行性能量引導(命題 2)。</li>
+<li><strong>可微近端投影層 \(\Pi_\theta\)</strong> &mdash; 把幾何規整化寫成帶提案錨定的近端算子,以 \(K\) 步展開實現單步推論與梯度反傳,消除測試期優化(命題 3')。</li>
+<li><strong>結構化預算前端</strong> &mdash; 極端縮小戶型下依面積預算與意圖圖做成對剪枝與小尺寸資產替換,解耦離散拓撲調整與連續幾何生成。</li>
+</ul>
+<p>在 3D-FRONT 與跨戶型測試集上,<strong>單次前向 + 單步可微投影</strong>即在投影消融中取得全場最低碰撞(1.41%)與最佳關係保持(\(S_\text{rel}=0.696\)),延遲遠優於多步優化。</p>
+
+<!-- 一、緒論 -->
+<h2>一、緒論(Introduction)</h2>
+<p><strong>設計身分假設(Design Identity Hypothesis)</strong>:設計的本質是<em>相對</em>結構(Motif 內部間距、朝向對齊、靠牆特徵),而非全域絕對座標。基本矛盾:適應全新邊界 \(P_t\)(貼牆、防撞、不越界)的同時,嚴格守恆 \(S_\text{ref}\) 的意圖與 Motif 結構。</p>
+<h3>四步破題(Storyline)</h3>
+<div class="note">
+<p style="margin:0 0 8px"><strong>① 困境</strong> &mdash; 意圖是拓撲的,但生成流在<em>全域座標</em>積分:房間非均勻縮放時,Motif 內部度量距離隨房間放大 → 餐桌椅被<strong>拉散</strong>。</p>
+<p style="margin:0 0 8px"><strong>② 死穴</strong> &mdash; 兩種現有解法都傷佈局:<em>測試期能量優化</em>(LEGO-Net 式 Adam / MCMC)慢且陷局部極小;<em>硬吸附</em>貼牆卻破壞拓撲(\(S_\text{rel}\!\downarrow\))並誘發次生碰撞(\(R_\text{col}\!\uparrow\))。</p>
+<p style="margin:0 0 8px"><strong>③ 洞察</strong> &mdash; 層級拓撲保持流(命題 1)+ 流形拉回引導(命題 2)+ 端到端可微近端投影 \(\Pi_\theta\)(命題 3')。</p>
+<p style="margin:0"><strong>④ 結論</strong> &mdash; 單網路 + 單步可微投影,達最低碰撞(1.41%)與最高拓撲保持(\(S_\text{rel}=0.70\)),無測試期優化。</p>
+</div>
+<h3>關鍵技術創新</h3>
+<ul>
+<li><strong>度量不變重參數化</strong> &mdash; Parent-Relative 度量座標使 Child 尺度與房間幾何解耦(命題 1)。</li>
+<li><strong>流形拉回引導</strong> &mdash; 跨座標系 Jacobian,使全域物理約束連帶更新層級子節點(命題 2)。</li>
+<li><strong>端到端可微近端投影</strong> &mdash; 展開式算子取代後處理,得單網路 + 單步投影管線(命題 3')。</li>
+<li><strong>因果反向變形語料</strong> &mdash; 四道物理守門,保證訓練對具備因果遷移關係。</li>
+</ul>
+
+<!-- 二、相關工作 -->
+<h2>二、相關工作(Related Work)</h2>
+<h3>2.1 室內場景生成與佈局</h3>
+<p>規則 / 能量式生成(PlanIT、Make-it-Home);深度生成佈局(自回歸 ATISS、場景擴散 DiffuScene / SceneFormer);佈局編輯與條件生成(LayoutDiffusion、LEGO-Net)。這些從先驗取樣或原地編輯,無一能把<em>特定參考</em>的組成與意圖綁定到新邊界。</p>
+<h3>2.2 連續正規化流與 Flow Matching</h3>
+<p>Rectified Flow 與條件流匹配(CFM);幾何與約束流形上的流匹配 &mdash; 本文層級度量流形的基礎。</p>
+<h3>2.3 約束生成與可微優化</h3>
+<p>隱式可微優化層(OptNet)在物理約束的應用;神經生成器 + 凸 / 近端算子的混合架構 &mdash; 我們 \(\Pi_\theta\) 的譜系。</p>
+
+<!-- 三、問題定義 -->
+<h2>三、問題定義(Formulation)</h2>
+<ul>
+<li><strong>參考場景</strong> \(S_\text{ref}=\{(c_i,s_i,x_i^\text{ref},\theta_i^\text{ref})\}_{i=1}^N\):類別、三維尺寸、中心、偏航。</li>
+<li><strong>目標邊界</strong> \(P_t\in\mathbb{R}^{32\times6}\):32 個邊界取樣點(座標、高度特徵、內向法向量 \((n_u,n_v)\))。</li>
+<li><strong>意圖圖</strong> \(\mathcal{G}=(\mathcal{V},\mathcal{E},\alpha)\):物件為節點,邊帶關係型與彈性 \(\alpha_{ij}\in[0,1]\),誘導層級 parent map \(\pi:\text{child}\mapsto\text{head}\)。</li>
+<li><strong>靠牆傾向</strong> \(a_i\in[0,1]\):物件在參考場景的貼牆親和度。</li>
+</ul>
+<p>狀態 \(x_i=(u_i,v_i,\cos\theta_i,\sin\theta_i)\in\mathbb{R}^4\),正規化到房間 MRR frame。採用<strong>帶 informative prior 的 Rectified Flow</strong>:把高斯起點換成參考佈局仿射投影進 \(P_t\) 加輕擾動,讓模型整流而非盲猜:</p>
+$$x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon,\qquad \mathcal{L}_\text{FM}=\mathbb{E}_{\tau}\big\|v_\theta(x_\tau,\tau,\mathcal{G},P_t)-(x_1-x_0)\big\|^2 .$$
+
+<!-- 四、方法 -->
+<h2>四、方法(Methodology)</h2>
+<p class="lead">兩階段:離散拓撲調整,再連續約束合成。</p>
+<div class="arch">
+  <div class="io"><span class="chip">參考 \(S_\text{ref}\)</span><span class="chip">目標邊界 \(P_t\)</span></div>
+  <div class="arw">↓</div>
+  <div class="abox s1"><p class="h">Stage 1 · 前端(離散)</p><p class="t">Budgeted Plan-Summarization</p>
+    <ul><li>面積預算 &amp; 長寬比剪枝</li><li>對稱結構化剪枝</li><li>錨點保護的小尺寸替換</li></ul></div>
+  <div class="arw">↓ <b>剪枝後子集 \(N'\)</b></div>
+  <div class="abox s2"><p class="h">Stage 2 · 後端(連續 · 核心)</p><p class="t">Topology-Preserving Constrained Hierarchical Flow</p>
+    <div class="mini"><span class="k">prior</span> Informative prior \(x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon\)</div>
+    <div class="mini"><span class="k">DiT</span> 異質 Transformer · Type-ID · WallCrossAttention</div>
+    <div class="mini"><span class="k">命題2</span> 流形拉回 Jacobian 引導</div>
+    <div class="abox core"><p class="t" style="margin:0 0 3px">可微近端投影層 \(\Pi_\theta\) &nbsp;— 命題 3'</p>
+      <ul style="padding-left:17px;margin:0"><li>提案錨定項</li><li>展開式 flush / ortho / collision</li></ul></div>
   </div>
-</header>
+  <div class="arw">↓</div>
+  <div class="io"><span class="chip" style="border-style:solid;border-color:var(--acc);color:var(--acc)">遷移後場景 \(S_\text{tgt}\)</span></div>
+</div>
+<figcaption><strong>圖 1.</strong> 系統總覽。Stage 1 在意圖圖上做「哪些物件存活」的離散決策;Stage 2(核心)是拓撲保持層級流 + 拉回引導 + 可微投影 \(\Pi_\theta\)。線上,Stage 2 = 單次前向 + 單步投影。</figcaption>
 
-<nav class="toc"><div class="wrap">
-  <a href="#abstract">Abstract</a>
-  <a href="#intro">1 Intro</a>
-  <a href="#related">2 Related</a>
-  <a href="#formulation">3 Formulation</a>
-  <a href="#method">4 Method</a>
-  <a href="#data">5 Data</a>
-  <a href="#experiments">6 Experiments</a>
-  <a href="#discussion">7 Discussion</a>
-  <a href="#bibtex">Cite</a>
-</div></nav>
+<h3>4.2 Stage 1 — 離散語意拓撲調整</h3>
+<p>面積預算 \(\text{Area}_\text{budget}=\operatorname{clip}(\text{density}+\text{slack})\cdot\operatorname{Area}(P_t)\)。物件短邊大於房間內切圓直徑則剔除;語意錨件(沙發、床)受保護,改觸發同風格小尺寸資產替換。超預算時<em>對稱</em>成對剪枝次要物件(如餐椅),再依重要性序縮減 &mdash; 保持語意合法。</p>
 
-<main class="wrap">
+<h3>4.3 Stage 2 — 拓撲保持層級流</h3>
+<p>映射 \(\Phi_\mathcal{G}:x\mapsto z\):head 用絕對座標,child 用 parent-local 度量座標(\(\lambda=\text{REL\_SCALE}=3\) m):</p>
+$$z_h=x_h,\qquad z_c=\tfrac{1}{\lambda}R(-\theta_{\pi(c)})\big(x_c-x_{\pi(c)}\big),\quad \Delta\theta_c=\theta_c-\theta_{\pi(c)}.$$
+<h3>命題 1 — 度量形變下的拓撲不變性</h3>
+<p><em>各向異性縮放 \(A=\mathrm{diag}(s_x,s_y)\) 下,child 度量偏移被 parent 絕對座標吸收,相對編碼尺度無關:</em></p>
+$$z_c(A\!\cdot\!P_t)=z_c(P_t)\;\Rightarrow\;\lVert x_c-x_{\pi(c)}\rVert\ \text{保持(至多至 parent 位姿)}.$$
+<p>房間拉伸時 Motif 不散架。<strong>證據</strong>:0.6 m 偏移在 3 m 與 4.5 m 房都給 \(z=0.2\);1.35× motif 保持 25→42%;1.0× raw \(S_\text{rel}=0.98\)。</p>
+<p>骨幹為<strong>異質 Transformer DiT</strong>:Type-ID 區分全域錨點與相對子節點;dense pairwise bias 注入相對位移 / 角度;<strong>WallCrossAttention</strong> 把 32 邊界點設為牆 token(child 遮罩外牆注意力,\(P_t\) 才不會把椅子從桌邊扯走);child 損失權重 \(\lambda_\text{child}=10\approx1/\sigma^2\) 補償局部 / 全域尺度梯度。</p>
+<h3>命題 2 — 絕對空間能量的 Jacobian 拉回</h3>
+<p>可行性能量 \(\Phi=w_b E_\text{bound}+w_c E_\text{col}+w_{cl} E_\text{clear}+w_{wp} E_\text{wall}\) 定義在絕對空間;流在重參數化流形,故引導須拉回:</p>
+$$z\leftarrow z+d\tau\,v_\theta-d\tau\,\mathrm{ramp}(\tau)\,\nabla_z\Phi\big(\Psi_\mathcal{G}(\hat z_1)\big),\qquad \nabla_z\Phi=J_{\Psi_\mathcal{G}}^{\top}\,\nabla_x\Phi.$$
+<p>Jacobian 對 child 含 parent-motion 項 &mdash; 即「動 parent 帶動 child」的鏈式法則。實作即 <span class="mono">decode → nudge → encode</span>。</p>
+<h3>命題 3' — 端到端可微近端投影 \(\Pi_\theta\)(核心)<span class="tag">core</span></h3>
+<p>幾何規整(貼牆 flush、朝向、Manhattan、非碰撞)寫成錨定於提案 \(x_0\) 的<strong>近端目標</strong>,投影為 \(K\) 步展開梯度算子:</p>
+$$\Pi_\theta(x_0)=\underset{K\text{ 步展開}}{\arg\min}\;\underbrace{w_a\lVert x-x_0\rVert^2}_{\text{錨定提案}}+w_f E_\text{flush}+w_o E_\text{ortho}+w_c E_\text{col}.$$
+<p>每步可微,故 flow-matching loss 能<em>穿透</em>投影反傳 &mdash; DiT 學會輸出已近 \(\Pi_\theta\) 不動點的佈局(OptNet / implicit-diff 精神,以顯式展開實現、無外部依賴)。得一個自洽的<strong>神經生成器 + 凸式投影</strong>系統。</p>
+<div class="note"><strong>性質(拓撲保持)</strong>:錨定項把投影位移限在微觀尺度(均 19 cm),故 \(\Pi_\theta\) 只修小角度 / 貼牆偏差,不改拓撲:\(\lvert S_\text{rel}(\Pi(x))-S_\text{rel}(x)\rvert\le 0.005\)。少了錨定,純能量下降會漂移、扯散 motif(\(S_\text{rel}\!\to\!0.566\))。</div>
 
-<!-- ABSTRACT -->
-<section id="abstract">
-  <h2 class="sec">Abstract</h2>
-  <h3 class="big serif">Retargeting preserves relational topology, not absolute coordinates.</h3>
-  <p class="lead">Interior design identity lives in spatial relationships and functional groupings (<em>motifs</em>), not in absolute coordinates. We define <strong>reference-guided 3D scene retargeting</strong>: given a user-preferred reference design \(S_\text{ref}\) and a target room boundary \(P_t\) of arbitrary shape, area, and aspect ratio, transplant the layout automatically.</p>
-  <p>The task has an intrinsic tension — preserve the reference's object composition, spatial relations, motif structure, and style, while satisfying the new room's hard geometry (wall-flush, in-bounds, collision-free). Generative sampling in a global frame breaks intent; affine warping tears motifs apart; test-time multi-step optimization is slow; and hard heuristic snapping breaks the manifold and injects secondary collisions. We contribute:</p>
-  <ul class="tight">
-    <li><strong>Topology-preserving hierarchical flow</strong> — a metric reparameterization manifold \(\Phi_\mathcal{G}\) with a proof of motif topology invariance under anisotropic room deformation (Prop. 1), and a Jacobian manifold-pullback for feasibility guidance (Prop. 2).</li>
-    <li><strong>Differentiable proximal projection \(\Pi_\theta\)</strong> — geometric regularization as an anchored proximal operator, realized by \(K\)-step unrolling for single-step inference and gradient back-propagation, removing test-time optimization (Prop. 3′).</li>
-    <li><strong>Budgeted plan-summarization front-end</strong> — under extreme shrink, area-budgeted pairwise pruning and small-asset substitution, decoupling discrete topology adaptation from continuous geometric synthesis.</li>
-  </ul>
-  <p>On 3D-FRONT and a cross-room test set, a <strong>single forward pass + single differentiable projection</strong> reaches the lowest collision rate (1.41%) and highest relational retention (\(S_\text{rel}=0.696\)) in our projection ablation, at a fraction of the latency of multi-step optimization.</p>
-</section>
+<!-- 五、資料 -->
+<h2>五、因果資料與物理守門(Data)</h2>
+<p>無配對 retargeting 資料,故反向製造:取真實 3D-FRONT 場景為 GT \(S_\text{tgt}\),對邊界做參數化形變,再把佈局(每個 Motif 視為剛體)逆映射合成參考 \(S_\text{ref}\)。剛性保證訓練對反映物理因果的設計轉移。</p>
+<figure>
+  <img src="assets/levels.png" alt="參數化房間形變族:reference、uniform、aspect、slanted、corner-cut">
+  <figcaption><strong>圖 2.</strong> 合成訓練對用的參數化形變族 &mdash; 等比、長寬比、斜牆、切角(凹多邊形)。真實場景是 GT,形變邊界上的佈局是合成參考,意圖遷移因此因果成立。</figcaption>
+</figure>
+<h3>5.2 四道物理守門</h3>
+<ul>
+<li><strong>面積比重採樣</strong> &mdash; 限制 \(\rho\in[0.5,2.0]\),超範圍重採。</li>
+<li><strong>出界守門(OOB)</strong> &mdash; 出界比例超標則剔除該形變。</li>
+<li><strong>剛體共享平移</strong> &mdash; 把戳出牆的家具整體往內推(出牆 25.1% → 1.1%)。</li>
+<li><strong>三類碰撞審計</strong> &mdash; 區分真碰撞、可疊放對(餐桌椅、床與床頭櫃)與 Z 軸分離(檯燈 / 地毯),使合成碰撞不劣於真實基線。</li>
+</ul>
+<p>另建真實<strong>跨場景配對</strong>(類別 Jaccard &gt; 0.6、錨點偏航差 &le; 30°,空間代價矩陣 + 匈牙利對齊)作為 OOD 泛化測試 &mdash; 證明模型非只擬合合成變形。</p>
 
-<!-- 1 INTRODUCTION -->
-<section id="intro">
-  <h2 class="sec"><span class="no">1</span> Introduction</h2>
-  <h3 class="big serif">The scene-retargeting dilemma.</h3>
-  <p>3D interior retargeting underpins personalized virtual staging, adaptive game-level generation, and metaverse space reconstruction. Our central premise — the <strong>Design Identity Hypothesis</strong> — is that a design's essence is its <em>relative</em> structure (intra-motif spacing, orientation alignment, wall affinity), not global coordinates. The fundamental conflict: adapt to a brand-new boundary \(P_t\) (flush, non-colliding, in-bounds) while strictly conserving \(S_\text{ref}\)'s intent and motif structure.</p>
+<!-- 六、實驗 -->
+<h2>六、實驗(Experiments)</h2>
+<p>3D-FRONT 臥室 / 客廳,固定測試集(12 跨場景配對 + 4 多尺度)。指標:關係保持 \(S_\text{rel}\) / \(S_\text{motif}\);物理可行 \(R_\text{col}\)、\(R_\text{OOB}\)、貼牆率;以及推論延遲。</p>
 
-  <div class="spine">
-    <div class="step k1"><div class="node">1</div><p class="kicker">Dilemma</p>
-      <h4>Intent is topological, but flows integrate in global coordinates.</h4>
-      <p>Under non-uniform scaling the metric distance between motif members scales with the room, so a dining set is <strong>pulled apart</strong>.</p></div>
-    <div class="step k2"><div class="node">2</div><p class="kicker">Why prior fixes fail</p>
-      <h4>Both standard remedies damage the layout.</h4>
-      <p><strong>Test-time energy optimization</strong> (LEGO-Net-style Adam / MCMC) costs hundreds of ms and stalls in local minima; <strong>hard heuristic snapping</strong> aligns walls but breaks topology (\(S_\text{rel}\!\downarrow\)) and rebounds collisions (\(R_\text{col}\!\uparrow\)).</p></div>
-    <div class="step k3"><div class="node">3</div><p class="kicker">Insight &amp; method</p>
-      <h4>Hierarchical topology-preserving flow + differentiable anchored projection.</h4>
-      <p><strong>Representation</strong> (Prop. 1) · <strong>pullback guidance</strong> (Prop. 2) · <strong>differentiable proximal layer</strong> \(\Pi_\theta\) (Prop. 3′).</p></div>
-    <div class="step k4"><div class="node">4</div><p class="kicker">Takeaway</p>
-      <h4>Single network + single differentiable projection.</h4>
-      <p>Lowest collision (1.41%) and highest topology retention (\(S_\text{rel}=0.70\)) with no test-time optimization.</p></div>
-  </div>
+<h3>6.2 投影消融(表 1)</h3>
+<p class="lead">同一 raw flow 輸出,四種幾何約束方式。延遲為投影相對於共用取樣的<em>額外</em>成本(單張 L40,實測)。</p>
+<div class="tw"><table>
+<thead><tr><th>變體</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>貼牆 ↑</th><th>投影延遲 ↓</th></tr></thead>
+<tbody>
+<tr><td>Raw DiT(無投影)</td><td>0.700</td><td>1.79%</td><td>85%</td><td>—</td></tr>
+<tr><td>+ 測試期 25 步 polish</td><td class="bad">0.652</td><td>1.89%</td><td>92%</td><td class="bad">+289 ms</td></tr>
+<tr><td>+ 硬吸附 snap</td><td class="bad">0.652</td><td class="bad">2.59%</td><td>92%</td><td>+0.8 ms</td></tr>
+<tr class="ours"><td>+ 可微 \(\Pi_\theta\)(Ours)</td><td class="win">0.696</td><td class="win">1.41%</td><td>84%</td><td>+81 ms</td></tr>
+</tbody></table></div>
+<p><strong>硬 snap</strong> 貼牆漂亮卻把碰撞反彈到 2.59% 且拓撲下滑;<strong>polish</strong> 投影成本貴 3.6× 卻在 \(S_\text{rel}\) / \(R_\text{col}\) 都<em>輸</em>給我們;<strong>Ours</strong> 守住 raw 的拓撲(0.696 ≈ 0.700)且碰撞最低,代價幾乎無感。</p>
+<div class="note"><strong>誠實範圍</strong>:品質指標在投影消融集(4 refs × 3 尺寸)。base ODE 取樣 ~565 ms/佈局(純 DiT,k=1,50 步)/ ~667 ms(帶 guidance),每列共用;表僅隔離投影的邊際成本。這是<em>投影選擇</em>的消融,非與他人系統對比(見 6.6)。</div>
 
-  <h4 class="sub">1.3 Key technical innovations</h4>
-  <ul class="tight">
-    <li><strong>Metric-invariant reparameterization</strong> — parent-relative metric coordinates decouple child scale from room geometry (Prop. 1).</li>
-    <li><strong>Manifold-pullback guidance</strong> — a cross-frame Jacobian so global physical constraints propagate to hierarchical children (Prop. 2).</li>
-    <li><strong>End-to-end differentiable proximal projection</strong> — an unrolled operator replacing post-processing, yielding a single-network single-step pipeline (Prop. 3′).</li>
-    <li><strong>Causal inverse-deformation corpus</strong> — a synthesis pipeline with four physical gates guaranteeing causally valid transfer pairs.</li>
-  </ul>
-</section>
+<h3>6.3 Baseline 對比(表 2)</h3>
+<p>ATISS / LEGO-Net 解的是<em>不同</em>任務(無條件補全 / 同房去噪),本環境未設置,故對比我們方法要取代的 baseline:<strong>仿射 / 全域 warp</strong> &mdash; 公平的 reference-guided 搬移(MRR 仿射映射進 \(P_t\),無流)。同一 seeds / sizes 實測。</p>
+<div class="tw"><table>
+<thead><tr><th>方法</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{rel}^\text{kept}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>貼牆 ↑</th><th>可增減件</th></tr></thead>
+<tbody>
+<tr><td>仿射 / 全域 warp</td><td>0.932</td><td>0.932</td><td class="bad">4.60%</td><td class="bad">67%</td><td class="bad">✗</td></tr>
+<tr class="ours"><td>Ours:flow + 可微 \(\Pi_\theta\)</td><td>0.696</td><td class="win">0.908</td><td class="win">1.40%</td><td class="win">84%</td><td class="win">✓</td></tr>
+</tbody></table></div>
+<p>仿射<em>trivially</em> 拉滿關係保持(它是線性映射,\(S_\text{rel}=0.93\))但<strong>物理不可行</strong>(碰撞 4.6%、貼牆 67%)且不能改變物件數。在存活物件上 Ours 追平它(\(S_\text{rel}^\text{kept}=0.91\) vs 0.93),同時碰撞少 <strong>3.3×</strong>、貼牆多 <strong>17 個百分點</strong>,並能減件適配。raw \(S_\text{rel}\) 的差(0.70 vs 0.93)幾乎全來自 Ours 在 0.75× <em>減件</em> &mdash; 被丟端點在全關係計 0 &mdash; 而非拓撲丟失,\(S_\text{rel}^\text{kept}\) 已證。仿射的 1 ms 是「不做任何幾何處理」的代價;Ours 的延遲分解見表 1。</p>
 
-<!-- 2 RELATED -->
-<section id="related">
-  <h2 class="sec"><span class="no">2</span> Related Work</h2>
-  <h4 class="sub">2.1 Indoor scene synthesis &amp; layout generation</h4>
-  <p>Rule/energy-based synthesis (PlanIT, Make-it-Home); deep generative layout models (autoregressive ATISS; scene diffusion DiffuScene / SceneFormer); layout editing and conditional generation (LayoutDiffusion, LEGO-Net). These sample from a prior or edit in place; none binds a <em>specific reference</em>'s composition and intent to a new boundary.</p>
-  <h4 class="sub">2.2 Continuous normalizing flows &amp; flow matching</h4>
-  <p>Rectified Flow and conditional flow matching (CFM); flow matching on geometric and constrained manifolds — the basis for our hierarchical metric-manifold formulation.</p>
-  <h4 class="sub">2.3 Constrained generation &amp; differentiable optimization</h4>
-  <p>Implicit differentiable optimization layers (OptNet) for physical constraints; hybrids of neural generators with convex / proximal operators — the lineage of our differentiable projection \(\Pi_\theta\).</p>
-</section>
+<h3>6.4 定性結果</h3>
+<figure>
+  <img src="assets/three_sizes_r2m2full.png" alt="同一參考在 0.75x / 1.0x / 1.35x 的遷移">
+  <figcaption><strong>圖 3.</strong> 同一參考(L 型、22 m²、14 件)跨尺度遷移:<strong>0.75×</strong> 減件以容納;<strong>1.0×</strong> 重構(\(S_\text{rel}=0.97\));<strong>1.35×</strong> 床 / 沙發與餐桌 Motif 不散架(\(S_\text{rel}=0.91\)) &mdash; 命題 1 度量-相對編碼之效。每格印有指標。</figcaption>
+</figure>
+<figure>
+  <img src="assets/shipped_living_cross.png" alt="十字形非凸客廳的遷移">
+  <figcaption><strong>圖 4.</strong> 非凸(十字形)房間:貼牆件沿真實邊界貼齊並保持正交,自由件維持 Motif 關係 &mdash; 牆 token cross-attention 與 \(\Pi_\theta\) 在凹幾何上運作。</figcaption>
+</figure>
+<figure>
+  <img src="assets/micro_compare.png" alt="投影的微觀位移向量">
+  <figcaption><strong>圖 5.</strong> \(\Pi_\theta\) 微觀位移分析:灰虛線 = raw flow、實色 = 投影後、紅箭頭 = 每物件位移(cm)。箭頭<em>短</em>且指向最近牆(flush)或桌邊(slot),物件不互換 / 不重排 &mdash; 直觀證明投影是拓撲保持的對齊(均 19 cm),非重生成。</figcaption>
+</figure>
 
-<!-- 3 FORMULATION -->
-<section id="formulation">
-  <h2 class="sec"><span class="no">3</span> Problem Formulation</h2>
-  <h3 class="big serif">A hierarchical metric manifold over an intent graph.</h3>
-  <ul class="tight">
-    <li><strong>Reference scene</strong> \(S_\text{ref}=\{(c_i,s_i,x_i^\text{ref},\theta_i^\text{ref})\}_{i=1}^N\): category, 3-D size, center, yaw.</li>
-    <li><strong>Target boundary</strong> \(P_t\in\mathbb{R}^{32\times6}\): 32 boundary samples with coordinates, height features, and inward normals \((n_u,n_v)\).</li>
-    <li><strong>Intent graph</strong> \(\mathcal{G}=(\mathcal{V},\mathcal{E},\alpha)\): objects as nodes; edges carry relation type and elasticity \(\alpha_{ij}\in[0,1]\); a motif hierarchy induces a parent map \(\pi:\text{child}\mapsto\text{head}\).</li>
-    <li><strong>Wall affinity</strong> \(a_i\in[0,1]\): how strongly object \(i\) hugged a wall in the reference.</li>
-  </ul>
-  <p>Each state is \(x_i=(u_i,v_i,\cos\theta_i,\sin\theta_i)\in\mathbb{R}^4\), normalized to the room's minimum-rotated-rectangle frame. We use <strong>Rectified Flow with an informative prior</strong>: the Gaussian start is replaced by the reference layout affinely projected into \(P_t\) plus light noise, so the model rectifies rather than guessing globally:</p>
-  $$x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon,\qquad
-  \mathcal{L}_\text{FM}=\mathbb{E}_{\tau}\big\|v_\theta(x_\tau,\tau,\mathcal{G},P_t)-(x_1-x_0)\big\|^2 .$$
-</section>
+<h3>6.5 消融研究</h3>
+<ul>
+<li><strong>層級相對空間</strong> &mdash; 全域座標流 vs parent-relative 流,1.35× 下 Motif 保持 25% → 42%。</li>
+<li><strong>投影層</strong> &mdash; 無 / 硬 snap / 多步 polish / 可微 \(\Pi_\theta\):表 1。</li>
+<li><strong>Informative prior</strong> &mdash; 從參考投影 \(x_0\) 出發對降低全域漂移與收斂具決定性。</li>
+<li><strong>Stage-1 剪枝</strong> &mdash; 對稱結構化剪枝改善極端縮小下的動線連通度。</li>
+</ul>
 
-<!-- 4 METHOD -->
-<section id="method">
-  <h2 class="sec"><span class="no">4</span> Methodology</h2>
-  <h3 class="big serif">Two stages: discrete topology adaptation, then constrained continuous synthesis.</h3>
+<h3>6.6 尚未執行的評測</h3>
+<div class="note warn"><strong>誠實聲明</strong>:以下兩項<em>未</em>完成,本頁不當作結果宣稱:
+<ul style="margin:8px 0 0">
+<li><strong>學習式模型正面對比</strong>(ATISS、LEGO-Net 於<em>我們</em>的指標) &mdash; 不同任務、本環境未設置(無 code / weights / 對外網路),公平移植為 future work。它們對照的<em>仿射 warp</em> baseline <em>已</em>跑(6.3)。</li>
+<li><strong>User study</strong> &mdash; 兩問雙盲協定(意圖保真 / 自然度 / 功能合規),量測工具已就緒,結果待受試者招募。</li>
+</ul></div>
 
-  <div class="arch">
-    <div class="abox io">
-      <div class="chip">Reference \(S_\text{ref}\)</div>
-      <div class="chip">Target boundary \(P_t\)</div>
-    </div>
-    <div class="arrow">↓</div>
-    <div class="abox stage1">
-      <p class="h">Stage 1 · Front-end (discrete)</p>
-      <p class="t">Budgeted Plan-Summarization</p>
-      <ul><li>Area-budget &amp; aspect-ratio pruning</li><li>Symmetric structured pruning</li><li>Anchor-protected small-asset swap</li></ul>
-    </div>
-    <div class="arrow">↓ <b>pruned subset \(N'\)</b></div>
-    <div class="abox stage2">
-      <p class="h">Stage 2 · Back-end (continuous — the core)</p>
-      <p class="t">Topology-Preserving Constrained Hierarchical Flow</p>
-      <div class="flowrow">
-        <div class="mini"><span class="k">prior</span> Informative prior \(x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon\)</div>
-        <div class="mini"><span class="k">DiT</span> Heterogeneous transformer · Type-ID · WallCrossAttention</div>
-        <div class="mini"><span class="k">Prop 2</span> Manifold-pullback Jacobian guidance</div>
-      </div>
-      <div class="abox core">
-        <p class="t" style="margin:0 0 4px">Differentiable Proximal Layer \(\Pi_\theta\) &nbsp;— Prop. 3′</p>
-        <ul style="padding-left:17px;margin:0;font-size:13.5px;color:var(--mut)"><li>anchor-to-proposal term</li><li>unrolled flush / ortho / collision ops</li></ul>
-      </div>
-    </div>
-    <div class="arrow">↓</div>
-    <div class="abox io"><div class="chip" style="border-style:solid;border-color:var(--acc);color:var(--acc-ink)">Retargeted scene \(S_\text{tgt}\)</div></div>
-  </div>
-  <figcaption><strong>Figure 1.</strong> System overview. Stage 1 makes the discrete "which objects survive" decision on the intent graph; Stage 2 — the paper's core — is the topology-preserving hierarchical flow with pullback guidance and the differentiable projection \(\Pi_\theta\). Online, Stage 2 is a single forward pass + a single projection.</figcaption>
+<!-- 七、討論 -->
+<h2>七、討論與限制(Discussion)</h2>
+<ul>
+<li><strong>垂直維度</strong> &mdash; 目前流形建模 2D 平面 + 偏航,垂直層疊與複式空間為 future work。</li>
+<li><strong>統一離散-連續流</strong> &mdash; 把 Stage-1 剪枝以 Dirichlet / categorical 流匹配融入流(存在+位姿聯合過程)理論可行;我們的原型能學會剪枝但品質尚不及分階段基線 &mdash; 開放方向。</li>
+</ul>
+<h3>防禦式定位</h3>
+<div class="note"><strong>離散剪枝怎麼交代?</strong> &nbsp;&mdash;&nbsp; 不寫「用 while-loop 砍椅子」,而定義為<strong>兩階段架構</strong>:(1) 圖論式<em>預算結構化剪枝</em>(離散決策);(2) <em>連續約束幾何合成</em>(流形流)。設計上解耦,貢獻在 Stage 2。</div>
+<div class="note"><strong>合成資料怎麼交代?</strong> &nbsp;&mdash;&nbsp; 不寫「寫了變形腳本」,而是<strong>帶嚴格守門的因果反向變形</strong> &mdash; 保持物理因果與 Motif 剛性的逆邊界映射,四道物理守門,並以真實跨場景配對做 OOD 測試,證明非過擬合合成。</div>
 
-  <h4 class="sub">4.2 Stage 1 — Discrete semantic topology adaptation</h4>
-  <p>Area budget \(\text{Area}_\text{budget}=\operatorname{clip}(\text{density}+\text{slack})\cdot\operatorname{Area}(P_t)\). Objects whose short side exceeds the room's inscribed-circle diameter are removed; semantic anchors (sofa, bed) are protected and instead trigger same-style small-asset substitution. When over budget, <em>symmetric</em> structured pruning removes secondary items in pairs (e.g. dining chairs) before importance-ordered reduction — keeping the layout semantically legal.</p>
-
-  <h4 class="sub">4.3 Stage 2 — Topology-preserving hierarchical flow</h4>
-  <p>The map \(\Phi_\mathcal{G}:x\mapsto z\) keeps heads absolute and encodes children in parent-local metric coordinates (\(\lambda=\text{REL\_SCALE}=3\) m):</p>
-  $$z_h=x_h,\qquad z_c=\tfrac{1}{\lambda}R(-\theta_{\pi(c)})\big(x_c-x_{\pi(c)}\big),\quad \Delta\theta_c=\theta_c-\theta_{\pi(c)}.$$
-
-  <div class="prop">
-    <div class="tag"><span class="n">Prop 1</span> Metric invariance under deformation</div>
-    <p>Under anisotropic scaling \(A=\mathrm{diag}(s_x,s_y)\), the child metric offset is absorbed by its parent's absolute coordinate — the relative code is scale-free:</p>
-    $$z_c(A\!\cdot\!P_t)=z_c(P_t)\;\Rightarrow\;\lVert x_c-x_{\pi(c)}\rVert\ \text{preserved (up to parent pose)}.$$
-    <p>Motifs do not disperse when the room stretches. <strong>Evidence:</strong> a 0.6 m offset yields \(z=0.2\) in both a 3 m and 4.5 m room; 1.35× motif retention 25→42%; raw \(S_\text{rel}=0.98\) at 1.0×.</p>
-  </div>
-
-  <p>The backbone is a <strong>heterogeneous transformer DiT</strong>: Type-ID node tags separate global anchors from relative children; a dense pairwise bias injects relative displacement/angle; <strong>WallCrossAttention</strong> treats the 32 boundary samples as wall tokens (children mask outer-wall attention so \(P_t\) never yanks a chair off its table); and a child loss weight \(\lambda_\text{child}=10\approx1/\sigma^2\) compensates local-vs-global scale gradients.</p>
-
-  <div class="prop">
-    <div class="tag"><span class="n">Prop 2</span> Jacobian pullback for absolute-space energy</div>
-    <p>Feasibility energy \(\Phi=w_b E_\text{bound}+w_c E_\text{col}+w_{cl} E_\text{clear}+w_{wp} E_\text{wall}\) lives in absolute space; the flow lives on the reparameterized manifold, so guidance is pulled back:</p>
-    $$z\leftarrow z+d\tau\,v_\theta-d\tau\,\mathrm{ramp}(\tau)\,\nabla_z\Phi\big(\Psi_\mathcal{G}(\hat z_1)\big),\qquad \nabla_z\Phi=J_{\Psi_\mathcal{G}}^{\top}\,\nabla_x\Phi.$$
-    <p>The Jacobian carries a parent-motion term for children — the explicit "move the parent, carry the children" chain rule. Implemented as <span class="mono">decode → nudge → encode</span>.</p>
-  </div>
-
-  <div class="prop hi">
-    <div class="tag"><span class="n">Prop 3′</span> End-to-end differentiable proximal projection \(\Pi_\theta\) — the core</div>
-    <p>Geometric regularities become a smooth <strong>proximal objective</strong> anchored to the flow's proposal \(x_0\); the projection is a \(K\)-step unrolled gradient operator:</p>
-    $$\Pi_\theta(x_0)=\underset{K\text{-step unroll}}{\arg\min}\;\underbrace{w_a\lVert x-x_0\rVert^2}_{\text{anchor to proposal}}+w_f E_\text{flush}+w_o E_\text{ortho}+w_c E_\text{col}.$$
-    <p>Every step is differentiable, so the flow-matching loss back-propagates <em>through</em> the projection — the DiT learns to emit layouts already near \(\Pi_\theta\)'s fixed point (OptNet / implicit-differentiation spirit, realized by explicit unrolling, dependency-free). A self-contained <strong>neural generator + convex-style projection</strong>.</p>
-    <p class="caveat"><strong>Property (topology retention).</strong> The anchor term bounds the projection's displacement to the microscopic regime (mean 19 cm), so \(\Pi_\theta\) only corrects small angle/flush deviations and does not change topology: \(\lvert S_\text{rel}(\Pi(x))-S_\text{rel}(x)\rvert\le 0.005\). Without the anchor, pure energy descent drifts and tears motifs (\(S_\text{rel}\!\to\!0.566\)).</p>
-  </div>
-</section>
-
-<!-- 5 DATA -->
-<section id="data">
-  <h2 class="sec"><span class="no">5</span> Causal Data &amp; Physical Gates</h2>
-  <h3 class="big serif">Supervision by causal inverse-deformation, not forward guessing.</h3>
-  <p>With no paired retargeting data, we run the problem backwards: take a real 3D-FRONT scene as ground truth \(S_\text{tgt}\), deform its boundary through a parametric family, and inverse-map the layout (moving each motif as a rigid body) to synthesize the reference \(S_\text{ref}\). Rigidity guarantees the pair reflects a physically causal design transition.</p>
-
-  <figure>
-    <img src="assets/levels.png" alt="Parametric room deformation family: reference, uniform, aspect, slanted, corner-cut">
-    <figcaption><strong>Figure 2.</strong> The parametric deformation family used to synthesize training pairs — uniform scale, aspect-ratio change, slanted wall, and corner cut (concave). The real scene is the target/GT; the deformed-boundary layout is the synthetic reference, so intent transfer is causal by construction.</figcaption>
-  </figure>
-
-  <h4 class="sub">5.2 Four physical quality gates</h4>
-  <ul class="tight">
-    <li><strong>Area-ratio resampling</strong> — restrict \(\rho\in[0.5,2.0]\); out-of-range pairs are rejected.</li>
-    <li><strong>OOB gate</strong> — reject deforms whose out-of-bounds fraction exceeds threshold.</li>
-    <li><strong>Rigid shared-translation</strong> — push footprints poking through walls back inward (overhang 25.1% → 1.1%).</li>
-    <li><strong>Three-way collision audit</strong> — separate true collisions, nestable pairs (chair-under-table, bed-with-nightstand), and z-separated objects (lamp/rug), so synthetic collision never exceeds the real source baseline.</li>
-  </ul>
-  <p>A real <strong>cross-pairing</strong> set (human designs matched across rooms by category Jaccard &gt; 0.6 and anchor-yaw &le; 30°, aligned by a spatial-cost Hungarian assignment) serves as an out-of-distribution generalization test — evidence the model is not merely overfitting the synthetic deformations.</p>
-</section>
-
-<!-- 6 EXPERIMENTS -->
-<section id="experiments">
-  <h2 class="sec"><span class="no">6</span> Experiments</h2>
-  <h3 class="big serif">Single forward pass + single differentiable projection.</h3>
-  <p>3D-FRONT bedrooms and living rooms, with a frozen held-out test set (12 cross-scene pairs + 4 multi-scale). Metrics: relational retention \(S_\text{rel}\) / \(S_\text{motif}\); physical feasibility \(R_\text{col}\), \(R_\text{OOB}\), wall-snap %; and inference latency.</p>
-
-  <h4 class="sub">6.2 Projection ablation (Table 1)</h4>
-  <p>Same raw flow outputs, four ways to enforce geometry. Latency is the projection's <em>added</em> cost over the shared sampling (single L40, measured).</p>
-  <div class="tw"><table>
-    <thead><tr><th>Variant</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Proj. latency ↓</th></tr></thead>
-    <tbody>
-      <tr><td>Raw DiT (no projection)</td><td>0.700</td><td>1.79%</td><td>85%</td><td>—</td></tr>
-      <tr><td>+ Test-time 25-step polish</td><td class="bad">0.652</td><td>1.89%</td><td>92%</td><td class="bad">+289 ms</td></tr>
-      <tr><td>+ Hard heuristic snap</td><td class="bad">0.652</td><td class="bad">2.59%</td><td>92%</td><td>+0.8 ms</td></tr>
-      <tr class="ours"><td>+ Differentiable \(\Pi_\theta\) (Ours)</td><td class="win">0.696</td><td class="win">1.41%</td><td>84%</td><td>+81 ms</td></tr>
-    </tbody>
-  </table></div>
-  <p><strong>Hard snap</strong> buys crisp walls but rebounds collisions to 2.59% and drops topology; <strong>polish</strong> is 3.6× more expensive on projection and still lands <em>below</em> ours on \(S_\text{rel}\) and \(R_\text{col}\); <strong>ours</strong> holds the raw flow's topology (0.696 ≈ 0.700) at the lowest collision, for a near-imperceptible cost.</p>
-  <div class="note"><strong>Honest scope.</strong> Quality metrics are on the projection-ablation set (4 references × 3 sizes). Base ODE sampling is ~565 ms/layout (pure DiT, k=1, 50 steps) or ~667 ms with in-sampling guidance — shared by every row; the table isolates the projection's marginal cost. This is an ablation of <em>projection choices</em>, not a head-to-head against prior systems (see §6.5).</div>
-
-  <h4 class="sub">6.3 Baseline comparison</h4>
-  <p>ATISS and LEGO-Net solve <em>different</em> tasks (unconditional completion; same-room denoising) and are not set up in our environment, so we compare against the baseline our method is built to replace: the <strong>affine / global warp</strong> — a fair, reference-guided transplant (MRR-affine map of the reference into \(P_t\), no flow). Measured on the same seeds/sizes.</p>
-  <div class="tw"><table>
-    <thead><tr><th>Method</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{rel}^\text{kept}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Adapts count</th></tr></thead>
-    <tbody>
-      <tr><td>Affine / global warp</td><td>0.932</td><td>0.932</td><td class="bad">4.60%</td><td class="bad">67%</td><td class="bad">✗</td></tr>
-      <tr class="ours"><td>Ours: flow + diff \(\Pi_\theta\)</td><td>0.696</td><td class="win">0.908</td><td class="win">1.40%</td><td class="win">84%</td><td class="win">✓</td></tr>
-    </tbody>
-  </table></div>
-  <p>The affine map <em>trivially</em> maximizes relation retention — it is linear, so \(S_\text{rel}=0.93\) — but is <strong>physically infeasible</strong> (4.6% collisions, 67% wall-snap) and cannot change object count. Among surviving objects Ours matches it (\(S_\text{rel}^\text{kept}=0.91\) vs 0.93) while cutting collisions <strong>3.3×</strong>, adding <strong>+17 pts</strong> wall-snap, and pruning to fit. The raw-\(S_\text{rel}\) gap (0.70 vs 0.93) is almost entirely Ours <em>pruning</em> at 0.75× — where dropped endpoints score zero over all reference relations — not lost topology, as \(S_\text{rel}^\text{kept}\) shows. Affine's 1 ms is the cost of doing nothing geometry-aware; Ours' latency breakdown is in Table 1.</p>
-
-  <h4 class="sub">6.4 Qualitative results</h4>
-  <figure>
-    <img src="assets/three_sizes_r2m2full.png" alt="One reference living room retargeted to 0.75x, 1.0x, 1.35x">
-    <figcaption><strong>Figure 3.</strong> One reference (L-shaped, 22 m², 14 objects) retargeted across scales. At <strong>0.75×</strong> the dining set is pruned to fit; at <strong>1.0×</strong> the layout is reconstructed (\(S_\text{rel}=0.97\)); at <strong>1.35×</strong> the bed/sofa and dining motifs stay tight rather than dispersing (\(S_\text{rel}=0.91\)) — the effect of Prop. 1's metric-relative encoding. Metrics are printed per panel.</figcaption>
-  </figure>
-  <figure>
-    <img src="assets/shipped_living_cross.png" alt="Retargeting into a non-convex cross-shaped living room">
-    <figcaption><strong>Figure 4.</strong> A non-convex (cross-shaped) room: wall-affinity objects seat flush along the true boundary and stay orthogonal, while free objects keep their motif relations — the wall-token cross-attention and \(\Pi_\theta\) at work on concave geometry.</figcaption>
-  </figure>
-  <figure>
-    <img src="assets/micro_compare.png" alt="Micro-displacement vectors of the projection">
-    <figcaption><strong>Figure 5.</strong> Micro-displacement analysis of \(\Pi_\theta\): grey dashed = raw flow, solid = projected, red arrows = per-object displacement (cm). Arrows are <em>short</em> and point at the nearest wall (flush) or table edge (slot) — objects never swap or reorder. This is the visual proof that the projection is a topology-preserving alignment (mean 19 cm), not a re-synthesis.</figcaption>
-  </figure>
-
-  <h4 class="sub">6.5 Ablation studies</h4>
-  <ul class="tight">
-    <li><strong>Hierarchical relative space</strong> — global-coordinate flow vs parent-relative flow at 1.35×: motif retention 25% → 42%.</li>
-    <li><strong>Projection layer</strong> — none / hard snap / multi-step polish / differentiable \(\Pi_\theta\): Table 1.</li>
-    <li><strong>Informative prior</strong> — starting from the reference projection \(x_0\) is decisive for low global drift and convergence.</li>
-    <li><strong>Stage-1 pruning</strong> — symmetric structured pruning improves walkable connectivity under extreme shrink.</li>
-  </ul>
-
-  <h4 class="sub">6.6 Planned &amp; not-yet-run evaluations</h4>
-  <div class="warnnote"><strong>Stated honestly.</strong> Two evaluations named in this outline are <em>not</em> yet complete and are not claimed as results here:
-    <ul class="tight" style="margin-top:8px">
-      <li><strong>Learned-model head-to-head</strong> (ATISS, LEGO-Net on <em>our</em> metrics) — these solve different tasks and are not set up here (no code/weights/internet in the environment); a fair port is future work. The <em>affine/global-warp</em> baseline they would be measured against <em>is</em> run (§6.3).</li>
-      <li><strong>User study</strong> — a two-question double-blind protocol (intent fidelity / realism / functionality) with designers and end users; the study instrument is live, results pend participant recruitment.</li>
-    </ul>
-  </div>
-</section>
-
-<!-- 7 DISCUSSION -->
-<section id="discussion">
-  <h2 class="sec"><span class="no">7</span> Discussion &amp; Limitations</h2>
-  <ul class="tight">
-    <li><strong>Vertical dimension.</strong> The manifold currently models 2-D placement + yaw; extending to vertical stacking and multi-level spaces is future work.</li>
-    <li><strong>Unified discrete–continuous flow.</strong> Folding Stage-1 pruning into the flow via Dirichlet / categorical flow matching (a joint existence+pose process) is theoretically appealing; our prototype learns to prune but does not yet match the staged baseline's quality — an open direction.</li>
-  </ul>
-  <h4 class="sub">Positioning — framing two components honestly</h4>
-  <div class="frame">
-    <p class="q">Discrete pruning under extreme scale disparity</p>
-    <p class="ng"><span class="badge">avoid</span>“a script deletes chairs with while-loops when the room is small.”</p>
-    <p class="ok"><span class="badge g">frame</span>A <strong>two-stage architecture</strong>: (1) graph-based <em>budgeted structural pruning</em> — a discrete decision; (2) <em>continuous constrained geometric synthesis</em> — the manifold flow. Decoupled by design; the contribution is Stage 2.</p>
-  </div>
-  <div class="frame">
-    <p class="q">Training-pair synthesis without paired data</p>
-    <p class="ng"><span class="badge">avoid</span>“we wrote deformation algorithms to make synthetic pairs.”</p>
-    <p class="ok"><span class="badge g">frame</span><strong>Causal inverse-deformation with strict quality gates</strong> — an inverse-boundary mapping preserving physical causality and motif rigidity, filtered by four physical gates, with a real cross-pairing OOD test showing the model is not overfit to the synthesis.</p>
-  </div>
-</section>
-
-<section id="bibtex">
-  <h2 class="sec">Cite</h2>
-  <pre class="bib"><span class="k">@article</span>{reroom,
+<!-- 引用 -->
+<h2>引用(Cite)</h2>
+<pre style="background:var(--panel);border:1px solid var(--line);border-radius:4px;padding:14px 16px;overflow-x:auto;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:13px;line-height:1.7">@article{reroom,
   title   = {ReRoom: Reference-Guided 3D Scene Retargeting via Topology-Preserving
              Hierarchical Flow and Differentiable Geometric Projection},
   author  = {ReRoom Project},
@@ -462,15 +263,12 @@
   year    = {2026},
   url     = {https://gino6178.github.io/project4/paper.html}
 }</pre>
-  <p class="caveat">Draft in preparation — not peer-reviewed and not associated with any accepted venue. Numbers are from this repository's measurements; unrun evaluations are marked in §6.5.</p>
-</section>
+<p class="lead">草稿階段 &mdash; 未經同行評審、未關聯任何已接收 venue。數字均來自本 repo 實測;未跑項見 6.6。</p>
 
-</main>
+<footer>
+論文敘事頁 · <a href="index.html">Shipped 方法</a> · <a href="experiments.html">實驗</a> · <a href="https://github.com/gino6178/project4">Repo</a>
+</footer>
 
-<footer><div class="wrap"><div class="row">
-  <span>ReRoom · Topology-preserving metric flow + differentiable projection</span>
-  <span><a href="index.html">Method</a> · <a href="experiments.html">Experiments</a> · <a href="https://github.com/gino6178/project4">Code</a></span>
-</div></div></footer>
-
+</div>
 </body>
 </html>
