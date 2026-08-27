@@ -61,6 +61,7 @@
 
 <h1>ReRoom · Shipped 做法</h1>
 <p class="sub">參考導向的 3D 室內場景 retargeting &mdash; 從資料生產到最終輸出的完整做法</p>
+<p style="margin:-6px 0 20px"><a href="paper.html" style="display:inline-flex;align-items:center;gap:8px;font-size:14.5px;font-weight:600;padding:8px 14px;border:1px solid var(--acc2);border-radius:8px;color:var(--acc2);text-decoration:none">📄 CVPR/SIGGRAPH 論文敘事頁 &mdash; Topology-Preserving Flow + Differentiable Projection →</a></p>
 
 <p><strong>問題</strong>:給一份使用者喜歡的房間設計(reference)+ 一個尺寸 / 長寬比 / 形狀可能完全不同的目標房間邊界 <span class="mono">P_t</span>,自動把設計搬過去 &mdash; 保留參考的<strong>物件組成、空間關係、motif 與風格</strong>,同時讓佈局符合新房間的幾何(貼牆、不出界、不碰撞)。核心假設(PDF §4):設計的 identity 在於<strong>關係</strong>而非絕對座標。</p>
 
