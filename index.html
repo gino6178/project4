@@ -434,12 +434,50 @@ $$E_\text{wall-pull}=\lambda_w(\rho)\sum_i a_i\big(d_i^\text{back}\big)^2,\qquad
 </tbody></table></div>
 <p>逐步驗證了設計的每一步:<strong>Module 1</strong> 帶來全域定位(float↓、碰撞↓)但物件歪斜;<strong>Module 2</strong> 牆面 attention 把貼牆對齊救回,1.35× snap 一路推到 64% 超越 baseline;<strong>Step 2</strong>(bfresh)讓 motif 從 flow 源頭不散架 &mdash; 1.35× motif_pass 25→42%、0.75× 50→83%(皆 raw 無 snap),val_loss 最佳。唯一代價 1.35× 貼牆 snap 略退(child 綁緊 parent 後貼牆自由度降低),正好由 Step 1 規整化補上。<strong>shipped = flow_bfresh(Step 2)+ 規整化投影(Step 1)</strong>。</p>
 
+<h3>3. 消融:拓撲是 flow 學的,polish 只做幾何投影</h3>
+<p>核心問題:輸出的品質是<strong>模型本體</strong>學的,還是後處理硬修的?消融方法:同一 flow 提案,量 <em>raw</em>(只有 flow,無 polish 無 snap)vs <em>full</em>(shipped)。4 場景 × 3 尺寸。</p>
+<div class="tw"><table>
+<thead><tr><th>量測</th><th>raw flow</th><th>+ polish/regularity</th><th>解讀</th></tr></thead>
+<tbody>
+<tr><td>S_rel 關係拓撲</td><td>0.743</td><td>0.739</td><td><strong>Δ −0.004 → 拓撲完全是 DiT 學的,polish 不改</strong></td></tr>
+<tr><td>R_col 碰撞率</td><td>2.4%</td><td>1.2%</td><td>raw 已近無碰撞,polish 只收尾</td></tr>
+<tr><td>物件位移 raw→full</td><td colspan="2">均 19.1 cm(中位 14.2)· ≈物件半徑 33%(中位)</td><td>位移幾乎全是貼牆 / 正交對齊</td></tr>
+</tbody></table></div>
+<p><strong>兩個結論</strong>:(1) 關係拓撲與近乎無碰撞的分佈是 <span class="mono">DiT + WallCrossAttention</span> 本體學出來的 &mdash; S_rel 經 polish 幾乎不變(Δ0.4%),raw R_col 僅 2.4%,直接否定「全靠後處理」。(2) polish/regularity 定位為<strong>有界、確定性的幾何投影算子</strong>(eq 37 的 constraint projection):它只做正交對齊與貼牆(平均移 19 cm),<em>不改變拓撲</em> &mdash; 誠實地說,這不是「可忽略的 &lt;5% 微調」,而是一道<em>拓撲保持</em>的 alignment projection。</p>
+
 <figure>
   <img src="assets/reroom2_compare.png" alt="固定測試集 ref | GT | bnd200 | ReRoom 2.0">
   <figcaption>固定測試集 6 案例(參考 | 真實 GT | bnd200 | ReRoom 2.0)。相比只有 Module 1 的物件歪斜,完整 ReRoom 2.0 靠 Module 2 牆面相對邊回到軸對齊,同時保住全域定位優勢。</figcaption>
 </figure>
 
 <p class="note">實作對照:資料 <span class="mono">reroom/generative/xscene.py</span>;模型 <span class="mono">model.py</span>(<span class="mono">to_relative/to_world</span>、<span class="mono">e_type</span> 異質節點、<span class="mono">WallCrossAttention</span>、<span class="mono">geo_bias</span>)+ <span class="mono">train.py</span>(<span class="mono">prior_x0</span>、<span class="mono">parent_relative</span>、<span class="mono">child_loss_weight</span>、<span class="mono">rel_loss</span>);推理 <span class="mono">sample.py</span> + <span class="mono">optimizer.py</span> + <span class="mono">regularity.py</span>。shipped checkpoint <span class="mono">flow_bfresh/flow_best.pt</span>,以 <span class="mono">RetargetConfig(regularity_snap=True)</span> 執行。</p>
+
+
+<h2>七、理論框架:Topology-preserving Hierarchical Flow</h2>
+<p class="lead">把工程做法抽象成理論主軸 &mdash; ReRoom = 一個<strong>層級、幾何條件化的連續流(Hierarchical Geometry-conditioned Continuous Flow)</strong>,其歸納偏置在度量形變下保持拓撲。以下定義 + 三個命題,每個都有本站的數值/實證證據。</p>
+
+<h3>設定</h3>
+<p>令<strong>場景拓撲圖</strong> \(\mathcal{G}=(\mathcal{V},\mathcal{E})\):節點 \(\mathcal{V}\) 為物件,邊 \(\mathcal{E}\) 帶關係型與彈性 \(\alpha_{ij}\);motif 層級誘導一個 parent map \(\pi:\text{child}\mapsto\text{head}\)。每物件狀態在 \(SE(2)\)(位置 + 朝向),正規化到房間 MRR frame。</p>
+<p><strong>層級重參數化</strong> \(\Phi_\mathcal{G}:x\mapsto z\):head 用絕對座標,child 用 <em>parent-local 度量</em>座標:</p>
+$$z_h = x_h\ (\text{絕對}),\qquad z_c = \tfrac{1}{\lambda}\,R(-\theta_{\pi(c)})\big(x_c - x_{\pi(c)}\big),\quad \Delta\theta_c=\theta_c-\theta_{\pi(c)}$$
+<p>其中 \(\lambda=\text{REL\_SCALE}=3\) m。因 parent 皆為 head,\(\Phi_\mathcal{G}\) 單步可逆(\(\Psi_\mathcal{G}=\Phi_\mathcal{G}^{-1}\),round-trip 誤差 \(10^{-7}\))。Flow matching 在 \(z\) 空間進行,並用 informative prior \(z_0=\Phi_\mathcal{G}(\mathcal{T}(S_\text{ref},P_t))+\sigma\epsilon\)。</p>
+
+<h3>命題 1 &mdash; 度量形變下的拓撲不變性</h3>
+<p><em>設目標房受各向異性縮放 \(A=\text{diag}(s_x,s_y)\)(長寬比改變)。在層級(度量-相對)參數化下,motif 內部相對構型不變:</em></p>
+$$z_c(A\!\cdot\!P_t)=z_c(P_t)\ \Rightarrow\ \big\|x_c-x_{\pi(c)}\big\|\ \text{保持(至多至 parent 位姿)}$$
+<p><strong>證明梗概</strong>:\(z_c\) 存<em>度量</em>偏移 / \(\lambda\),與房間尺度無關;形變 \(A\) 只被 parent 的絕對 \(z_h\) 吸收。解碼 \(\Psi_\mathcal{G}\) 在(尺度無關的)度量偏移處重建 child。<strong>對照</strong>:絕對座標流預測的 child normalized 偏移,其度量大小隨房間縮放 → motif 距離<em>不</em>不變(即觀察到的「大房拉散」)。<strong>證據</strong>:0.6 m 偏移在 3 m 與 4.5 m 房都給 \(z=0.2\)(數值驗證);1.35× motif_pass 25→42%、1.0× raw S_rel 0.98(實證)。</p>
+
+<h3>命題 2 &mdash; 能量引導流與 Jacobian 回傳</h3>
+<p>取樣是<strong>能量引導 ODE</strong>:每步用可行性能量 \(\Phi\) 在預測終點 \(\hat z_1\) 的 score 修正速度。因 \(\Phi\)(牆、碰撞、邊界)定義在<em>絕對</em>座標、而流在重參數化流形上,guidance 梯度須經 pullback:</p>
+$$z\leftarrow z+d\tau\,v_\theta-d\tau\,\text{ramp}(\tau)\,\nabla_z\Phi(\Psi_\mathcal{G}(\hat z_1)),\qquad \nabla_z\Phi=J_{\Psi_\mathcal{G}}^{\top}\,\nabla_x\Phi$$
+<p>Jacobian \(J_{\Psi_\mathcal{G}}=\partial x/\partial z\):head \(=I\);child \(\partial x_c/\partial z_c=\lambda R(\theta_{\pi})\),且 \(\partial x_c/\partial z_{\pi}\) 含 parent-motion 項 &mdash; 即「動 parent 帶動 child」的鏈式法則顯式化。實作即 <span class="mono">decode → nudge → encode</span>,正是此 pullback。</p>
+
+<h3>命題 3 &mdash; 拓撲保持的投影算子</h3>
+<p><em>輸出 \(x^\star=\Pi(\Psi_\mathcal{G}(z_1))\),\(\Pi\) 為有界幾何投影(能量下降 + 規整化 snap)。\(\Pi\) 保持關係拓撲:</em></p>
+$$\big|S_\text{rel}(\Pi(x))-S_\text{rel}(x)\big|\le 0.005\quad(\text{實測 }\Delta=-0.004)$$
+<p>同時 \(\Pi\) 把碰撞 \(2.4\%\to1.2\%\)、施加 Manhattan / 貼牆對齊(平均移 19 cm)。<strong>結論</strong>:生成模型擁有拓撲與近可行分佈;\(\Pi\) 只貢獻一個<em>拓撲中性</em>的度量對齊 &mdash; 因此在論文中 \(\Pi\)(optimizer)可精簡為 <em>Implementation Detail</em>,而非結構來源。</p>
+
+<p class="note"><strong>定位</strong>:三個命題把 ReRoom 寫成一個層級、幾何條件化的連續流:其歸納偏置(度量-相對層級 + 牆 token cross-attention + informative prior)在度量形變下保持拓撲,optimizer 降格為有界投影。資料生產與優化器 → Implementation Details;<strong>Topology-preserving Continuous Flow + Geometry-conditioned Modeling → 理論主軸</strong>。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
