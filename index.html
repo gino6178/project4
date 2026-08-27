@@ -398,9 +398,21 @@ $$E_\text{wall-pull}=\lambda_w(\rho)\sum_i a_i\big(d_i^\text{back}\big)^2,\qquad
 
 <h2>六、結果</h2>
 
+<p>三份不同的 reference,各自放入 0.75× / 1.0× / 1.35× 房間 &mdash; shipped <strong>flow_bfresh + 規整化投影</strong>。每張左上為 reference,其餘三格為三種尺寸輸出。</p>
+
 <figure>
-  <img src="assets/three_sizes_r2m2full.png" alt="Shipped 三尺寸輸出">
-  <figcaption>同一份 22 m² L 形客廳 reference(左上),放入 0.75× / 1.0× / 1.35× 房間 &mdash; shipped <strong>flow_bfresh + 規整化投影</strong>。1.0× 幾乎完美重現 reference、4 椅平行桌邊環繞、各件正交貼牆;1.35× 大房餐桌+椅整組不散架、零碰撞。</figcaption>
+  <img src="assets/shipped_living_L.png" alt="Shipped 輸出 — L 形客廳">
+  <figcaption><strong>客廳 A · L 形 22 m²</strong>(dining set + sofa/tv/coffee)。1.0× 幾乎完美重現 reference、4 椅平行桌邊環繞、各件正交貼牆;1.35× 大房餐桌+椅整組不散架、零碰撞。</figcaption>
+</figure>
+
+<figure>
+  <img src="assets/shipped_living_cross.png" alt="Shipped 輸出 — 十字形客廳">
+  <figcaption><strong>客廳 B · 十字 / T 形 29 m²</strong>(dining set + sofa + tv-stand)。不規則房型下 dining set 仍成套保留(1.0× S_rel 0.96、1.35× 0.94,皆零碰撞);縮小到 0.75× 時 Summarise 減量、留出走道。</figcaption>
+</figure>
+
+<figure>
+  <img src="assets/shipped_bedroom.png" alt="Shipped 輸出 — 臥室">
+  <figcaption><strong>臥室 · 20 m²</strong>(double_bed + 兩個 nightstand + dressing table)。<strong>床 + 床頭櫃 motif 在三種尺寸下都保持兩側夾床</strong> &mdash; 房間放大 1.35× 時床頭櫃仍緊貼床側不散開,正是 Step 2 parent-relative 從源頭綁緊 motif 的效果。</figcaption>
 </figure>
 
 <h3>1. 固定測試集 · PDF §15 指標</h3>
