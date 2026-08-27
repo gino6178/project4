@@ -390,7 +390,18 @@
   <p><strong>Hard snap</strong> buys crisp walls but rebounds collisions to 2.59% and drops topology; <strong>polish</strong> is 3.6× more expensive on projection and still lands <em>below</em> ours on \(S_\text{rel}\) and \(R_\text{col}\); <strong>ours</strong> holds the raw flow's topology (0.696 ≈ 0.700) at the lowest collision, for a near-imperceptible cost.</p>
   <div class="note"><strong>Honest scope.</strong> Quality metrics are on the projection-ablation set (4 references × 3 sizes). Base ODE sampling is ~565 ms/layout (pure DiT, k=1, 50 steps) or ~667 ms with in-sampling guidance — shared by every row; the table isolates the projection's marginal cost. This is an ablation of <em>projection choices</em>, not a head-to-head against prior systems (see §6.5).</div>
 
-  <h4 class="sub">6.3 Qualitative results</h4>
+  <h4 class="sub">6.3 Baseline comparison</h4>
+  <p>ATISS and LEGO-Net solve <em>different</em> tasks (unconditional completion; same-room denoising) and are not set up in our environment, so we compare against the baseline our method is built to replace: the <strong>affine / global warp</strong> — a fair, reference-guided transplant (MRR-affine map of the reference into \(P_t\), no flow). Measured on the same seeds/sizes.</p>
+  <div class="tw"><table>
+    <thead><tr><th>Method</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{rel}^\text{kept}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Adapts count</th></tr></thead>
+    <tbody>
+      <tr><td>Affine / global warp</td><td>0.932</td><td>0.932</td><td class="bad">4.60%</td><td class="bad">67%</td><td class="bad">✗</td></tr>
+      <tr class="ours"><td>Ours: flow + diff \(\Pi_\theta\)</td><td>0.696</td><td class="win">0.908</td><td class="win">1.40%</td><td class="win">84%</td><td class="win">✓</td></tr>
+    </tbody>
+  </table></div>
+  <p>The affine map <em>trivially</em> maximizes relation retention — it is linear, so \(S_\text{rel}=0.93\) — but is <strong>physically infeasible</strong> (4.6% collisions, 67% wall-snap) and cannot change object count. Among surviving objects Ours matches it (\(S_\text{rel}^\text{kept}=0.91\) vs 0.93) while cutting collisions <strong>3.3×</strong>, adding <strong>+17 pts</strong> wall-snap, and pruning to fit. The raw-\(S_\text{rel}\) gap (0.70 vs 0.93) is almost entirely Ours <em>pruning</em> at 0.75× — where dropped endpoints score zero over all reference relations — not lost topology, as \(S_\text{rel}^\text{kept}\) shows. Affine's 1 ms is the cost of doing nothing geometry-aware; Ours' latency breakdown is in Table 1.</p>
+
+  <h4 class="sub">6.4 Qualitative results</h4>
   <figure>
     <img src="assets/three_sizes_r2m2full.png" alt="One reference living room retargeted to 0.75x, 1.0x, 1.35x">
     <figcaption><strong>Figure 3.</strong> One reference (L-shaped, 22 m², 14 objects) retargeted across scales. At <strong>0.75×</strong> the dining set is pruned to fit; at <strong>1.0×</strong> the layout is reconstructed (\(S_\text{rel}=0.97\)); at <strong>1.35×</strong> the bed/sofa and dining motifs stay tight rather than dispersing (\(S_\text{rel}=0.91\)) — the effect of Prop. 1's metric-relative encoding. Metrics are printed per panel.</figcaption>
@@ -404,7 +415,7 @@
     <figcaption><strong>Figure 5.</strong> Micro-displacement analysis of \(\Pi_\theta\): grey dashed = raw flow, solid = projected, red arrows = per-object displacement (cm). Arrows are <em>short</em> and point at the nearest wall (flush) or table edge (slot) — objects never swap or reorder. This is the visual proof that the projection is a topology-preserving alignment (mean 19 cm), not a re-synthesis.</figcaption>
   </figure>
 
-  <h4 class="sub">6.4 Ablation studies</h4>
+  <h4 class="sub">6.5 Ablation studies</h4>
   <ul class="tight">
     <li><strong>Hierarchical relative space</strong> — global-coordinate flow vs parent-relative flow at 1.35×: motif retention 25% → 42%.</li>
     <li><strong>Projection layer</strong> — none / hard snap / multi-step polish / differentiable \(\Pi_\theta\): Table 1.</li>
@@ -412,10 +423,10 @@
     <li><strong>Stage-1 pruning</strong> — symmetric structured pruning improves walkable connectivity under extreme shrink.</li>
   </ul>
 
-  <h4 class="sub">6.5 Planned &amp; not-yet-run evaluations</h4>
+  <h4 class="sub">6.6 Planned &amp; not-yet-run evaluations</h4>
   <div class="warnnote"><strong>Stated honestly.</strong> Two evaluations named in this outline are <em>not</em> yet complete and are not claimed as results here:
     <ul class="tight" style="margin-top:8px">
-      <li><strong>External-baseline head-to-head</strong> (ATISS, LEGO-Net on <em>our</em> metrics) — requires running their released code on this benchmark; not yet done, so no such rows appear in Table 1.</li>
+      <li><strong>Learned-model head-to-head</strong> (ATISS, LEGO-Net on <em>our</em> metrics) — these solve different tasks and are not set up here (no code/weights/internet in the environment); a fair port is future work. The <em>affine/global-warp</em> baseline they would be measured against <em>is</em> run (§6.3).</li>
       <li><strong>User study</strong> — a two-question double-blind protocol (intent fidelity / realism / functionality) with designers and end users; the study instrument is live, results pend participant recruitment.</li>
     </ul>
   </div>
