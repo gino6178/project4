@@ -321,8 +321,12 @@ $$\Pi_\theta(x_0)=\underset{K\text{ 步展開}}{\arg\min}\;\underbrace{w_a\lVert
 
 <h3>6.4 定性結果</h3>
 <figure>
-  <img src="assets/3d_sheet.png" alt="真實 3D box 渲染:reference 與 0.75x/1.0x/1.35x">
-  <figcaption><strong>圖 6.（3D 渲染)</strong> 由 <span class="mono">render_scene3d</span> 產生的<em>真實</em> 3D 透視渲染(matplotlib box render,無需 3D-FUTURE 貼圖網格、GL-free)。同一參考在 0.75× / 1.0× / 1.35× 的 flow 輸出:貼牆件貼牆、Motif 不散架、朝向正確。</figcaption>
+  <img src="assets/textured_sheet.png" alt="真實 3D-FUTURE 貼圖網格渲染:reference 與 0.75x/1.0x/1.35x">
+  <figcaption><strong>圖 6.（貼圖渲染)</strong> 用<em>真實 3D-FUTURE 貼圖網格</em> + pyrender/EGL 渲染(PhyScene 式;每件家具依 <span class="mono">jid</span> 載入原始 <span class="mono">raw_model.obj</span> 與材質,repose 到 flow 輸出的位姿)。同一參考在 0.75× / 1.0× / 1.35× 的 flow 結果:餐桌椅成套、沙發與邊櫃貼牆、朝向正確;0.75× 減件後仍可居住。</figcaption>
+</figure>
+<figure>
+  <img src="assets/3d_sheet.png" alt="GL-free 3D box 渲染(對照)">
+  <figcaption><strong>圖 6b.（幾何對照)</strong> 同一結果的 GL-free box 渲染(<span class="mono">render_scene3d</span>,matplotlib)—— 不需貼圖網格、到處可重現,凸顯幾何佈局本身。</figcaption>
 </figure>
 <figure>
   <img src="assets/three_sizes_r2m2full.png" alt="同一參考在 0.75x / 1.0x / 1.35x 的遷移">
