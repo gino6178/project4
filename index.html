@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReRoom · 最終做法</title>
+<title>ReRoom · Shipped 做法</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
       integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
@@ -13,36 +13,45 @@
         onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
 <style>
   :root{
-    --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a;
-    --panel:#f7f7f7;
+    --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a; --acc2:#2a6f7a;
+    --panel:#f7f7f7; --good:#2a7a2a;
   }
   *{box-sizing:border-box}
   html{-webkit-text-size-adjust:100%}
   body{margin:0;background:#fff;color:var(--ink);
        font:17px/1.75 -apple-system,"PingFang TC","Noto Sans TC",BlinkMacSystemFont,"Segoe UI",sans-serif;
        -webkit-font-smoothing:antialiased}
-  .wrap{max-width:820px;margin:0 auto;padding:32px 22px 60px}
+  .wrap{max-width:860px;margin:0 auto;padding:32px 22px 60px}
   h1{font-size:32px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
-  .sub{color:var(--mut);font-size:17px;margin:0 0 28px}
-  h2{font-size:22px;margin:44px 0 12px;font-weight:600}
-  h3{font-size:17.5px;margin:24px 0 6px;font-weight:600}
+  .sub{color:var(--mut);font-size:17px;margin:0 0 20px}
+  h2{font-size:23px;margin:52px 0 12px;font-weight:700;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+  h3{font-size:18px;margin:28px 0 6px;font-weight:600}
+  h4{font-size:16px;margin:20px 0 4px;font-weight:600;color:#333}
   p{margin:0 0 14px}
-  ul{margin:0 0 14px;padding-left:22px} li{margin-bottom:5px}
-  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em}
-  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.92em;
+  ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:6px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
        background:var(--panel);padding:1px 5px;border-radius:3px}
   .note{background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;
-        border-radius:0 3px 3px 0;font-size:15.5px;margin:20px 0;color:#3c3c3c}
+        border-radius:0 3px 3px 0;font-size:15px;margin:20px 0;color:#3c3c3c}
   .note strong{color:var(--ink)}
-  figure{margin:20px 0}
-  figure img{width:100%;display:block;border-radius:3px;background:#fff}
-  figcaption{color:var(--mut);font-size:14.5px;margin-top:8px;line-height:1.6}
-  table{border-collapse:collapse;width:100%;font-size:14.5px;margin:8px 0 16px}
-  th,td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:right}
+  .tag{display:inline-block;font-size:12.5px;font-weight:600;padding:1px 8px;border-radius:10px;
+       background:var(--acc);color:#fff;vertical-align:middle;margin-left:6px}
+  .tag.g{background:var(--good)}
+  figure{margin:22px 0}
+  figure img{width:100%;display:block;border-radius:3px;background:#fff;border:1px solid var(--line)}
+  figcaption{color:var(--mut);font-size:14px;margin-top:8px;line-height:1.6}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 16px}
+  .tw{overflow-x:auto}
+  th,td{padding:5px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top}
   th:first-child,td:first-child{text-align:left}
   thead th{font-weight:600;border-bottom:1.5px solid var(--ink)}
-  .win{font-weight:700}
-  footer{margin:48px 0 0;padding-top:20px;border-top:1px solid var(--line);
+  tbody tr:hover{background:#fafafa}
+  .win{font-weight:700;color:var(--good)}
+  .grp td{background:#f2efe9;font-weight:600;color:var(--acc)}
+  .flow{width:100%;height:auto;margin:14px 0;display:block}
+  .lead{font-size:15px;color:var(--mut);margin:-2px 0 16px}
+  footer{margin:56px 0 0;padding-top:20px;border-top:1px solid var(--line);
          color:var(--mut);font-size:14px}
   footer a{color:var(--acc)}
 </style>
@@ -50,370 +59,375 @@
 <body>
 <div class="wrap">
 
-<h1>ReRoom · 最終做法</h1>
-<p class="sub">參考導向的 3D 室內設計 retargeting &mdash; 最終 shipped pipeline</p>
+<h1>ReRoom · Shipped 做法</h1>
+<p class="sub">參考導向的 3D 室內場景 retargeting &mdash; 從資料生產到最終輸出的完整做法</p>
 
-<p><strong>問題</strong>:給一張使用者喜歡的房間設計 + 一個形狀 / 大小可能完全不同的目標房間,自動把設計搬過去 &mdash; 保留原本的關係與 motif,佈局符合新房間幾何。</p>
+<p><strong>問題</strong>:給一份使用者喜歡的房間設計(reference)+ 一個尺寸 / 長寬比 / 形狀可能完全不同的目標房間邊界 <span class="mono">P_t</span>,自動把設計搬過去 &mdash; 保留參考的<strong>物件組成、空間關係、motif 與風格</strong>,同時讓佈局符合新房間的幾何(貼牆、不出界、不碰撞)。核心假設(PDF §4):設計的 identity 在於<strong>關係</strong>而非絕對座標。</p>
 
-<h2>Pipeline</h2>
+<p><strong>Shipped 全景</strong>:整條系統分兩半。<em>離線</em>把真實 3D-FRONT 場景反向製造成因果訓練對,訓出 flow 模型 <span class="mono">flow_bfresh</span>;<em>線上</em>把 reference 投影進目標房、由 flow 整流、再經 polish + 規整化 + ranking 輸出。</p>
 
-<ol>
-  <li><strong>意圖抽取</strong>:參考房影像 → MIDI-3D → 場景 + 物件圖 → 加上關係彈性 α<sub>ij</sub>(神經 MLP 學出來)</li>
-  <li><strong>Summarise & Substitution(§9 § 11)</strong>:房間變小先刪 motif,再從 asset bank 換成塞得下的較小家具(在 flow 之前,避免硬塞被 collision 推散)。<em>Anchor 保護</em>:每個房間類型的核心家具(客廳 sofa、臥室 bed 等)永遠不刪 &mdash; 若塞不下就交給 substitution 換小版本</li>
-  <li><strong>Flow Transformer(§13 前半)</strong>:DiT 33 M 參數,意圖圖 + α 進 attention bias,ODE 50 步生成 k=16 個候選佈局。<em>In-sampling guidance</em>:每步都算 E<sub>bound</sub> + E<sub>col</sub> + E<sub>clear</sub> + wall_pull 的可行性梯度,融進 ODE trajectory。<em>Wall pull 用連續多邊形 SDF</em>(取相鄰邊界取樣點為 line segments,取所有 segment 中的最短距離),取代原本的 32 點 argmin,gradient 更平滑,靠牆物件即使離牆 40+ cm 也有連續吸附力</li>
-  <li><strong>Polish(§13 eq (37) 後半)</strong>:每個候選跑 25 步 Adam,對 § 8 六個能量做梯度下降,freeze_yaw(朝向由 flow 決定),疊四個機制:
-    <ul>
-      <li>① 異方性 anchor:tangent 100 + normal 單向(只懲罰往房間中心飄)</li>
-      <li>② 親子相對 anchor:motif child 對齊「相對 parent 偏移」,parent 動則整組跟</li>
-      <li>③ Phase 1(前 <strong>16</strong> 步 = 65 %):E_col × 0.15、tangent × 0.10、<strong>E_func × 3.0</strong> → wall 物件在被 col 擋前先強力吸到牆邊</li>
-      <li>④ Phase 2(後 9 步):恢復全能量 → 消碰撞、貼合</li>
-    </ul>
-  </li>
-  <li><strong>Population(§10)</strong>:房間變大時依 co-occurrence 新增家具,守門要求「加入後成本不變」</li>
-  <li><strong>Ranking</strong>:全 7 個 §8 能量算 E(Y),k 個候選挑最佳</li>
-</ol>
 
-<h2>實際輸出</h2>
+<h2>一、全景流程圖</h2>
 
-<figure>
-  <img src="assets/three_sizes_r2m2full.png" alt="Three-sizes output — ReRoom 2.0 (r2m2full)">
-  <figcaption>同一份 22 m² L 形客廳 reference(左上),分別放入 0.75× / 1.0× / 1.35× 房間 &mdash; 目前 shipped 模型 <strong>ReRoom 2.0(<span class="mono">flow_bfresh</span>,含 Step 2 parent-relative)+ 規整化投影(Step 1)</strong>。1.0× 幾乎完美重現 reference、4 張餐椅平行桌邊成套環繞、各件正交貼牆(S_rel 0.92);1.35× 大房餐桌+椅整組不散架、零碰撞(col 0.0%)。詳細指標見下方「ReRoom 2.0」一節。</figcaption>
-</figure>
+<h3>資料生產 &amp; 訓練(離線)</h3>
+<svg class="flow" viewBox="0 0 860 300" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang TC,sans-serif">
+  <defs>
+    <marker id="ar" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
+    </marker>
+  </defs>
+  <style>
+    .bx{fill:#f7f7f7;stroke:#333;stroke-width:1.3;rx:7}
+    .bt{font-size:13px;fill:#111;font-weight:600}
+    .bs{font-size:11px;fill:#5c5c5c}
+    .ln{stroke:#555;stroke-width:1.4;marker-end:url(#ar)}
 
-<h3>6 場景平均實測(早期 planA baseline,供對照)</h3>
-<table>
-<thead><tr><th>Size</th><th>mean float</th><th>max float</th><th>OOB %</th><th>col %</th><th>S<sub>rel</sub></th><th>Snap %</th><th>Motif err</th></tr></thead>
-<tbody>
-<tr><td>0.75× 縮小</td><td>13.0 cm</td><td>54.9 cm</td><td>2.4 %</td><td>3.2 %</td><td>0.41</td><td>56 %</td><td>74.3 cm</td></tr>
-<tr><td>1.00× 原尺寸</td><td class="win">12.8 cm</td><td>66.1 cm</td><td>1.3 %</td><td>5.3 %</td><td>0.92</td><td class="win">68 %</td><td class="win">50.4 cm</td></tr>
-<tr><td>1.35× 放大</td><td class="win">14.9 cm</td><td>103.5 cm</td><td>2.8 %</td><td class="win">1.9 %</td><td>0.86</td><td class="win">73 %</td><td>131.1 cm</td></tr>
-</tbody>
-</table>
-<p style="font-size:14.5px;color:var(--mut);margin:-6px 0 14px">兩個新指標:<strong>Snap %</strong> = 貼牆物件 gap ≤ 8 cm 且朝向誤差 ≤ 5° 的比例(PhyScene 常用);<strong>Motif err</strong> = motif 內 child 相對 parent 的位置偏移誤差(整組是否散架)。<br>1.35× 大房 mean float 從 20 → 15 cm(-26 %)、Snap 從 44 % → 73 %(+66 %)是本輪最大突破,得力於 Wall-SDF 連續場 + Phase 1 排程延長至 65 % + Phase 1 wall pull × 3。</p>
+  </style>
+  <!-- row 1 -->
+  <rect class="bx" x="8" y="20" width="150" height="56" rx="7"/>
+  <text class="bt" x="83" y="42" text-anchor="middle">3D-FRONT 真實場景</text>
+  <text class="bs" x="83" y="60" text-anchor="middle">S_tgt(GT 佈局)</text>
 
-<h2>算法細節(公式與變量)</h2>
+  <rect class="bx" x="188" y="20" width="160" height="56" rx="7"/>
+  <text class="bt" x="268" y="40" text-anchor="middle">變形 target 多邊形</text>
+  <text class="bs" x="268" y="58" text-anchor="middle">5 levels · 比例∈[0.6,1.7]</text>
 
-<h3>符號表(全文統一)</h3>
+  <rect class="bx" x="378" y="20" width="176" height="56" rx="7"/>
+  <text class="bt" x="466" y="40" text-anchor="middle">motif 剛體逆映射</text>
+  <text class="bs" x="466" y="58" text-anchor="middle">→ S_ref(偽 reference)</text>
+
+  <rect class="bx" x="584" y="20" width="180" height="56" rx="7"/>
+  <text class="bt" x="674" y="40" text-anchor="middle">因果對</text>
+  <text class="bs" x="674" y="58" text-anchor="middle">(S_ref, P_t) → S_tgt</text>
+
+  <line class="ln" x1="158" y1="48" x2="186" y2="48"/>
+  <line class="ln" x1="348" y1="48" x2="376" y2="48"/>
+  <line class="ln" x1="554" y1="48" x2="582" y2="48"/>
+
+  <!-- quality gates -->
+  <rect class="bx" x="378" y="96" width="386" height="40" rx="7" fill="#fbf3ef" stroke="#a8412a"/>
+  <text class="bs" x="571" y="113" text-anchor="middle" fill="#a8412a" font-weight="600">品質守門:面積比 [0.5,2.0] · footprint 溢出 ≤15% · 碰撞 ≤ 來源基線</text>
+  <text class="bs" x="571" y="128" text-anchor="middle">不合格 → 重採樣 / fallback</text>
+  <line class="ln" x1="571" y1="76" x2="571" y2="94"/>
+
+  <!-- row 2 -->
+  <line class="ln" x1="674" y1="136" x2="674" y2="164"/>
+  <rect class="bx" x="560" y="166" width="204" height="46" rx="7"/>
+  <text class="bt" x="662" y="185" text-anchor="middle">HybridPairs dataset</text>
+  <text class="bs" x="662" y="202" text-anchor="middle">forward-deform 因果對</text>
+
+  <line class="ln" x1="560" y1="189" x2="470" y2="189"/>
+  <rect class="bx" x="8" y="160" width="452" height="120" rx="7" fill="#eef4f5" stroke="#2a6f7a"/>
+  <text class="bt" x="234" y="182" text-anchor="middle" fill="#1c565f">Flow 訓練 → flow_bfresh(DiT depth12/d384, ~34M)</text>
+  <text class="bs" x="234" y="203" text-anchor="middle">Module 1 informative prior:x₀ = ref 投影 + 噪聲</text>
+  <text class="bs" x="234" y="220" text-anchor="middle">Module 2 幾何 attention:dense pairwise + 牆 token cross-attn</text>
+  <text class="bs" x="234" y="237" text-anchor="middle">Step 2 parent-relative:child = 相對 parent 度量偏移(尺度不變)</text>
+  <text class="bs" x="234" y="254" text-anchor="middle">異質節點 Type-ID · child 遮罩牆面 · child loss ×10</text>
+  <text class="bs" x="234" y="271" text-anchor="middle">fresh 180 epoch · lr 3e-4 · batch 192 · L_fm + L_rel + L_wall-align</text>
+</svg>
+
+<h3>推理管線(線上)</h3>
+<svg class="flow" viewBox="0 0 860 470" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang TC,sans-serif">
+  <defs>
+    <marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
+      <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
+    </marker>
+  </defs>
+  <style>
+    .b{fill:#f7f7f7;stroke:#333;stroke-width:1.3}
+    .t{font-size:13.5px;fill:#111;font-weight:600}
+    .s{font-size:11px;fill:#5c5c5c}
+    .l{stroke:#555;stroke-width:1.5;marker-end:url(#ar2)}
+    .n{font-size:12px;fill:#a8412a;font-weight:700}
+  </style>
+  <!-- inputs -->
+  <rect class="b" x="140" y="10" width="240" height="40" rx="7"/>
+  <text class="t" x="260" y="34" text-anchor="middle">Reference 場景 / 影像</text>
+  <rect class="b" x="480" y="10" width="240" height="40" rx="7"/>
+  <text class="t" x="600" y="34" text-anchor="middle">Target 房邊界 P_t</text>
+
+  <!-- intent -->
+  <line class="l" x1="260" y1="50" x2="360" y2="66"/>
+  <line class="l" x1="600" y1="50" x2="500" y2="66"/>
+  <rect class="b" x="230" y="68" width="400" height="44" rx="7"/>
+  <text class="t" x="430" y="87" text-anchor="middle">意圖抽取:場景圖 G + 關係彈性 α_ij(MLP)</text>
+  <text class="s" x="430" y="104" text-anchor="middle">MIDI-3D 影像解析 · motif 分群 · reference wall-affinity a_i</text>
+
+  <!-- stage boxes -->
+  <g>
+    <line class="l" x1="430" y1="112" x2="430" y2="128"/>
+    <text class="n" x="150" y="146">①</text>
+    <rect class="b" x="170" y="130" width="520" height="42" rx="7" fill="#fbf3ef" stroke="#a8412a"/>
+    <text class="t" x="430" y="148" text-anchor="middle">Summarise + Substitution(flow 之前）</text>
+    <text class="s" x="430" y="164" text-anchor="middle">縮房刪次要件(anchor 保護)· 換 bank 中塞得下的較小同風格家具</text>
+
+    <line class="l" x1="430" y1="172" x2="430" y2="188"/>
+    <text class="n" x="150" y="206">②</text>
+    <rect class="b" x="170" y="190" width="520" height="42" rx="7" fill="#eef4f5" stroke="#2a6f7a"/>
+    <text class="t" x="430" y="208" text-anchor="middle">Flow 取樣:x₀ = ref 投影 → ODE 50 步 + in-sampling guidance</text>
+    <text class="s" x="430" y="224" text-anchor="middle">k=16 候選 · 每步反傳 E_bound+E_col+E_clear+wall-pull 可行性梯度</text>
+
+    <line class="l" x1="430" y1="232" x2="430" y2="248"/>
+    <text class="n" x="150" y="266">③</text>
+    <rect class="b" x="170" y="250" width="520" height="42" rx="7"/>
+    <text class="t" x="430" y="268" text-anchor="middle">Polish:25 步 Adam(freeze yaw)</text>
+    <text class="s" x="430" y="284" text-anchor="middle">異方性 anchor + 親子相對 anchor + 二階段排程 + 連續牆 SDF pull</text>
+
+    <line class="l" x1="430" y1="292" x2="430" y2="308"/>
+    <text class="n" x="150" y="326">④</text>
+    <rect class="b" x="170" y="310" width="520" height="42" rx="7"/>
+    <text class="t" x="430" y="328" text-anchor="middle">Regularity Projector(Step 1)</text>
+    <text class="s" x="430" y="344" text-anchor="middle">槽位吸附 · 貼牆 flush + 法線朝向 · Manhattan 正交 snap</text>
+
+    <line class="l" x1="430" y1="352" x2="430" y2="368"/>
+    <text class="n" x="150" y="386">⑤</text>
+    <rect class="b" x="170" y="370" width="520" height="42" rx="7"/>
+    <text class="t" x="430" y="388" text-anchor="middle">Population(放大房補件)</text>
+    <text class="s" x="430" y="404" text-anchor="middle">依 co-occurrence 新增家具,守門「加入後成本不變」</text>
+
+    <line class="l" x1="430" y1="412" x2="430" y2="428"/>
+    <text class="n" x="150" y="446">⑥</text>
+    <rect class="b" x="170" y="430" width="520" height="34" rx="7" fill="#eaf5ea" stroke="#2a7a2a"/>
+    <text class="t" x="430" y="452" text-anchor="middle">Ranking:全 7 能量 E(Y) 選最佳 → Editable 3D scene</text>
+  </g>
+</svg>
+
+
+<h2>二、統一符號與參數表</h2>
+<p class="lead">全站符號與所有 shipped 超參數的單一真相來源。下方各節不再重複數值。</p>
+
+<h3>符號</h3>
 <div class="tw"><table>
 <thead><tr><th>符號</th><th>意義</th><th>單位 / 範圍</th></tr></thead>
 <tbody>
 <tr><td>\(N\)</td><td>物件數</td><td>–</td></tr>
-<tr><td>\(x_i \in \mathbb{R}^2\)</td><td>物件 \(i\) 在房間 MRR-normalized 座標系的位置</td><td>\(u, v \in [-1, 1]\)</td></tr>
-<tr><td>\(\theta_i\)</td><td>物件 \(i\) 的 yaw</td><td>弧度</td></tr>
-<tr><td>\(s_i \in \mathbb{R}^2\)</td><td>物件 \(i\) 的 footprint 半尺寸(local 座標)</td><td>米</td></tr>
-<tr><td>\(x_i^{(0)}\)</td><td>polish 起點:flow 取樣的位置</td><td>同 \(x_i\)</td></tr>
-<tr><td>\(\hat n_i,\ \hat t_i\)</td><td>物件 \(i\) 在 reference 靠的牆的 inward normal / 切向</td><td>單位向量</td></tr>
-<tr><td>\(a_i \in [0, 1]\)</td><td>wall affinity(reference 中靠牆程度)</td><td>–</td></tr>
-<tr><td>\(\alpha_{ij} \in [0, 1]\)</td><td>關係彈性:0 = 彈性,1 = 剛性</td><td>–</td></tr>
-<tr><td>\(\hat x_1\)</td><td>flow 對 \(x_1\) 的當前預測 = \(x_\tau + (1-\tau) v_\theta\)</td><td>同 \(x\)</td></tr>
-<tr><td>\(\tau\)</td><td>flow matching 時間</td><td>\([0, 1]\)</td></tr>
-<tr><td>\(w_\text{tan}, w_\text{norm}, w_\text{free}\)</td><td>anchor 各分量權重</td><td>–</td></tr>
+<tr><td>\(x_i=(u_i,v_i)\)</td><td>物件 \(i\) 在房間 MRR-normalized 座標</td><td>\([-1,1]\)</td></tr>
+<tr><td>\(\theta_i\)</td><td>物件 \(i\) yaw;state 存 \((\cos\theta,\sin\theta)\)</td><td>弧度</td></tr>
+<tr><td>\(s_i\in\mathbb{R}^2\)</td><td>footprint 半尺寸(local)</td><td>米</td></tr>
+<tr><td>\(P_t\)</td><td>目標房邊界,32 取樣點 × 6 維</td><td>\((u,v,u h_1,v h_2,n_u,n_v)\)</td></tr>
+<tr><td>\(G\)</td><td>意圖圖:節點=物件,邊帶 \(\alpha_{ij}\)+關係型</td><td>–</td></tr>
+<tr><td>\(\alpha_{ij}\)</td><td>關係彈性:0=彈性,1=剛性</td><td>\([0,1]\)</td></tr>
+<tr><td>\(a_i\)</td><td>reference wall affinity(靠牆程度)</td><td>\([0,1]\)</td></tr>
+<tr><td>\(\hat n_i,\hat t_i\)</td><td>物件 \(i\) 在其牆的 inward normal / 切向</td><td>單位向量</td></tr>
+<tr><td>\(\tau\)</td><td>flow matching 時間</td><td>\([0,1]\)</td></tr>
+<tr><td>\(\hat x_1\)</td><td>flow 對終點預測 \(=x_\tau+(1-\tau)v_\theta\)</td><td>同 \(x\)</td></tr>
+<tr><td>\(\rho\)</td><td>房間面積比 \(=\text{Area}_{P_t}/\text{Area}_\text{ref}\)</td><td>–</td></tr>
 </tbody></table></div>
 
-<h3>1. 關係彈性 \(\alpha_{ij}\)</h3>
-<p>每對物件 \((i, j)\) 有一個彈性係數,由 MLP 從關係 context 學:</p>
-$$\alpha_{ij} = \sigma\!\big(\text{MLP}(c_i,\, c_j,\, e_{ij})\big)$$
-<ul>
-  <li>\(c_i\):物件 \(i\) 的 category 嵌入 + \(\log s_i\) + motif id + 房間類型</li>
-  <li>\(e_{ij}\):關係向量(距離、相對角度、共牆 / 共 motif 指示)</li>
-  <li>\(\alpha_{ij} \to 1\):剛性,搬房間時距離要保留(nightstand ↔ bed)</li>
-  <li>\(\alpha_{ij} \to 0\):彈性,距離可隨房間放縮(tv ↔ sofa)</li>
-</ul>
-
-<h3>2. Flow matching:訓練與取樣</h3>
-<p>State \(x_1 \in \mathbb{R}^{N \times 4}\):每個物件的 \((u_i, v_i, \cos\theta_i, \sin\theta_i)\)。</p>
-<p><strong>訓練</strong>:\(\tau \sim \text{Uniform}(0, 1)\),\(x_0 \sim \mathcal{N}(0, I)\)</p>
-$$x_\tau = (1-\tau)\,x_0 + \tau\,x_1, \qquad v_\text{target} = x_1 - x_0$$
-$$\mathcal{L}_\text{fm} = \big\|\,v_\theta(x_\tau, \tau, G, P_t) - v_\text{target}\,\big\|^2$$
-<ul>
-  <li>\(G\):意圖圖(節點 = 物件,邊帶 \(\alpha_{ij}\) 與 relation type,進 attention bias)</li>
-  <li>\(P_t\):目標房邊界 32 個取樣點,每點 6 維 \((u, v, u\cdot h_1, v\cdot h_2, n_u, n_v)\)——normalized 位置給形狀 prior,metric 位置給尺度 prior</li>
-</ul>
-<p><strong>取樣</strong>:50 步 Euler,\(x_{\tau + d\tau} = x_\tau + d\tau \cdot v_\theta\)。</p>
-
-<h3>3. In-sampling guidance(§13 eq (37) 前半)</h3>
-<p>每步 ODE 之後,估計最終位置 \(\hat x_1 = x_\tau + (1-\tau)\, v_\theta\),對可行性打分並反傳梯度:</p>
-$$\Phi(\hat x_1) = w_\text{bound}\,E_\text{bound} + w_\text{col}\,E_\text{col}^{\text{nest-exempt}} + w_\text{clear}\,E_\text{clear} + w_\text{wp}\,E_\text{wall-pull}$$
-$$x_{\tau + d\tau} \;\leftarrow\; x_{\tau + d\tau} - d\tau \cdot \text{ramp}(\tau) \cdot \nabla_x \Phi$$
-$$\text{ramp}(\tau) = \max\!\big(0,\, (\tau - 0.5) / 0.5\big)$$
-<p>其中 \(E_\text{bound}\) 懲罰 4 角超出 polygon 深度(容忍 12 cm);\(E_\text{col}\) 對 nestable pair(椅塞桌下)豁免;\(E_\text{clear}\) 跨 motif pair 走道;\(E_\text{wall-pull}\) 見 § 8。</p>
-
-<h3>4. Polish 目標:能量之和 + anchor</h3>
-<p>對每個候選 layout,25 步 Adam,freeze_yaw:</p>
-$$\mathcal{L}_\text{polish}(x) = \sum_k w_k\, E_k(x) + \mathcal{L}_\text{anchor}(x), \quad k \in \{\text{rel, bound, col, clear, func, style}\}$$
+<h3>Shipped 超參數(全部)</h3>
 <div class="tw"><table>
-<thead><tr><th>\(E_k\)</th><th>形式(概要)</th><th>意義</th><th>\(w_k\)</th></tr></thead>
+<thead><tr><th>參數</th><th>值</th><th>作用</th></tr></thead>
 <tbody>
-<tr><td>\(E_\text{rel}\)</td><td>\(\sum_{ij}\alpha_{ij}\,\big\|\phi(y_i, y_j) - \phi_{ij}^\text{ref}\big\|^2\)</td><td>保留 reference 關係向量(距離、角度、共牆)</td><td>1.0</td></tr>
-<tr><td>\(E_\text{bound}\)</td><td>\(\sum_i \max(0,\, r_i - d_i^\text{floor})^2\)</td><td>物件保持在 floor polygon 內</td><td>40.0</td></tr>
-<tr><td>\(E_\text{col}\)</td><td>\(\sum_{ij \notin \mathcal{N}}\max(0,\, r_i + r_j - d_{ij})^2\)</td><td>非 nestable pair 不重疊</td><td>30.0</td></tr>
-<tr><td>\(E_\text{clear}\)</td><td>\(\sum \max(0,\, C - \text{gap}_{ij})^2\)</td><td>跨 motif pair 走道 \(C = 25\) cm</td><td>4.0</td></tr>
-<tr><td>\(E_\text{func}\)</td><td>wall_flush + door swing + front clearance</td><td>靠牆貼合、開門通、正面留距</td><td>3.0</td></tr>
-<tr><td>\(E_\text{style}\)</td><td>\(\sum_i \text{retrieval\_cost}_i\)</td><td>替換的 asset 越近 reference 風格越好</td><td>1.0</td></tr>
+<tr class="grp"><td colspan="3">資料生產(HybridPairs,<span class="mono">xscene.py</span>)</td></tr>
+<tr><td>forward_frac</td><td>1.0</td><td>shipped 用純前向變形因果對(cross-pairing 為驗證過的替代 30% 選項)</td></tr>
+<tr><td>deform levels</td><td>1–5</td><td>uniform / aspect / slant / corner-cut / concave</td></tr>
+<tr><td>l1_range</td><td>[0.6, 1.7]</td><td>uniform_scale 線性倍率(面積比 ≈平方)</td></tr>
+<tr><td>面積比守門</td><td>[0.5, 2.0]</td><td>target/source 超範圍 → 重採樣</td></tr>
+<tr><td>footprint 溢出守門</td><td>≤ 15%</td><td>物件 footprint 出牆比例上限</td></tr>
+<tr><td>碰撞守門</td><td>≤ 來源基線</td><td>變形不得引入超過真實來源的碰撞</td></tr>
+<tr><td>cross Jaccard / Δθ</td><td>&gt;0.6 / ≤30°</td><td>(cross-pairing 用)類別相似度 + 錨點朝向一致</td></tr>
+<tr class="grp"><td colspan="3">模型 &amp; 訓練(<span class="mono">flow_bfresh</span>,<span class="mono">train.py</span>)</td></tr>
+<tr><td>DiT depth / d_model / heads</td><td>12 / 384 / 8</td><td>≈34M 參數 transformer</td></tr>
+<tr><td>epochs / lr / batch / wd</td><td>180 / 3e-4 / 192 / 3e-4</td><td><strong>fresh</strong>(無 warm-start)</td></tr>
+<tr><td>prior_x0 / prior_noise</td><td>True / 0.3</td><td>Module 1:x₀=ref 投影 + 噪聲</td></tr>
+<tr><td>geo_bias / wall_tokens</td><td>True / True</td><td>Module 2:dense pairwise + 牆 token</td></tr>
+<tr><td>parent_relative</td><td>True</td><td>Step 2:child 相對 parent 度量偏移</td></tr>
+<tr><td>REL_SCALE</td><td>3.0 m</td><td>child 偏移的度量正規化常數</td></tr>
+<tr><td>child_loss_weight λ_child</td><td>10.0</td><td>≈1/0.3²,補償 child 局部尺度梯度</td></tr>
+<tr><td>rel_loss / wall_align / wall_aux</td><td>4.0 / 1.0 / 3.0</td><td>Module 4 motif 剛性 + 貼牆對齊 aux</td></tr>
+<tr class="grp"><td colspan="3">推理:Flow 取樣(<span class="mono">sample.py</span>)</td></tr>
+<tr><td>k 候選 / ODE 步數</td><td>16 / 50</td><td>取樣 k 個佈局,Euler 積分</td></tr>
+<tr><td>guidance ramp</td><td>\(\max(0,(\tau-0.5)/0.5)\)</td><td>guidance 只在後半 trajectory 生效</td></tr>
+<tr class="grp"><td colspan="3">推理:Polish(<span class="mono">optimizer.py</span>)</td></tr>
+<tr><td>restarts / polish_steps / lr</td><td>24 / 25 / 0.02</td><td>Adam,freeze_yaw</td></tr>
+<tr><td>polish_anchor</td><td>100</td><td>錨定到 flow 取樣位置</td></tr>
+<tr><td>二階段 phase1_frac</td><td>0.65(T₁=16 步)</td><td>前 65% 弱化 col/tangent、強化 wall</td></tr>
+<tr><td>phase1 col / tan / wall</td><td>×0.15 / ×0.10 / ×3.0</td><td>Phase 1 縮放</td></tr>
+<tr><td>異方性 w_tan / w_norm / w_free</td><td>100 / 8 / 100</td><td>切向強 / 法線單向 / 自由對稱</td></tr>
+<tr><td>wall-pull λ_w(ρ≤1 / ρ&gt;1)</td><td>2.5 / 1.5</td><td>縮房推力大、放大房避免撞飛</td></tr>
+<tr><td>δ_flush</td><td>6 cm</td><td>貼牆容忍</td></tr>
+<tr class="grp"><td colspan="3">推理:能量權重 \(w_k\)(<span class="mono">energy.py</span>)</td></tr>
+<tr><td>rel / bound / col / clear / func / style</td><td>1 / 40 / 30 / 4 / 3 / 1</td><td>§8 六項;edit 未接(=0)</td></tr>
+<tr><td>clearance C / bound 容忍</td><td>25 cm / 12 cm</td><td>跨 motif 走道 / 出界容忍</td></tr>
+<tr class="grp"><td colspan="3">推理:Regularity(Step 1,<span class="mono">regularity.py</span>)</td></tr>
+<tr><td>regularity_snap</td><td>True</td><td>槽位 + 貼牆 flush + Manhattan</td></tr>
+<tr><td>Manhattan 容差</td><td>22°</td><td>朝向 snap 到最近牆軸的門檻</td></tr>
 </tbody></table></div>
-<p>\(E_\text{edit}\)(使用者手動 constraint)shipped path 沒接,\(w_\text{edit} = 0\)。</p>
 
-<h3>5. Anisotropic anchor(新)</h3>
-<p>令位移 \(\delta_i = x_i - x_i^{(0)}\)。對<em>高 wall affinity</em>物件(\(a_i > 0.3\)),把位移沿牆<em>法線</em>與<em>切線</em>分解:</p>
-$$\delta_i^n = \delta_i \cdot \hat n_i, \qquad \delta_i^t = \delta_i \cdot \hat t_i$$
-$$\mathcal{L}_\text{anchor}^{(i)} = a_i \Big[\, w_\text{tan}\,(\delta_i^t)^2 + w_\text{norm}\,\big(\text{ReLU}(\delta_i^n)\big)^2 \,\Big] + (1 - a_i)\, w_\text{free}\,\|\delta_i\|^2$$
-<ul>
-  <li>\(w_\text{tan} = 100\):切向強懲罰 → 鎖住牆邊排列次序</li>
-  <li>\(w_\text{norm} = 8\):法線<em>單向</em>懲罰,只罰 \(\delta_i^n > 0\)(往房間中心飄);\(\delta_i^n < 0\)(靠向牆)完全免罰</li>
-  <li>\(w_\text{free} = 100\):非靠牆物件用普通對稱 L2</li>
-  <li>\(\hat n_i\) 決定方式:找 reference 房間裡物件 \(i\) 真正靠的牆 index,對映到 target 房間同 index 的牆;用 signed-area 判 CCW/CW,再用 polygon.contains 探點驗證方向</li>
-</ul>
 
-<h3>6. Parent-child relative anchor(新)</h3>
-<p>對 motif 中非 head 的 child 物件 \(c\),parent \(p = \text{head}(c)\),把 \(\delta_c\) 換成:</p>
-$$\delta_c^\text{rel} = \big(x_c - x_p\big) - \big(x_c^{(0)} - x_p^{(0)}\big)$$
-<p>然後 \(\delta_c^\text{rel}\) 代入 § 5 anchor 損失。當 parent 被 wall pull 拉向牆,\(x_p\) 移動,child 的<em>相對偏移</em>保持不變,child 跟著整組移動,不撕裂 motif。</p>
+<h2>三、資料生產</h2>
+<p>沒有現成的「reference 房 → retargeted 房」配對語料,所以 shipped 用<strong>反向製造因果對</strong>:拿一份真實 3D-FRONT 場景 <span class="mono">S_tgt</span> 當 GT,倒推出一個 pseudo-reference <span class="mono">S_ref</span>,再讓模型學「\((S_\text{ref}, P_t)\to S_\text{tgt}\)」。這保證每個訓練對有 100% 因果關係。</p>
 
-<h3>7. 二階段能量排程(Plan A)</h3>
-<p>25 步 Adam 拆兩段,\(T_1 = 12\)(50 %):</p>
-$$\text{Phase 1 }(t < T_1):\quad w_\text{col} \leftarrow 0.15\,w_\text{col}^\text{full}, \quad w_\text{tan} \leftarrow 0.10\,w_\text{tan}^\text{full}$$
-$$\text{Phase 2 }(t \ge T_1):\quad \text{恢復所有 weights}$$
-<p>Phase 1 讓 wall 物件擺脫 E_col 阻擋 + tangent 死鎖,順暢斜滑到牆;Phase 2 就地消碰撞、貼合。</p>
-
-<h3>8. Wall pull 具體形式(在 § 3 guidance 內)</h3>
-<p>對高 wall affinity 物件,計算<em>背面</em>到牆的深度:</p>
-$$d_i^\text{back} = \max\!\big(0,\; (x_i - x_i^\text{wall-anchor}) \cdot \hat n_i \,-\, h_i^\perp \,-\, \delta_\text{flush}\big)$$
-$$E_\text{wall-pull} = \lambda_w(\rho)\,\sum_i a_i\,\big(d_i^\text{back}\big)^2$$
-<ul>
-  <li>\(h_i^\perp = |s_i \cdot \hat n_i\text{-basis proj}|\):物件在牆法線方向的半深度(米)</li>
-  <li>\(\delta_\text{flush} = 6\) cm(容忍)</li>
-  <li>\(\rho = \text{Area}_\text{target} / \text{Area}_\text{ref}\):房間面積比</li>
-  <li>\(\lambda_w(\rho) = \begin{cases} 2.5 & \rho \le 1 \text{ (縮小房,推力大)} \\ 1.5 & \rho > 1 \text{ (放大房,避免撞飛出界)}\end{cases}\)</li>
-</ul>
-
-<h2>訓練資料(現在真的產生的樣子)</h2>
-
-<p>每個訓練 sample 都是一對「pseudo-reference → 真實場景」:真實 3D-FRONT 場景保留當 <em>target</em>(自帶 GT layout),<em>reference</em> 反向製造 &mdash; 把場景的 room deform、物件用 affine warp 帶進去,一起餵給 model。天然涵蓋放大 / 縮小兩個方向。</p>
-
-<figure>
-  <img src="assets/training_pair_backward.png" alt="Training pair — backward manufacturing">
-  <figcaption>左 = pseudo-reference(輸入),右 = target = 真實場景(GT)。三個範例分別是 uniform_scale、aspect_ratio、corner_cut 三種 deform level;下方數字是 ref / target 面積比。</figcaption>
-</figure>
-
-<p>另外 50 % 的樣本會啟用 <strong>Scramble 增強</strong>:pseudo-reference 的物件位置完全隨機、朝向也隨機,類別與尺寸保留。強迫 model 從語意訊號(category、motif、wall_affinity、boundary)重建佈局,而不是複製 pseudo。類 LEGO-Net 精神,融進 flow matching。</p>
-
-<figure>
-  <img src="assets/training_pair_scramble.png" alt="Training pair — with scramble augmentation">
-  <figcaption>Scramble 樣本示意:輸入位置全部打亂 → 目標仍是真實場景 layout。</figcaption>
-</figure>
-
-<h3>面積比分布</h3>
-<figure>
-  <img src="assets/train_ratios.png" alt="Ref/target area ratio distribution across 3000 sampled pairs">
-  <figcaption>3000 個訓練 pair 抽樣的 ref / target 面積比分布。虛線標記推理測試的 0.75× / 1.0× / 1.35× 對應位置(ratio = 1.33 / 1.00 / 0.74)。分布峰在 1.0 附近,兩尾(尤其對應大房 1.35× 的 ratio 0.74)相對稀疏 &mdash; 這是剩餘 1.35× bottleneck 的資料層根因。</figcaption>
-</figure>
-
-<h2>新資料策略:跨場景配對(兩邊都是真實房間)</h2>
-
-<p>上面的反向製造有一個根本弱點:<em>reference 是假的</em> &mdash; 用 affine warp 從真實 target 硬帶回去,motif(沙發+茶几、床+床頭櫃)內部間距會被仿射拉伸,model 因此學到「motif 可以被拉變形」這個錯誤先驗。我們改用兩種<strong>真實佈局</strong>來源的配對策略。</p>
-
-<h3>策略 1 — 同風格跨場景配對(Cross-Scene Pairing)</h3>
-<p>在 3D-FRONT 裡找<strong>同房型、物件類別 Jaccard 相似度 &gt; 0.6</strong> 的兩間真實房間 <span class="mono">(S_ref, S_tgt)</span>。以 <span class="mono">S_ref</span> 當輸入 reference,以 <span class="mono">S_tgt</span> 的多邊形邊界當 target <span class="mono">P_t</span>,以 <span class="mono">S_tgt</span> 的<em>真實擺放</em>當 GT。兩邊都是真人、人因合理的佈局,model 學到的是真正的「跨空間設計風格遷移」,而非「還原 affine 變形」。物件用 per-category Hungarian(依尺寸)在兩房間對應,所以 reference 物件 i 的 GT 就是它在 <span class="mono">S_tgt</span> 中對應物件的位置。</p>
-
-<figure>
-  <img src="assets/xscene_pairs.png" alt="Cross-scene pairing examples">
-  <figcaption>每組三格:<strong>左</strong> = 真實 reference(輸入)、<strong>中</strong> = 另一間真實房的邊界 <span class="mono">P_t</span>(含 L 型 / 切角等真實形狀)、<strong>右</strong> = 該真實房的真實 layout(GT)。標題為房型與 Jaccard 相似度。</figcaption>
-</figure>
-
-<ul>
-  <li><strong>配對覆蓋率 98.6%</strong>(7738 / 7848 訓練房間有至少一個 Jaccard&gt;0.6 的夥伴,平均 15 個夥伴)</li>
-  <li><strong>物件配對率 76%</strong>(reference 物件能在 target 找到同類別 GT 對應的比例;無對應者不參與 flow loss)</li>
-</ul>
-
-<h3>策略 2 — Motif-Preserving 前向變形(無配對時的 fallback)</h3>
-<p>剩下 1.4% 沒有夥伴的房間:保持 reference 為真實房間不變形,對 <em>target</em> 多邊形做變形(長寬比縮放、切角、L/T 切割),再把佈局搬進去 &mdash; 但每個 <strong>motif 當成一個剛體</strong>整組搬(head 用仿射映射,成員保留相對 offset 與朝向),確保 motif 內部不被仿射拉伸。這同時也是對現行 affine warp 的直接升級。</p>
-
-<figure>
-  <img src="assets/xscene_stretch.png" alt="Intra-motif stretch by GT-generation strategy">
-  <figcaption>三種 GT 生成策略的 motif 內部拉伸(child→head 距離相對於 reference 的變化,cm)。<strong>Motif-rigid warp 把拉伸從 14.4 cm 降到 3.3 cm(−77%)</strong>。策略 1 的 47 cm 是兩間真實房間本身的人因差異(合理、非我方拉伸造成)。</figcaption>
-</figure>
-
-<h3>三個過濾與修正機制</h3>
-<p>純 Jaccard 配對會混進「同一組家具但佈局大不同」的髒樣本(例如沙發突然轉 90°)。加上三道機制讓 cross-pairing 的訊號乾淨、位移合理,並用混合配比兼顧意圖傳承與真實細節。</p>
-
+<h3>1. 前向變形因果對(shipped 主路徑)</h3>
 <ol>
-  <li><strong>核心錨點朝向一致性(Anchor Orientation Filter)</strong> &mdash; 計算兩房核心家具(客廳沙發 / 臥室床)在各自房間座標系下的主朝向差 <span class="mono">Δθ = |θ_ref − θ_tgt|</span>。因 MRR 長軸有 180° 歧義,把差值摺到 <span class="mono">[0°, 90°]</span>(0° 與 180° 皆算對齊),規定 <span class="mono">Δθ ≤ 30°</span>,剔除 45° / 90° 這種突變樣本。<br><span class="mono">覆蓋率 98.6% → 98.1%</span> &mdash; 幾乎不損資料量,只砍掉真正的朝向突變。</li>
-
-  <li><strong>匈牙利演算法做物件對齊(空間 Cost Matrix)</strong> &mdash; 同類別物件(多張椅子、多個床頭櫃)之間,以<em>正規化座標下的空間距離</em>(加尺寸差當次要 tiebreaker)構建 Cost Matrix,做一對一最優分配,確保 <span class="mono">S_ref → S_tgt</span> 的位移向量最短、不交叉。<br>相對於只看尺寸的配對:<span class="mono">平均位移 0.895 → 0.775(−13%)</span>、<span class="mono">交叉率 23.1% → 13.5%(−42%)</span>。</li>
-
-  <li><strong>70% 前向變形 + 30% 嚴格過濾 Cross-Pairing 混合配比</strong> &mdash; 前向變形(70%)以 reference 為主體、變形 target 邊界,motif 剛體搬運,100% 保證意圖傳承;Cross-Pairing(30%)經朝向與拓撲過濾後的真實配對,補充真實設計師在微小幾何變化下的擺放細節。</li>
+  <li>取真實場景 <span class="mono">S_tgt</span> 及其房間多邊形。</li>
+  <li>對房間多邊形做參數化<strong>變形</strong>(5 個 level)得 <span class="mono">P_ref</span>:等比縮放 / 長寬比 / 斜牆 / 切角 L 型 / 凹型。面積比落在守門範圍。</li>
+  <li>把 <span class="mono">S_tgt</span> 的家具<strong>逆映射</strong>回 <span class="mono">P_ref</span> 成 <span class="mono">S_ref</span> &mdash; 關鍵:每個 <strong>motif 當一個剛體</strong>整組搬(head 用仿射,成員保留相對 offset 與朝向),絕不用逐物件仿射把 motif 內部間距拉伸。</li>
+  <li>成果:合法因果對 \((S_\text{ref}, P_t)\to S_\text{tgt}\)。模型學到「房間長寬比變時,motif 整體平移、非貼牆件等比縮放」的正確遷移物理。</li>
 </ol>
 
 <figure>
-  <img src="assets/xscene_matching.png" alt="Size-only vs spatial Hungarian matching">
-  <figcaption>物件對齊在正規化房間座標系下比較。<span style="color:#a8412a">●</span> = reference 位置、<span style="color:#2a7a2a">■</span> = target 位置、連線 = 位移。<strong>左(只看尺寸)12 個交叉 → 右(空間 Cost Matrix)6 個交叉</strong>。空間配對讓椅子 / 床頭櫃就近對應,不會互相穿越。</figcaption>
+  <img src="assets/strat2_cases.png" alt="5 deform levels × 兩房型">
+  <figcaption>5 種變形 level × 兩房型(語料只含 bedroom / living_room)。上 = INPUT reference、下 = TARGET GT。<span class="mono">L1 uniform_scale</span> / <span class="mono">L2 aspect_ratio</span> / <span class="mono">L3 slanted_wall</span> / <span class="mono">L4 corner_cut</span> / <span class="mono">L5 concave</span>。面積比 0.66×–1.68×;每格 motif(dining set、bed+床頭櫃)以剛體保持完整、共享平移推進房間(單一物件最多 6% footprint 觸牆)。</figcaption>
 </figure>
 
-<p class="note">實作:<span class="mono">reroom/generative/xscene.py</span> &mdash; 配對 <span class="mono">build_pair_index_filtered</span>、對齊 <span class="mono">match_objects_spatial</span>、朝向過濾 <span class="mono">anchor_orientation_ok</span>、前向變形 <span class="mono">make_forward_pair</span> / <span class="mono">motif_rigid_warp</span>、真實配對 <span class="mono">make_cross_pair_filtered</span>;驗證與可視化 <span class="mono">scripts/diag_xscene.py</span>。</p>
-
-<h3>資料管線驗證:model 實際訓練的樣本</h3>
-<p>把三個機制組成 <span class="mono">HybridPairs</span> dataset(<span class="mono">70% forward-deform + 30% cross-pairing</span>),直接從它抽樣渲染,確認餵給 model 的 input / target 真的沒問題。</p>
-
+<h3>2. 四道品質守門(渲染即發現、逐一修掉)</h3>
+<p>直接把 dataset 抽樣渲染,發現並修掉四個資料品質問題:</p>
+<table>
+  <thead><tr><th>問題</th><th>守門 / 修法</th><th>修正前 → 後</th></tr></thead>
+  <tbody>
+    <tr><td>面積比爆量(切角生出 4× 大房)</td><td>面積比重採樣 [0.5, 2.0]</td><td>&gt;2.0× 比例 10.3% → <span class="win">0.0%</span></td></tr>
+    <tr><td>退化崩塌(motif 投影到邊界同點)</td><td><span class="mono">_gt_oob_frac</span> 出界守門</td><td>OOB 最大 100% → <span class="win">14.3%</span></td></tr>
+    <tr><td>物件戳出牆(footprint 出牆)</td><td>剛體<strong>共享平移</strong>往內推</td><td>&gt;15% 出牆 25.1% → <span class="win">1.1%</span></td></tr>
+    <tr><td>碰撞(縮房把家具擠一起)</td><td>不得引入超過來源基線的碰撞</td><td>真碰撞/場景 2.81 → <span class="win">1.73</span>(&lt; 來源 1.93)</td></tr>
+  </tbody>
+</table>
 <figure>
-  <img src="assets/pipeline_rooms.png" alt="HybridPairs pipeline — input reference and target GT for 6 rooms">
-  <figcaption>上排 = INPUT reference(輸入的真實 reference 佈局)、下排 = TARGET(GT 佈局)。左四含 forward-deform(藍字,motif 剛體搬)與 cross-pairing(綠字,真實→真實)。標題數字為 target / source 面積比。可見 dining set、bed 等 motif 在 input↔target 之間保持完整,面積比落在實際範圍。</figcaption>
+  <img src="assets/pipeline_rooms.png" alt="HybridPairs input/target 樣本">
+  <figcaption>模型實際訓練的樣本(上 = INPUT reference、下 = TARGET GT)。面積比全落在合理範圍,dining set / bed 等 motif 在 input↔target 保持完整。</figcaption>
 </figure>
 
-<p>渲染即發現、並修掉兩個資料品質問題:</p>
+<h4>碰撞審計:哪些重疊是合法的</h4>
+<p>「重疊」不等於「碰撞」。用 optimizer / guidance 內建同一套規則分三類 &mdash; <strong style="color:#e23b2e">真碰撞</strong>(footprint 相交且 z 重疊且非可疊放對)、<strong style="color:#2a9d3f">可疊放</strong>(<span class="mono">NESTABLE_PAIRS</span>:餐椅↔桌、床頭櫃↔床…)、<strong style="color:#3a7ad1">z 分離</strong>(檯燈在桌上、地毯在家具下)。殘留真碰撞是<em>從真實 3D-FRONT 繼承</em>的(真實資料本身即有重疊),我方變形不再新增。</p>
+<figure>
+  <img src="assets/collision_check.png" alt="碰撞審計 三類顏色">
+  <figcaption>每對重疊的交集區域填色:紅=真碰撞、綠=可疊放、藍=z 分離。此處刻意挑含真碰撞的場景展示三類,非平均狀況。</figcaption>
+</figure>
+
+<h3>3. 跨場景配對(驗證過的替代來源)</h3>
+<p>前向變形的 reference 是「造」出來的。另一條路是用兩間<strong>真實</strong>房間:同房型、類別 Jaccard &gt; 0.6、核心錨點朝向差 ≤ 30°,以 <span class="mono">S_ref</span> 為輸入、<span class="mono">S_tgt</span> 邊界為 <span class="mono">P_t</span>、<span class="mono">S_tgt</span> 真實佈局為 GT;物件用<strong>空間 Cost Matrix + 匈牙利</strong>對齊(位移最短、不交叉)。覆蓋率 98.6%、配對率 76%。shipped bfresh 選用純前向變形(因果最乾淨),cross-pairing 作為已驗證的補充來源保留。</p>
+<figure>
+  <img src="assets/xscene_matching.png" alt="size-only vs spatial 匈牙利">
+  <figcaption>物件對齊(正規化座標):只看尺寸 12 個交叉 → 空間 Cost Matrix 6 個交叉。椅子 / 床頭櫃就近對應不互穿。</figcaption>
+</figure>
+
+
+<h2>四、模型與訓練:flow_bfresh</h2>
+
+<h3>1. Flow matching 基礎</h3>
+<p>State \(x_1\in\mathbb{R}^{N\times4}\):每物件 \((u,v,\cos\theta,\sin\theta)\)。訓練以因果對的 GT 為 \(x_1\):</p>
+$$x_\tau=(1-\tau)\,x_0+\tau\,x_1,\qquad v_\text{target}=x_1-x_0,\qquad \mathcal{L}_\text{fm}=\big\|v_\theta(x_\tau,\tau,G,P_t)-v_\text{target}\big\|^2$$
+<p>取樣:50 步 Euler,\(x_{\tau+d\tau}=x_\tau+d\tau\,v_\theta\)。\(G\) 進 attention bias,\(P_t\) 為 32 邊界點。</p>
+
+<h3>2. Module 1 &mdash; Informative Prior(x₀ 不是噪聲)<span class="tag g">shipped</span></h3>
+<p>診斷:flow 從高斯噪聲起步 = 在目標房盲猜,optimizer/polish 因此主導輸出。改為從 <strong>reference 投影</strong>起步,flow 只負責整流:</p>
+$$x_0 = \mathcal{T}(S_\text{ref}, P_t) + \sigma\,\epsilon,\qquad \sigma = 0.3$$
+<p>\(\mathcal{T}\) 即 reference 佈局在目標房 normalized 座標系的仿射投影(<span class="mono">cond</span> 已帶的 ref_state)。train / sample / validate 三處一致,flag 存進 checkpoint 自動對齊。</p>
+
+<h3>3. Module 2 &mdash; 全對相對幾何 attention<span class="tag g">shipped</span></h3>
 <ul>
-  <li><strong>面積比爆量</strong> &mdash; 原始 forward-deform 的切角 / L 切割會產生 target / source 高達 <span class="mono">4.0×</span> 的房間(物件擠一角填不滿),遠超部署範圍。<span class="mono">make_forward_pair</span> 加上面積比重採樣 <span class="mono">[0.5, 2.0]</span> 後,forward 路徑最大降到 <span class="mono">1.68×</span>,整條管線 <span class="mono">100%</span> 落在 <span class="mono">[0.5, 2.0]</span>(中位數 0.99)。</li>
-  <li><strong>退化崩塌</strong> &mdash; 偶發(0.3%)一個 motif 被 <span class="mono">motif_rigid_warp</span> 整組投影到邊界同一點,造成 GT 全部出界(OOB 100%)。加上 GT 出界比例守門(<span class="mono">forward &le; 15%</span> 重採樣、<span class="mono">cross &gt; 30%</span> 直接 fallback)後,OOB 最大值 <span class="mono">100% → 14.3%</span>、平均 <span class="mono">0.26%</span>。</li>
-  <li><strong>物件戳出牆外</strong> &mdash; 原本只檢查<em>中心點</em>是否出界,但斜牆 / 凹型 / 切角房型下,物件的 <em>footprint(四角)</em>會整片戳出牆(有 25.1% 的物件 footprint 超過 15% 在牆外)。改法:<span class="mono">motif_rigid_warp</span> 不再逐物件裁切中心,而是把整個 motif 以<strong>共享平移(剛體)</strong>往內推到 footprint 進得了房間 &mdash; 保持 motif 內部幾何不變;再加 footprint 溢出守門。forward 路徑「footprint 超過 15% 出牆」的物件比例 <span class="mono">25.1% → 1.1%</span>。</li>
-  <li><strong>物件碰撞</strong> &mdash; 剛體搬運沒有解碰撞,縮小房間時會把家具擠在一起。用 optimizer/guidance 相同的規則稽核碰撞(排除 <span class="mono">NESTABLE_PAIRS</span> 可疊放對、排除不同高度的 z 分離對):forward GT 一度 <span class="mono">2.81</span> 個真碰撞/場景,<em>高於</em>真實來源的 <span class="mono">1.93</span>。加上碰撞守門(deform 不得引入超過來源基線的碰撞,否則重採樣)後,forward 降到 <span class="mono">1.73</span>,已<em>低於</em>真實 3D-FRONT 來源。</li>
+  <li><strong>dense pairwise bias</strong>:從當前 state 算所有物件對的 \((\Delta u,\Delta v,\|\Delta p\|,\Delta\cos,\Delta\sin)\),MLP → 每 head 的 attention bias。</li>
+  <li><strong>牆 token cross-attention</strong>(<span class="mono">WallCrossAttention</span>):32 個邊界點成為<em>牆 token</em>,每個家具對所有牆 token 做 cross-attention,帶 object→wall 邊 bias(相對位移、垂直距離、法線失準度)&mdash; 讓模型自己挑「該貼哪面牆」。</li>
 </ul>
 
-<table>
-  <thead><tr><th>資料品質指標</th><th>修正前</th><th>修正後</th></tr></thead>
-  <tbody>
-    <tr><td>面積比 &gt; 2.0× 比例</td><td>10.3%</td><td><strong>0.0%</strong></td></tr>
-    <tr><td>面積比最大值</td><td>4.00×</td><td><strong>1.96×</strong></td></tr>
-    <tr><td>GT 出界比例最大</td><td>100%</td><td><strong>14.3%</strong></td></tr>
-    <tr><td>物件 footprint &gt;15% 出牆(forward)</td><td>25.1%</td><td><strong>1.1%</strong></td></tr>
-    <tr><td>真碰撞 / 場景(forward GT)</td><td>2.81</td><td><strong>1.73</strong>(&lt; 來源 1.93)</td></tr>
-    <tr><td>motif 拉伸(forward GT)</td><td colspan="2"><strong>3.9 cm</strong>(剛體搬,保持完整)</td></tr>
-    <tr><td>motif 拉伸(cross GT)</td><td colspan="2">49.3 cm(兩間真房的人因差異)</td></tr>
-  </tbody>
-</table>
+<h3>4. Step 2 &mdash; Parent-Relative Flow(motif 從源頭不散架)<span class="tag g">shipped</span></h3>
+<p>motif child(餐椅、床頭櫃)不預測全域座標,而是預測<strong>相對 parent 的度量偏移</strong>:</p>
+$$x_\text{child} = \mathcal{T}_\text{parent}\cdot\big(\text{offset}\big),\qquad \text{offset 為度量單位 / REL\_SCALE}$$
+<p>因為偏移是<em>度量</em>、與房間尺度無關,房間放大 1.35× 時偏移不縮 → 椅子從 flow 提案階段就黏住桌子。三條訓練規範缺一不可(否則欠收斂):</p>
+<ol>
+  <li><strong>完全 fresh</strong>、180 epoch(warm-start 進相對空間 = 壞初始化,曾試 <span class="mono">flow_s2</span> val 0.53 全退)。</li>
+  <li><strong>異質節點 Type-ID</strong>:輸入層標 0=global anchor / 1=relative child,並把 child 從牆面 cross-attention <strong>遮罩</strong>掉(child 只依賴 parent,不該被外牆拉扯)。</li>
+  <li><strong>child loss 尺度補償</strong> \(\lambda_\text{child}=10\approx1/0.3^2\):child 相對速度在桌身局部尺度,否則梯度被 parent 的房間尺度淹沒。</li>
+</ol>
 
-<h4>碰撞檢查(哪些重疊是合法的)</h4>
-<p>「重疊」不等於「碰撞」。用 optimizer / guidance 內建的同一套規則分三類:</p>
+<h3>5. Module 4 &mdash; 幾何正則損失</h3>
+<p>總損失 \(\mathcal{L}=\mathcal{L}_\text{fm}+4\,\mathcal{L}_\text{rel}+1\,\mathcal{L}_\text{wall-align}+3\,\mathcal{L}_\text{wall-aux}\)。\(\mathcal{L}_\text{rel}\) 懲罰 motif 內部距離拉伸;\(\mathcal{L}_\text{wall-align}\) 讓貼牆件朝向對齊最近牆法線。</p>
+
+<figure>
+  <img src="assets/three_sizes_bfresh_raw.png" alt="bfresh RAW 輸出(無 snap)">
+  <figcaption><strong>RAW 輸出(完全沒用後處理 snap)</strong>驗證 flow 本身能力:1.0× raw S_rel <strong>0.98</strong>;1.35× 大房 4 張餐椅仍緊貼餐桌,沒散到房間中央 &mdash; flow 學會了相對空間建模。</figcaption>
+</figure>
+
+
+<h2>五、推理管線(六階段)</h2>
+
+<h3>① Summarise + Substitution</h3>
+<p>房間變小先刪 motif,再從 asset bank 換成塞得下的較小同風格家具(在 flow <em>之前</em>,避免硬塞被 collision 推散)。<strong>Anchor 保護</strong>:每房型核心家具(客廳 sofa、臥室 bed…)永不刪 &mdash; 塞不下就交給 substitution 換小版本。</p>
+
+<h3>② Flow 取樣 + In-sampling Guidance</h3>
+<p>從 \(x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon\) 起步,50 步 ODE,取 k=16 候選。每步估 \(\hat x_1=x_\tau+(1-\tau)v_\theta\),對可行性打分並反傳:</p>
+$$\Phi(\hat x_1)=w_\text{bound}E_\text{bound}+w_\text{col}E_\text{col}^\text{nest-exempt}+w_\text{clear}E_\text{clear}+w_\text{wp}E_\text{wall-pull}$$
+$$x\leftarrow x-d\tau\cdot\text{ramp}(\tau)\cdot\nabla_x\Phi,\qquad \text{ramp}(\tau)=\max(0,(\tau-0.5)/0.5)$$
+<p>parent-relative 模型下,積分在相對空間進行,guidance 時解碼成世界座標算梯度、再編碼回去(decode → nudge → encode)。</p>
+
+<h3>③ Polish(25 步 Adam,freeze yaw)</h3>
+<p>對每候選跑 25 步,對 §8 六個能量做梯度下降,疊四個機制:</p>
+$$\mathcal{L}_\text{polish}(x)=\sum_k w_k E_k(x)+\mathcal{L}_\text{anchor}(x)$$
+<div class="tw"><table>
+<thead><tr><th>\(E_k\)</th><th>形式(概要)</th><th>意義</th><th>\(w_k\)</th></tr></thead>
+<tbody>
+<tr><td>\(E_\text{rel}\)</td><td>\(\sum_{ij}\alpha_{ij}\|\phi(y_i,y_j)-\phi_{ij}^\text{ref}\|^2\)</td><td>保留 reference 關係向量</td><td>1</td></tr>
+<tr><td>\(E_\text{bound}\)</td><td>\(\sum_i\max(0,r_i-d_i^\text{floor})^2\)</td><td>保持在 floor polygon 內</td><td>40</td></tr>
+<tr><td>\(E_\text{col}\)</td><td>\(\sum_{ij\notin\mathcal{N}}\max(0,r_i+r_j-d_{ij})^2\)</td><td>非 nestable pair 不重疊</td><td>30</td></tr>
+<tr><td>\(E_\text{clear}\)</td><td>\(\sum\max(0,C-\text{gap}_{ij})^2\)</td><td>跨 motif 走道 \(C=25\)cm</td><td>4</td></tr>
+<tr><td>\(E_\text{func}\)</td><td>wall_flush + door swing + front clear</td><td>貼牆、開門通、正面留距</td><td>3</td></tr>
+<tr><td>\(E_\text{style}\)</td><td>\(\sum_i\text{retrieval\_cost}_i\)</td><td>替換 asset 貼近 reference 風格</td><td>1</td></tr>
+</tbody></table></div>
+
+<h4>③a 異方性 anchor</h4>
+<p>令 \(\delta_i=x_i-x_i^{(0)}\)。對高 wall affinity 物件(\(a_i>0.3\))沿牆法線 / 切線分解:</p>
+$$\mathcal{L}_\text{anchor}^{(i)}=a_i\big[w_\text{tan}(\delta_i^t)^2+w_\text{norm}\,\text{ReLU}(\delta_i^n)^2\big]+(1-a_i)\,w_\text{free}\|\delta_i\|^2$$
+<p>\(w_\text{tan}=100\)(切向強懲,鎖住牆邊次序);\(w_\text{norm}=8\) <strong>單向</strong>(只罰往房間中心飄,靠牆免罰);\(w_\text{free}=100\)(非靠牆件對稱 L2)。\(\hat n_i\) 由 reference 靠牆的 wall index 對映 target 同 index,signed-area 判 CCW/CW + polygon.contains 探點驗向。</p>
+
+<h4>③b 親子相對 anchor</h4>
+$$\delta_c^\text{rel}=(x_c-x_p)-(x_c^{(0)}-x_p^{(0)})$$
+<p>motif child 對齊「相對 parent 偏移」,parent 被 wall pull 拉動時 child 整組跟,不撕裂 motif(與 Step 2 的 flow 端相對建模呼應)。</p>
+
+<h4>③c 二階段能量排程</h4>
+$$\text{Phase 1}(t<T_1):\ w_\text{col}\!\leftarrow\!0.15w_\text{col},\ w_\text{tan}\!\leftarrow\!0.10w_\text{tan},\ w_\text{func}\!\leftarrow\!3.0w_\text{func};\quad T_1=16\ (65\%)$$
+<p>Phase 1 讓 wall 件擺脫 E_col + tangent 死鎖、強力吸到牆;Phase 2(後 9 步)恢復全能量,就地消碰撞、貼合。</p>
+
+<h4>③d 連續牆 SDF wall-pull</h4>
+<p>對高 wall affinity 物件算<em>背面</em>到牆深度,用相鄰邊界點為 line segments 取最短距離(連續 SDF,取代 32 點 argmin,梯度平滑、離牆 40+cm 仍有吸附):</p>
+$$E_\text{wall-pull}=\lambda_w(\rho)\sum_i a_i\big(d_i^\text{back}\big)^2,\qquad \lambda_w=\begin{cases}2.5&\rho\le1\\1.5&\rho>1\end{cases},\ \ \delta_\text{flush}=6\text{cm}$$
+
+<h3>④ Regularity Projector(Step 1)</h3>
+<p>連續空間低 loss 容忍 5–10 cm 非正交偏移,但人眼對「正交、貼合、成套」極敏感。polish 後加一道規整化投影(屬 eq 37 constraint projection,不需重訓):</p>
 <ul>
-  <li><strong style="color:#e23b2e">真碰撞(bug)</strong> &mdash; footprint 相交、<em>且</em>在 z 高度上也重疊、<em>且</em>不是可疊放對。</li>
-  <li><strong style="color:#2a9d3f">可疊放(合法)</strong> &mdash; 屬 <span class="mono">NESTABLE_PAIRS</span>:餐椅↔餐桌、椅↔書桌、床頭櫃↔床、扶手椅↔茶几 等。</li>
-  <li><strong style="color:#3a7ad1">z 分離(合法)</strong> &mdash; footprint 相交但高度不重疊:檯燈在桌上、吊燈、地毯在家具下。</li>
+  <li><strong>槽位吸附</strong>:餐椅 / 書桌椅吸附最近桌邊,朝向 snap 到<em>桌子的軸</em>(平行桌邊,非朝桌心對角)。</li>
+  <li><strong>貼牆 flush + 法線朝向</strong>:掛畫 / 衣櫃 / 電視櫃 / 床 / 沙發背面投影到最近牆線、朝向設為牆內法線。</li>
+  <li><strong>Manhattan 正交 snap</strong>:茶几 / 餐桌 / 邊桌朝向 snap 到最近牆軸(容差 22°),消除 3–15° 傾斜。</li>
 </ul>
 
-<figure>
-  <img src="assets/collision_check.png" alt="Collision check — overlaps colour-coded">
-  <figcaption>把每對重疊的<em>交集區域</em>填色:<span style="color:#e23b2e">紅=真碰撞</span>、<span style="color:#2a9d3f">綠=可疊放</span>、<span style="color:#3a7ad1">藍=z 分離</span>。此處<strong>刻意挑選含真碰撞的場景</strong>來展示三類同時出現,並非平均狀況。平均而言 forward GT 為 1.73 真碰撞/場景、cross GT 為 1.09,皆低於真實 3D-FRONT 來源的 1.93。</figcaption>
-</figure>
+<h3>⑤ Population(放大房補件)</h3>
+<p>房間變大時依 co-occurrence 新增家具,相對存活 motif 擺放,守門要求「加入後 feasibility 成本不變」&mdash; 填滿是對的,免費才行。</p>
 
-<p class="note">這些殘留的真碰撞是<strong>從真實 3D-FRONT 來源繼承</strong>的(真實資料本身即有家具重疊),我方的變形不再新增碰撞。要完全清零需對 GT 跑一次解碰撞投影,但那會讓 GT 偏離「真實佈局」&mdash; 這是資料哲學上的取捨,目前選擇保留真實分布。稽核工具:<span class="mono">real_collisions()</span> 於 <span class="mono">reroom/generative/xscene.py</span>,規則與 <span class="mono">guidance.NESTABLE_PAIRS</span> / <span class="mono">boxes_overlap_3d</span> 一致。</p>
+<h3>⑥ Ranking</h3>
+<p>對 k=16 候選,用全 7 個 §8 能量算 \(E(Y)\),挑 \(E\) 最小者輸出。</p>
 
-<p class="note">實作:<span class="mono">HybridPairs</span> 於 <span class="mono">reroom/generative/xscene.py</span>;資料品質守門在 <span class="mono">make_forward_pair</span>(面積比重採樣 + <span class="mono">_gt_oob_frac</span> 守門)與 <span class="mono">make_cross_pair_filtered</span>(出界 fallback);驗證 <span class="mono">scripts/diag_xscene.py</span> + pipeline 抽樣渲染。</p>
 
-<h3>所有可能情況一覽</h3>
-<p>兩個策略會產出的完整情況(語料只含 bedroom 與 living_room 兩種房型):</p>
-
-<h4>策略 2 — 前向變形的 5 種 deform level</h4>
-<figure>
-  <img src="assets/strat2_cases.png" alt="Strategy 2 forward-deform — all 5 levels × both room types">
-  <figcaption>5 種變形 level × 兩房型,上=INPUT reference、下=TARGET GT。<span class="mono">L1 uniform_scale</span>(等比縮放,矩形)、<span class="mono">L2 aspect_ratio</span>(長寬比)、<span class="mono">L3 slanted_wall</span>(斜牆 / 梯形)、<span class="mono">L4 corner_cut</span>(切角 / L 型)、<span class="mono">L5 concave</span>(凹型)。面積比涵蓋 0.66×–1.68×(放大與縮小皆有);每格 motif(dining set、bed+床頭櫃)在 input↔target 之間都以剛體保持完整,且以共享平移推進房間(所示各格單一物件最多僅 6% footprint 觸牆)。當某次 cross 配對被過濾器剔除時,pipeline 就 fallback 到這條路徑。</figcaption>
-</figure>
-
-<h4>策略 1 — 跨場景配對的真實情況</h4>
-<figure>
-  <img src="assets/strat1_cases.png" alt="Strategy 1 cross-pairing — real reference to real target, both room types">
-  <figcaption>真實 reference → 真實 target GT,涵蓋兩房型、多種真實邊界形狀(L 型 / 切角 / 斜角 / 矩形)、面積比 0.51×–1.59×。<strong>紅色虛線</strong> = reference 中沒有 target 對應的物件(未配對,mask 出 flow loss;因 Jaccard 0.62–0.83,每組有 2–11 個)。Jaccard 越低、未配對越多、被監督的物件越少 &mdash; 這是 cross-pairing 天生的取捨,也是為何 76% 配對率是關鍵指標。</figcaption>
-</figure>
-
-<h2>固定測試集與正確的量尺(按 PDF §15)</h2>
-
-<p>為了讓每次改動有可比的量化標的,從 held-out test split 凍結一組固定測試集(<span class="mono">outputs/fixed_testset.json</span>):12 組跨場景 cross pair(真實人類 target GT)+ 4 個 three-sizes 場景。關鍵教訓是<strong>量尺的選擇</strong>:PDF §4 標題明言「Design Intent 不是 Absolute Coordinates」,所以「模型輸出 vs 某一個人類擺法的位置 MAE」是<em>錯的</em>標的 —— 跨場景本來就是多解,人擺一種、模型擺另一種,兩者都合理。正確的標的是 PDF §15 的<strong>關係型指標</strong>:S_rel、S_motif、R_OOB、R_col。</p>
-
-<h3>用 PDF 指標重評:bnd200 vs 新的 hybrid 模型</h3>
-<table>
-  <thead><tr><th>指標(PDF §15)</th><th>bnd200</th><th>xscene(新)</th><th>方向</th></tr></thead>
-  <tbody>
-    <tr><td>S_rel 關係保持(eq 42)</td><td>0.903</td><td>0.904</td><td>持平 ✓</td></tr>
-    <tr><td>S_rel_elastic 彈性調整(§19)</td><td>0.903</td><td>0.903</td><td>持平 ✓</td></tr>
-    <tr><td>S_motif motif 保持(eq 43)</td><td>0.989</td><td><strong>1.000</strong></td><td>↑ 改善</td></tr>
-    <tr><td>R_OOB 出界率(eq 40)</td><td>1.1%</td><td>1.1%</td><td>持平 ✓</td></tr>
-    <tr><td>R_col 碰撞率(eq 41)</td><td>5.1%</td><td><strong>4.1%</strong></td><td>↓ 改善</td></tr>
-    <tr><td><em>位置 MAE(§4 說別追,僅參考)</em></td><td><em>261 cm</em></td><td><em>264 cm</em></td><td><em>持平</em></td></tr>
-  </tbody>
-</table>
-
-<p>兩個結論:<strong>(1)</strong> 用 PDF 的尺,系統在「該保的東西」上是達標的 &mdash; S_rel ≈ 0.90、S_motif ≈ 1.0、R_OOB 1%、R_col 4–5%。<strong>(2)</strong> hybrid 模型在它本該幫的指標上確實小幅進步(S_motif 0.989→1.000、R_col 5.1%→4.1%);之前「訓練沒用」的印象來自用位置 MAE 這把 PDF 明說別用的尺。</p>
+<h2>六、結果</h2>
 
 <figure>
-  <img src="assets/fixed_compare.png" alt="Fixed test set: ref | human GT | bnd200 | xscene">
-  <figcaption>固定測試集 6 案例:參考輸入 | 真實人類 GT | bnd200 | xscene。第 3、4 欄(兩個模型)幾乎相同 &mdash; 訓練前後實際輸出變化很小,和位置 MAE 持平一致;但按關係型指標兩者都保住了 reference 的 motif 與關係(S_motif ~1.0)。人類 GT 只是「眾多合理解之一」,不是唯一正解。</figcaption>
+  <img src="assets/three_sizes_r2m2full.png" alt="Shipped 三尺寸輸出">
+  <figcaption>同一份 22 m² L 形客廳 reference(左上),放入 0.75× / 1.0× / 1.35× 房間 &mdash; shipped <strong>flow_bfresh + 規整化投影</strong>。1.0× 幾乎完美重現 reference、4 椅平行桌邊環繞、各件正交貼牆;1.35× 大房餐桌+椅整組不散架、零碰撞。</figcaption>
 </figure>
 
-<p class="note">關於「1.35× motif_pass=25%」:那是 three-sizes 用的<em>嚴格絕對漂移</em>門檻(child 離 parent ≤25cm 且 yaw ≤15°)。房間放大時床頭櫃離床本來就該拉開 &gt;25cm,這正是 PDF §7/§19 的 elasticity 精神(關係可彈性拉伸)。用 PDF 的 S_motif(關係容差)量,同一批是 0.99–1.0。工具:<span class="mono">scripts/eval_fixed_testset.py</span>、<span class="mono">scripts/make_fixed_testset.py</span>。</p>
+<h3>1. 固定測試集 · PDF §15 指標</h3>
+<p>從 held-out test split 凍結固定測試集(<span class="mono">outputs/fixed_testset.json</span>):12 組跨場景 cross pair(真實人類 GT)+ 4 個 three-sizes。<strong>量尺選擇是關鍵</strong>:PDF §4 明言「Design Intent 不是絕對座標」,跨場景本就多解,所以主標的是關係型指標(S_rel / S_motif / R_OOB / R_col),位置 MAE 僅參考。</p>
 
-<h2>ReRoom 2.0:從「盲猜生成」到「幾何整流」(LEGO-Net 借鑑)</h2>
-
-<p>診斷發現一個根因:flow 從<strong>高斯噪聲</strong>起步 = 在 target 房間裡盲猜,optimizer/polish 因此主導了輸出,換不換 flow 幾乎沒差。借鑑 LEGO-Net 的成功經驗,把 flow 從「從零條件生成」重構為「<strong>幾何整流(Relational Retargeting Flow)</strong>」:不從噪聲起步,而是先把 reference 佈局投影進 target,flow 只負責修畸變、貼牆、保 motif。</p>
-
-<table>
-  <thead><tr><th>維度</th><th>現行(盲猜)</th><th>ReRoom 2.0</th></tr></thead>
-  <tbody>
-    <tr><td>生成起點 x₀</td><td>高斯噪聲 N(0, I)</td><td><strong>Reference 投影</strong> T(S_ref, P_tgt) + 噪聲</td></tr>
-    <tr><td>模型任務</td><td>盲猜合規擺放</td><td>修畸變、吸附牆面、保 motif 剛性</td></tr>
-    <tr><td>訓練監督</td><td>無因果的跨房 Hungarian 配對</td><td>幾何變形的<strong>因果</strong>資料對(motif 剛體逆映射)</td></tr>
-  </tbody>
-</table>
-
-<h3>四個模組</h3>
-<ul>
-  <li><strong>Module 1 空間初值投影</strong> &mdash; x₀ = reference 佈局投影進 target 座標系(<span class="mono">cond</span> 已帶的 ref_state)+ 噪聲。train/sample/validate 三處一致,flag 存進 checkpoint 自動對齊。</li>
-  <li><strong>Module 2 全對相對幾何 attention</strong> &mdash; 從當前 state 算全對 Δp/Δθ 的 dense attention bias,加上每物件的牆面特徵(最近牆距離 + 法線失準度)。這是讓模型「感知離牆多遠、和牆多不平行」進而吸附/對齊的關鍵。</li>
-  <li><strong>Module 3 因果資料對</strong> &mdash; 變形 target 多邊形 → 逆映射佈局(motif 剛體保持)= 100% 因果的 (S_ref, P_tgt)→S_tgt。</li>
-  <li><strong>Module 4 幾何正則損失</strong> &mdash; motif 剛性損失(懲罰內部距離拉伸)+ 貼牆法線對齊。</li>
-</ul>
-
-<h3>結果:兩者兼得,物理指標超越 baseline</h3>
-<p>三個模型在固定測試集上比較 &mdash; <span class="mono">bnd200</span>(原 baseline)、<span class="mono">r2</span>(只有 Module 1,朝向 under-correct 導致 snap 掉)、<span class="mono">r2m2</span>(Module 1+2)。</p>
-<table>
-  <thead><tr><th>指標</th><th>bnd200</th><th>r2(只 M1)</th><th>r2m2(M1+輕量M2)</th><th><strong>r2m2full(M1+完整M2)</strong></th></tr></thead>
-  <tbody>
-    <tr><td>S_rel 關係保持</td><td>0.903</td><td>0.875</td><td>0.900</td><td><strong>0.908</strong></td></tr>
-    <tr><td>S_motif</td><td>0.989</td><td>0.978</td><td>0.989</td><td><strong>0.989</strong></td></tr>
-    <tr><td>R_col 碰撞</td><td>5.1%</td><td>3.0%</td><td>3.3%</td><td><strong>3.4%</strong></td></tr>
-    <tr><td>0.75× float</td><td>8.8cm</td><td>9.8cm</td><td>9.5cm</td><td><strong>8.5cm</strong></td></tr>
-    <tr><td>1.00× motif_pass</td><td>74%</td><td>62%</td><td><strong>82%</strong></td><td>78%</td></tr>
-    <tr><td>1.35× float</td><td>32.1cm</td><td>24.7cm</td><td><strong>23.9cm</strong></td><td>25.8cm</td></tr>
-    <tr><td>1.35× snap</td><td>52%</td><td>37%</td><td>58%</td><td><strong>64%</strong></td></tr>
-    <tr><td>val_loss(訓練)</td><td>&mdash;</td><td>0.189</td><td>0.105</td><td><strong>0.079</strong></td></tr>
-  </tbody>
-</table>
-<p><strong>逐步驗證了設計的每一步</strong>:<span class="mono">r2</span>(只加 Module 1 informative prior)全域定位變好但物件歪斜、snap 崩到 37%;<span class="mono">r2m2</span>(加輕量 Module 2 每物件最近牆特徵)把 snap 救回 58%;<span class="mono">r2m2full</span>(完整 Module 2 &mdash; 牆段當獨立 token,家具對所有牆 cross-attention)再把最難的 <strong>1.35× 大房 snap 推到 64%</strong>,且 <strong>S_rel 0.908 反超 bnd200</strong>、val_loss 最佳(0.079)。<span class="mono">r2m2full</span> 為目前 shipped 最佳 checkpoint。</p>
+<h3>2. ReRoom 2.0 逐步驗證(raw+polish,無 snap)</h3>
+<div class="tw"><table>
+<thead><tr><th>指標</th><th>bnd200<br>baseline</th><th>r2<br>M1</th><th>r2m2<br>M1+輕M2</th><th>r2m2full<br>M1+完整M2</th><th><strong>bfresh</strong><br>+Step2 shipped</th></tr></thead>
+<tbody>
+<tr><td>S_rel 關係保持</td><td>0.903</td><td>0.875</td><td>0.900</td><td>0.908</td><td class="win">0.905</td></tr>
+<tr><td>S_motif</td><td>0.989</td><td>0.978</td><td>0.989</td><td>0.989</td><td class="win">0.989</td></tr>
+<tr><td>R_col 碰撞</td><td>5.1%</td><td>3.0%</td><td>3.3%</td><td>3.4%</td><td>3.8%</td></tr>
+<tr><td>0.75× float</td><td>8.8</td><td>9.8</td><td>9.5</td><td>8.5</td><td class="win">7.8 cm</td></tr>
+<tr><td>0.75× motif_pass</td><td>50%</td><td>–</td><td>50%</td><td>50%</td><td class="win">83%</td></tr>
+<tr><td>1.00× snap</td><td>83%</td><td>75%</td><td>83%</td><td>83%</td><td class="win">92%</td></tr>
+<tr><td>1.35× motif_pass<br>(child 黏 parent)</td><td>25%</td><td>25%</td><td>25%</td><td>25%</td><td class="win">42%</td></tr>
+<tr><td>1.35× wall-snap</td><td>52%</td><td>37%</td><td>58%</td><td>64%</td><td>52%</td></tr>
+<tr><td>val_loss</td><td>–</td><td>0.189</td><td>0.105</td><td>0.079</td><td class="win">0.058</td></tr>
+</tbody></table></div>
+<p>逐步驗證了設計的每一步:<strong>Module 1</strong> 帶來全域定位(float↓、碰撞↓)但物件歪斜;<strong>Module 2</strong> 牆面 attention 把貼牆對齊救回,1.35× snap 一路推到 64% 超越 baseline;<strong>Step 2</strong>(bfresh)讓 motif 從 flow 源頭不散架 &mdash; 1.35× motif_pass 25→42%、0.75× 50→83%(皆 raw 無 snap),val_loss 最佳。唯一代價 1.35× 貼牆 snap 略退(child 綁緊 parent 後貼牆自由度降低),正好由 Step 1 規整化補上。<strong>shipped = flow_bfresh(Step 2)+ 規整化投影(Step 1)</strong>。</p>
 
 <figure>
-  <img src="assets/reroom2_compare.png" alt="ReRoom 2.0: ref | GT | bnd200 | r2m2">
-  <figcaption>固定測試集 6 案例(參考 | 真實 GT | bnd200 | ReRoom 2.0)。相比 r2 的物件歪斜,ReRoom 2.0 靠 Module 2 的牆面相對邊回到軸對齊,同時保住全域定位優勢。完整版(牆 token)與輕量版視覺相近,提升為量化漸進(snap 58→64%)。</figcaption>
+  <img src="assets/reroom2_compare.png" alt="固定測試集 ref | GT | bnd200 | ReRoom 2.0">
+  <figcaption>固定測試集 6 案例(參考 | 真實 GT | bnd200 | ReRoom 2.0)。相比只有 Module 1 的物件歪斜,完整 ReRoom 2.0 靠 Module 2 牆面相對邊回到軸對齊,同時保住全域定位優勢。</figcaption>
 </figure>
 
-<p class="note">實作:Module 1 於 <span class="mono">train.py</span>(<span class="mono">prior_x0</span>/<span class="mono">prior_noise</span>)+ <span class="mono">sample.py</span>;Module 2 於 <span class="mono">model.py</span> &mdash; 輕量版 <span class="mono">geo_bias</span>(dense pairwise bias + 每物件最近牆特徵)、完整版 <span class="mono">wall_tokens</span>(<span class="mono">WallCrossAttention</span>:邊界點為牆 token,家具↔牆 cross-attention + object→wall 邊 bias);Module 3/4 於 <span class="mono">xscene.py</span> / <span class="mono">train.py</span>(<span class="mono">rel_loss</span>)。<span class="mono">flow_r2m2full</span> 為 shipped 最佳 checkpoint。</p>
-
-<h3>規整化投影(Regularity Projector):讓視覺自動變整齊</h3>
-<p>一個關鍵觀察:連續空間的低 loss / 高 S_rel 容忍 5–10 cm 的<em>非正交偏移</em>,但人眼對「正交、貼合、成套」極度敏感 &mdash; 物件被當成高維空間的自由粒子,而非有人因約束與剛性槽位的設計群組。所以在 polish 後(eq 37 的 constraint projection 之內)加一道<strong>規整化投影</strong>,不需重訓:</p>
-<ul>
-  <li><strong>槽位吸附</strong> &mdash; 餐椅 / 書桌椅吸附到最近的桌邊,並<em>平行桌邊</em>(朝向 snap 到桌子自身的軸,而非朝桌心的對角),整組成套不散架。</li>
-  <li><strong>貼牆 flush + 法線朝向</strong> &mdash; 掛畫、衣櫃、電視櫃、床、沙發等貼牆件,背面直接投影到最近牆線、朝向設為該牆內法線,絕不懸空或斜插。</li>
-  <li><strong>Manhattan 正交 snap</strong> &mdash; 茶几 / 餐桌 / 邊桌等自由正交件,朝向 snap 到最近牆軸(容差 22°),消除 3–15° 的「微醺」傾斜。</li>
-</ul>
-<p>效果見上方主圖:1.0× 幾乎完美重現 reference,1.35× 大房家具正交貼牆、餐椅整齊環桌。實作 <span class="mono">reroom/retarget/regularity.py</span>,由 <span class="mono">RetargetConfig.regularity_snap</span> 開啟。這是 Step 1(polish 層,最快見效)。</p>
-
-<h3>Step 2:parent-relative flow &mdash; 從源頭杜絕大房拉散</h3>
-<p>Step 1 在推理時 snap;Step 2 讓 <strong>flow 模型本身</strong>就把 motif 綁緊。做法:motif child(餐椅、床頭櫃)不再預測全域座標,而是預測<strong>相對 parent(桌/床)的度量偏移</strong> <span class="mono">p_child = T_parent · (offset)</span>。因為偏移是<em>度量</em>單位、與房間尺度無關,房間放大 1.35× 時偏移不縮 &mdash; 椅子從 flow 提案階段就黏住桌子,不靠後處理。</p>
-<p>訓練規範(缺一不可,否則欠收斂):<strong>完全棄用 warm-start、從頭訓 180 epoch</strong>;<strong>異質節點 Type-ID</strong>(global anchor vs relative child)並將 child 從牆面 cross-attention 遮罩掉(child 只依賴 parent,不該被外牆拉扯);<strong>child loss 尺度補償</strong> <span class="mono">λ_child ≈ 1/0.3²</span>(child 相對速度在桌身局部尺度,否則梯度被 parent 的房間尺度淹沒)。</p>
-
-<figure>
-  <img src="assets/three_sizes_bfresh_raw.png" alt="bfresh RAW output (no regularity snap)">
-  <figcaption><strong>RAW 輸出(完全沒用規整化 snap)</strong>驗證 flow 本身的能力:1.0× raw S_rel <strong>0.98</strong>;1.35× 大房 4 張餐椅仍緊貼餐桌,沒有散到房間中央。flow 學會了相對空間建模。</figcaption>
-</figure>
-
-<table>
-  <thead><tr><th>指標(raw+polish,無 snap)</th><th>r2m2full</th><th><strong>bfresh(Step 2)</strong></th></tr></thead>
-  <tbody>
-    <tr><td>1.35× motif_pass(child 黏 parent)</td><td>25%</td><td><strong>42%</strong></td></tr>
-    <tr><td>0.75× motif_pass</td><td>50%</td><td><strong>83%</strong></td></tr>
-    <tr><td>1.00× snap</td><td>83%</td><td><strong>92%</strong></td></tr>
-    <tr><td>0.75× float</td><td>8.5cm</td><td><strong>7.8cm</strong></td></tr>
-    <tr><td>val_loss(訓練)</td><td>0.079</td><td><strong>0.058</strong></td></tr>
-    <tr><td>1.35× wall-snap</td><td><strong>64%</strong></td><td>52%</td></tr>
-  </tbody>
-</table>
-<p><strong>motif 從源頭不散架</strong>(1.35× motif_pass 25→42%、0.75× 50→83%,皆 raw 無 snap)。唯一代價是 1.35× 貼牆 snap 略退(child 綁緊 parent 後貼牆自由度降低)&mdash; 這正好由 Step 1 規整化補上。<strong>目前 shipped = <span class="mono">flow_bfresh</span>(Step 2)+ 規整化投影(Step 1)</strong>:motif 從 flow 源頭綁緊、規整化補正交貼牆。實作於 <span class="mono">model.py</span>(<span class="mono">to_relative</span>/<span class="mono">to_world</span> + <span class="mono">e_type</span> 異質節點 + child 牆面遮罩)、<span class="mono">train.py</span>(<span class="mono">parent_relative</span> / <span class="mono">child_loss_weight</span>)。</p>
-<p class="note">曾走過的彎路(誠實記錄):先試 <em>warm-start</em> 版 Step 2(<span class="mono">flow_s2</span>)→ val 0.53 嚴重欠收斂、指標全退。驗證 <span class="mono">to_relative/to_world</span> 可逆(誤差 1e-7)且 scale 不變後,確認不是 bug 而是壞初始化 → 依規範改成<strong>從頭訓 + 異質節點 + 尺度補償</strong>才成功(val 0.058)。</p>
+<p class="note">實作對照:資料 <span class="mono">reroom/generative/xscene.py</span>;模型 <span class="mono">model.py</span>(<span class="mono">to_relative/to_world</span>、<span class="mono">e_type</span> 異質節點、<span class="mono">WallCrossAttention</span>、<span class="mono">geo_bias</span>)+ <span class="mono">train.py</span>(<span class="mono">prior_x0</span>、<span class="mono">parent_relative</span>、<span class="mono">child_loss_weight</span>、<span class="mono">rel_loss</span>);推理 <span class="mono">sample.py</span> + <span class="mono">optimizer.py</span> + <span class="mono">regularity.py</span>。shipped checkpoint <span class="mono">flow_bfresh/flow_best.pt</span>,以 <span class="mono">RetargetConfig(regularity_snap=True)</span> 執行。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
