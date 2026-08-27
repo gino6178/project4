@@ -335,7 +335,7 @@ $$\Pi_\theta(x_0)=\underset{K\text{-step unroll}}{\arg\min}\;\underbrace{w_a\lVe
 </tbody></table></div>
 
 <h2>7. Conclusion</h2>
-<p>ReRoom casts reference-guided retargeting as a hierarchical, geometry-conditioned continuous flow whose inductive bias is topology-preserving under diagonal metric scaling (by construction) and empirically under general deformation, terminated by a single differentiable geometric projection. A single forward pass plus a single projection removes multi-step test-time optimization while achieving the lowest collision and best relational retention among surviving objects in our ablation.</p>
+<p>ReRoom casts reference-guided retargeting as a hierarchical, geometry-conditioned continuous flow whose inductive bias is topology-preserving under diagonal metric scaling (by construction) and empirically under general deformation, terminated by a single differentiable geometric projection. A single forward pass plus a single projection removes multi-step test-time optimization while preserving relational structure at no measurable collision penalty and near-affine relation retention among surviving objects.</p>
 <p><strong>Limitations.</strong> We list these plainly rather than defer them.</p>
 <ul>
 <li><strong>No learned baseline.</strong> Our only comparison is the affine warp; a head-to-head against an <em>adapted</em> ATISS/LEGO-Net/DiffuScene on our metrics — the experiment that would substantiate "existing generative models cannot bind a reference to a new boundary" — is the single most important missing result.</li>
