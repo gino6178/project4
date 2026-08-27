@@ -446,6 +446,11 @@ $$E_\text{wall-pull}=\lambda_w(\rho)\sum_i a_i\big(d_i^\text{back}\big)^2,\qquad
 <p><strong>兩個結論</strong>:(1) 關係拓撲與近乎無碰撞的分佈是 <span class="mono">DiT + WallCrossAttention</span> 本體學出來的 &mdash; S_rel 經 polish 幾乎不變(Δ0.4%),raw R_col 僅 2.4%,直接否定「全靠後處理」。(2) polish/regularity 定位為<strong>有界、確定性的幾何投影算子</strong>(eq 37 的 constraint projection):它只做正交對齊與貼牆(平均移 19 cm),<em>不改變拓撲</em> &mdash; 誠實地說,這不是「可忽略的 &lt;5% 微調」,而是一道<em>拓撲保持</em>的 alignment projection。</p>
 
 <figure>
+  <img src="assets/micro_compare.png" alt="raw vs final 微觀位移對比">
+  <figcaption><strong>「19 cm 微調」微觀對比</strong>:灰虛線 = raw flow 輸出、實色 = polish+regularity 後、紅箭頭 = 每物件位移(cm)。raw 的相對排列已經正確;位移箭頭都<em>短</em>且<em>指向牆</em>(貼牆件 flush)或<em>桌邊</em>(餐椅 slot)&mdash; 物件不互換、不重排,拓撲完全不變。直觀證明 polish 是拓撲保持的幾何投影,而非重新生成佈局。</figcaption>
+</figure>
+
+<figure>
   <img src="assets/reroom2_compare.png" alt="固定測試集 ref | GT | bnd200 | ReRoom 2.0">
   <figcaption>固定測試集 6 案例(參考 | 真實 GT | bnd200 | ReRoom 2.0)。相比只有 Module 1 的物件歪斜,完整 ReRoom 2.0 靠 Module 2 牆面相對邊回到軸對齊,同時保住全域定位優勢。</figcaption>
 </figure>
