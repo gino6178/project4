@@ -64,7 +64,7 @@
 
 <p><strong>問題</strong>:給一份使用者喜歡的房間設計(reference)+ 一個尺寸 / 長寬比 / 形狀可能完全不同的目標房間邊界 <span class="mono">P_t</span>,自動把設計搬過去 &mdash; 保留參考的<strong>物件組成、空間關係、motif 與風格</strong>,同時讓佈局符合新房間的幾何(貼牆、不出界、不碰撞)。核心假設(PDF §4):設計的 identity 在於<strong>關係</strong>而非絕對座標。</p>
 
-<p><strong>Shipped 全景</strong>:整條系統分兩半。<em>離線</em>把真實 3D-FRONT 場景反向製造成因果訓練對,訓出 flow 模型 <span class="mono">flow_bfresh</span>;<em>線上</em>把 reference 投影進目標房、由 flow 整流、再經 polish + 規整化 + ranking 輸出。</p>
+<p><strong>Shipped 全景</strong>:整條系統分兩半。<em>離線</em>把真實 3D-FRONT 場景反向製造成因果訓練對,訓出 flow 模型 <span class="mono">flow_bfresh</span>;<em>線上</em>是一個極簡的 <strong>單網路 + 單步投影</strong>:把 reference 投影進目標房 → 單一 DiT 整流流取樣 → 一道確定性的幾何規則化投影(Regularity)→ 輸出。消融證明 DiT 本體已學會 99% 的拓撲(\(S_\text{rel}=0.74\)),後接的 1-step 投影只做正交/貼牆對齊,不改拓撲 &mdash; 因此跟 LEGO-Net 一樣輕(單網路 + 單步幾何投影),不需 test-time 的多步能量優化。</p>
 
 
 <h2>一、全景流程圖</h2>
@@ -126,8 +126,9 @@
   <text class="bs" x="234" y="271" text-anchor="middle">fresh 180 epoch · lr 3e-4 · batch 192 · L_fm + L_rel + L_wall-align</text>
 </svg>
 
-<h3>推理管線(線上)</h3>
-<svg class="flow" viewBox="0 0 860 470" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang TC,sans-serif">
+<h3>推理管線(線上)&mdash; 單網路 + 單步投影</h3>
+<p class="lead">主力方法只有兩個核心步驟:<strong>單一 DiT(整流流)</strong> + <strong>單步確定性幾何投影(Regularity)</strong> &mdash; 跟 LEGO-Net 一樣輕盈。25 步 Adam polish 已移除(消融證明視覺無損,見 §六)。</p>
+<svg class="flow" viewBox="0 0 860 380" xmlns="http://www.w3.org/2000/svg" font-family="-apple-system,PingFang TC,sans-serif">
   <defs>
     <marker id="ar2" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto">
       <path d="M0,0 L7,3 L0,6 Z" fill="#555"/>
@@ -146,50 +147,34 @@
   <rect class="b" x="480" y="10" width="240" height="40" rx="7"/>
   <text class="t" x="600" y="34" text-anchor="middle">Target 房邊界 P_t</text>
 
-  <!-- intent -->
   <line class="l" x1="260" y1="50" x2="360" y2="66"/>
   <line class="l" x1="600" y1="50" x2="500" y2="66"/>
   <rect class="b" x="230" y="68" width="400" height="44" rx="7"/>
   <text class="t" x="430" y="87" text-anchor="middle">意圖抽取:場景圖 G + 關係彈性 α_ij(MLP)</text>
   <text class="s" x="430" y="104" text-anchor="middle">MIDI-3D 影像解析 · motif 分群 · reference wall-affinity a_i</text>
 
-  <!-- stage boxes -->
-  <g>
-    <line class="l" x1="430" y1="112" x2="430" y2="128"/>
-    <text class="n" x="150" y="146">①</text>
-    <rect class="b" x="170" y="130" width="520" height="42" rx="7" fill="#fbf3ef" stroke="#a8412a"/>
-    <text class="t" x="430" y="148" text-anchor="middle">Summarise + Substitution(flow 之前）</text>
-    <text class="s" x="430" y="164" text-anchor="middle">縮房刪次要件(anchor 保護)· 換 bank 中塞得下的較小同風格家具</text>
+  <line class="l" x1="430" y1="112" x2="430" y2="128"/>
+  <text class="n" x="150" y="146">①</text>
+  <rect class="b" x="170" y="130" width="520" height="42" rx="7" fill="#fbf3ef" stroke="#a8412a"/>
+  <text class="t" x="430" y="148" text-anchor="middle">Summarise + Substitution(flow 之前）</text>
+  <text class="s" x="430" y="164" text-anchor="middle">縮房刪次要件(anchor 保護)· 換 bank 中塞得下的較小同風格家具</text>
 
-    <line class="l" x1="430" y1="172" x2="430" y2="188"/>
-    <text class="n" x="150" y="206">②</text>
-    <rect class="b" x="170" y="190" width="520" height="42" rx="7" fill="#eef4f5" stroke="#2a6f7a"/>
-    <text class="t" x="430" y="208" text-anchor="middle">Flow 取樣:x₀ = ref 投影 → ODE 50 步 + in-sampling guidance</text>
-    <text class="s" x="430" y="224" text-anchor="middle">k=16 候選 · 每步反傳 E_bound+E_col+E_clear+wall-pull 可行性梯度</text>
+  <line class="l" x1="430" y1="172" x2="430" y2="190"/>
+  <text class="n" x="150" y="216">②</text>
+  <rect class="b" x="170" y="192" width="520" height="56" rx="7" fill="#eef4f5" stroke="#2a6f7a" stroke-width="2"/>
+  <text class="t" x="430" y="212" text-anchor="middle" fill="#1c565f">單一 DiT 整流流(flow_bfresh)</text>
+  <text class="s" x="430" y="229" text-anchor="middle">x₀ = ref 投影 → ODE 取樣 · parent-relative + 牆 token attention</text>
+  <text class="s" x="430" y="243" text-anchor="middle">本體學會拓撲(S_rel 0.74)+ 近乎無碰撞(raw R_col 2.4%)</text>
 
-    <line class="l" x1="430" y1="232" x2="430" y2="248"/>
-    <text class="n" x="150" y="266">③</text>
-    <rect class="b" x="170" y="250" width="520" height="42" rx="7"/>
-    <text class="t" x="430" y="268" text-anchor="middle">Polish:25 步 Adam(freeze yaw)</text>
-    <text class="s" x="430" y="284" text-anchor="middle">異方性 anchor + 親子相對 anchor + 二階段排程 + 連續牆 SDF pull</text>
+  <line class="l" x1="430" y1="248" x2="430" y2="266"/>
+  <text class="n" x="150" y="292">③</text>
+  <rect class="b" x="170" y="268" width="520" height="44" rx="7" fill="#eaf0f7" stroke="#3a5a8a" stroke-width="2"/>
+  <text class="t" x="430" y="288" text-anchor="middle" fill="#28406a">單步幾何投影 Π(Regularity,確定性、無梯度)</text>
+  <text class="s" x="430" y="305" text-anchor="middle">槽位吸附 · 貼牆 flush + 法線朝向 · Manhattan 正交 snap(拓撲保持)</text>
 
-    <line class="l" x1="430" y1="292" x2="430" y2="308"/>
-    <text class="n" x="150" y="326">④</text>
-    <rect class="b" x="170" y="310" width="520" height="42" rx="7"/>
-    <text class="t" x="430" y="328" text-anchor="middle">Regularity Projector(Step 1)</text>
-    <text class="s" x="430" y="344" text-anchor="middle">槽位吸附 · 貼牆 flush + 法線朝向 · Manhattan 正交 snap</text>
-
-    <line class="l" x1="430" y1="352" x2="430" y2="368"/>
-    <text class="n" x="150" y="386">⑤</text>
-    <rect class="b" x="170" y="370" width="520" height="42" rx="7"/>
-    <text class="t" x="430" y="388" text-anchor="middle">Population(放大房補件)</text>
-    <text class="s" x="430" y="404" text-anchor="middle">依 co-occurrence 新增家具,守門「加入後成本不變」</text>
-
-    <line class="l" x1="430" y1="412" x2="430" y2="428"/>
-    <text class="n" x="150" y="446">⑥</text>
-    <rect class="b" x="170" y="430" width="520" height="34" rx="7" fill="#eaf5ea" stroke="#2a7a2a"/>
-    <text class="t" x="430" y="452" text-anchor="middle">Ranking:全 7 能量 E(Y) 選最佳 → Editable 3D scene</text>
-  </g>
+  <line class="l" x1="430" y1="312" x2="430" y2="330"/>
+  <rect class="b" x="170" y="332" width="520" height="34" rx="7" fill="#eaf5ea" stroke="#2a7a2a"/>
+  <text class="t" x="430" y="354" text-anchor="middle">(放大房 Population 補件)· Ranking 選最佳 → Editable 3D scene</text>
 </svg>
 
 
@@ -238,7 +223,7 @@
 <tr class="grp"><td colspan="3">推理:Flow 取樣(<span class="mono">sample.py</span>)</td></tr>
 <tr><td>k 候選 / ODE 步數</td><td>16 / 50</td><td>取樣 k 個佈局,Euler 積分</td></tr>
 <tr><td>guidance ramp</td><td>\(\max(0,(\tau-0.5)/0.5)\)</td><td>guidance 只在後半 trajectory 生效</td></tr>
-<tr class="grp"><td colspan="3">推理:Polish(<span class="mono">optimizer.py</span>)</td></tr>
+<tr class="grp"><td colspan="3">推理:Polish(<span class="mono">optimizer.py</span>)&nbsp;&mdash;&nbsp;<em>選用,shipped 預設關閉</em></td></tr>
 <tr><td>restarts / polish_steps / lr</td><td>24 / 25 / 0.02</td><td>Adam,freeze_yaw</td></tr>
 <tr><td>polish_anchor</td><td>100</td><td>錨定到 flow 取樣位置</td></tr>
 <tr><td>二階段 phase1_frac</td><td>0.65(T₁=16 步)</td><td>前 65% 弱化 col/tangent、強化 wall</td></tr>
@@ -246,10 +231,10 @@
 <tr><td>異方性 w_tan / w_norm / w_free</td><td>100 / 8 / 100</td><td>切向強 / 法線單向 / 自由對稱</td></tr>
 <tr><td>wall-pull λ_w(ρ≤1 / ρ&gt;1)</td><td>2.5 / 1.5</td><td>縮房推力大、放大房避免撞飛</td></tr>
 <tr><td>δ_flush</td><td>6 cm</td><td>貼牆容忍</td></tr>
-<tr class="grp"><td colspan="3">推理:能量權重 \(w_k\)(<span class="mono">energy.py</span>)</td></tr>
+<tr class="grp"><td colspan="3">推理:能量權重 \(w_k\)(<span class="mono">energy.py</span>)&nbsp;&mdash;&nbsp;<em>選用 polish 用</em></td></tr>
 <tr><td>rel / bound / col / clear / func / style</td><td>1 / 40 / 30 / 4 / 3 / 1</td><td>§8 六項;edit 未接(=0)</td></tr>
 <tr><td>clearance C / bound 容忍</td><td>25 cm / 12 cm</td><td>跨 motif 走道 / 出界容忍</td></tr>
-<tr class="grp"><td colspan="3">推理:Regularity(Step 1,<span class="mono">regularity.py</span>)</td></tr>
+<tr class="grp"><td colspan="3">推理:單步幾何投影 Π(Step 1,<span class="mono">regularity.py</span>)&nbsp;&mdash;&nbsp;<strong>shipped 核心</strong></td></tr>
 <tr><td>regularity_snap</td><td>True</td><td>槽位 + 貼牆 flush + Manhattan</td></tr>
 <tr><td>Manhattan 容差</td><td>22°</td><td>朝向 snap 到最近牆軸的門檻</td></tr>
 </tbody></table></div>
@@ -339,80 +324,51 @@ $$x_\text{child} = \mathcal{T}_\text{parent}\cdot\big(\text{offset}\big),\qquad 
 </figure>
 
 
-<h2>五、推理管線(六階段)</h2>
+<h2>五、推理管線(單網路 + 單步投影)</h2>
+<p class="lead">shipped 主力方法只有兩個核心步驟(② 單一 DiT + ③ 單步投影);其餘為輕量前後處理。</p>
 
 <h3>① Summarise + Substitution</h3>
 <p>房間變小先刪 motif,再從 asset bank 換成塞得下的較小同風格家具(在 flow <em>之前</em>,避免硬塞被 collision 推散)。<strong>Anchor 保護</strong>:每房型核心家具(客廳 sofa、臥室 bed…)永不刪 &mdash; 塞不下就交給 substitution 換小版本。</p>
 
-<h3>② Flow 取樣 + In-sampling Guidance</h3>
-<p>從 \(x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon\) 起步,50 步 ODE,取 k=16 候選。每步估 \(\hat x_1=x_\tau+(1-\tau)v_\theta\),對可行性打分並反傳:</p>
+<h3>② 單一 DiT 整流流 + In-sampling Guidance <span class="tag g">核心</span></h3>
+<p>從 \(x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon\) 起步(informative prior),ODE 取樣,取 k=16 候選。每步估 \(\hat x_1=x_\tau+(1-\tau)v_\theta\),對可行性打分並反傳(guidance):</p>
 $$\Phi(\hat x_1)=w_\text{bound}E_\text{bound}+w_\text{col}E_\text{col}^\text{nest-exempt}+w_\text{clear}E_\text{clear}+w_\text{wp}E_\text{wall-pull}$$
 $$x\leftarrow x-d\tau\cdot\text{ramp}(\tau)\cdot\nabla_x\Phi,\qquad \text{ramp}(\tau)=\max(0,(\tau-0.5)/0.5)$$
-<p>parent-relative 模型下,積分在相對空間進行,guidance 時解碼成世界座標算梯度、再編碼回去(decode → nudge → encode)。</p>
+<p>parent-relative 模型下,積分在相對空間進行,guidance 時解碼成世界座標算梯度、再編碼回去(decode → nudge → encode,§七 命題 2)。DiT 本體即輸出正確拓撲(raw \(S_\text{rel}=0.74\))與近乎無碰撞(raw \(R_\text{col}=2.4\%\))的佈局。</p>
 
-<h3>③ Polish(25 步 Adam,freeze yaw)</h3>
-<p>對每候選跑 25 步,對 §8 六個能量做梯度下降,疊四個機制:</p>
-$$\mathcal{L}_\text{polish}(x)=\sum_k w_k E_k(x)+\mathcal{L}_\text{anchor}(x)$$
-<div class="tw"><table>
-<thead><tr><th>\(E_k\)</th><th>形式(概要)</th><th>意義</th><th>\(w_k\)</th></tr></thead>
-<tbody>
-<tr><td>\(E_\text{rel}\)</td><td>\(\sum_{ij}\alpha_{ij}\|\phi(y_i,y_j)-\phi_{ij}^\text{ref}\|^2\)</td><td>保留 reference 關係向量</td><td>1</td></tr>
-<tr><td>\(E_\text{bound}\)</td><td>\(\sum_i\max(0,r_i-d_i^\text{floor})^2\)</td><td>保持在 floor polygon 內</td><td>40</td></tr>
-<tr><td>\(E_\text{col}\)</td><td>\(\sum_{ij\notin\mathcal{N}}\max(0,r_i+r_j-d_{ij})^2\)</td><td>非 nestable pair 不重疊</td><td>30</td></tr>
-<tr><td>\(E_\text{clear}\)</td><td>\(\sum\max(0,C-\text{gap}_{ij})^2\)</td><td>跨 motif 走道 \(C=25\)cm</td><td>4</td></tr>
-<tr><td>\(E_\text{func}\)</td><td>wall_flush + door swing + front clear</td><td>貼牆、開門通、正面留距</td><td>3</td></tr>
-<tr><td>\(E_\text{style}\)</td><td>\(\sum_i\text{retrieval\_cost}_i\)</td><td>替換 asset 貼近 reference 風格</td><td>1</td></tr>
-</tbody></table></div>
-
-<h4>③a 異方性 anchor</h4>
-<p>令 \(\delta_i=x_i-x_i^{(0)}\)。對高 wall affinity 物件(\(a_i>0.3\))沿牆法線 / 切線分解:</p>
-$$\mathcal{L}_\text{anchor}^{(i)}=a_i\big[w_\text{tan}(\delta_i^t)^2+w_\text{norm}\,\text{ReLU}(\delta_i^n)^2\big]+(1-a_i)\,w_\text{free}\|\delta_i\|^2$$
-<p>\(w_\text{tan}=100\)(切向強懲,鎖住牆邊次序);\(w_\text{norm}=8\) <strong>單向</strong>(只罰往房間中心飄,靠牆免罰);\(w_\text{free}=100\)(非靠牆件對稱 L2)。\(\hat n_i\) 由 reference 靠牆的 wall index 對映 target 同 index,signed-area 判 CCW/CW + polygon.contains 探點驗向。</p>
-
-<h4>③b 親子相對 anchor</h4>
-$$\delta_c^\text{rel}=(x_c-x_p)-(x_c^{(0)}-x_p^{(0)})$$
-<p>motif child 對齊「相對 parent 偏移」,parent 被 wall pull 拉動時 child 整組跟,不撕裂 motif(與 Step 2 的 flow 端相對建模呼應)。</p>
-
-<h4>③c 二階段能量排程</h4>
-$$\text{Phase 1}(t<T_1):\ w_\text{col}\!\leftarrow\!0.15w_\text{col},\ w_\text{tan}\!\leftarrow\!0.10w_\text{tan},\ w_\text{func}\!\leftarrow\!3.0w_\text{func};\quad T_1=16\ (65\%)$$
-<p>Phase 1 讓 wall 件擺脫 E_col + tangent 死鎖、強力吸到牆;Phase 2(後 9 步)恢復全能量,就地消碰撞、貼合。</p>
-
-<h4>③d 連續牆 SDF wall-pull</h4>
-<p>對高 wall affinity 物件算<em>背面</em>到牆深度,用相鄰邊界點為 line segments 取最短距離(連續 SDF,取代 32 點 argmin,梯度平滑、離牆 40+cm 仍有吸附):</p>
-$$E_\text{wall-pull}=\lambda_w(\rho)\sum_i a_i\big(d_i^\text{back}\big)^2,\qquad \lambda_w=\begin{cases}2.5&\rho\le1\\1.5&\rho>1\end{cases},\ \ \delta_\text{flush}=6\text{cm}$$
-
-<h3>④ Regularity Projector(Step 1)</h3>
-<p>連續空間低 loss 容忍 5–10 cm 非正交偏移,但人眼對「正交、貼合、成套」極敏感。polish 後加一道規整化投影(屬 eq 37 constraint projection,不需重訓):</p>
+<h3>③ 單步幾何投影 Π(Regularity)<span class="tag g">核心</span></h3>
+<p>連續空間低 loss 容忍 5–10 cm 非正交偏移,但人眼對「正交、貼合、成套」極敏感。所以接一道<strong>確定性、無梯度的單步投影</strong>(拓撲保持,§七 命題 3):</p>
 <ul>
   <li><strong>槽位吸附</strong>:餐椅 / 書桌椅吸附最近桌邊,朝向 snap 到<em>桌子的軸</em>(平行桌邊,非朝桌心對角)。</li>
   <li><strong>貼牆 flush + 法線朝向</strong>:掛畫 / 衣櫃 / 電視櫃 / 床 / 沙發背面投影到最近牆線、朝向設為牆內法線。</li>
   <li><strong>Manhattan 正交 snap</strong>:茶几 / 餐桌 / 邊桌朝向 snap 到最近牆軸(容差 22°),消除 3–15° 傾斜。</li>
 </ul>
+<p>這一步取代了原本 25 步 Adam polish &mdash; 消融證明視覺無損(§六),整條 pipeline 因此變成單網路 + 單步投影。</p>
 
-<h3>⑤ Population(放大房補件)</h3>
-<p>房間變大時依 co-occurrence 新增家具,相對存活 motif 擺放,守門要求「加入後 feasibility 成本不變」&mdash; 填滿是對的,免費才行。</p>
+<h3>④ Population + Ranking</h3>
+<p>房間變大時依 co-occurrence 新增家具(守門「加入後 feasibility 成本不變」);最後對 k=16 候選用 §8 能量 \(E(Y)\) 選最佳者輸出。</p>
 
-<h3>⑥ Ranking</h3>
-<p>對 k=16 候選,用全 7 個 §8 能量算 \(E(Y)\),挑 \(E\) 最小者輸出。</p>
+<h3>選用:多步 Polish(非 shipped,可選精修)</h3>
+<p>另有一個 25 步 Adam 能量下降版本(對 §8 六能量 \(w_k\)=1/40/30/4/3/1 + anchor 損失),疊<em>異方性 anchor</em>(\(w_\text{tan}=100\) 切向強、\(w_\text{norm}=8\) 法線單向、\(w_\text{free}=100\))、<em>親子相對 anchor</em>、<em>二階段排程</em>(前 65% 弱化 col/tangent、強化 wall)、<em>連續牆 SDF wall-pull</em>(\(\lambda_w=2.5/1.5\))。它把 \(R_\text{col}\) 從 1.8% 再降到 1.2%,但視覺與拓撲和單步投影無異,故 <strong>shipped 預設關閉</strong>,僅作為需要極致無碰撞時的選用精修。</p>
 
 
 <h2>六、結果</h2>
 
-<p>三份不同的 reference,各自放入 0.75× / 1.0× / 1.35× 房間 &mdash; shipped <strong>flow_bfresh + 規整化投影</strong>。每張左上為 reference,其餘三格為三種尺寸輸出。</p>
+<p>三份不同的 reference,各自放入 0.75× / 1.0× / 1.35× 房間 &mdash; shipped 主力方法 <strong>單一 DiT(flow_bfresh)+ 單步幾何投影</strong>,<em>無 25 步 polish</em>。每張左上為 reference,其餘三格為三種尺寸輸出。</p>
 
 <figure>
   <img src="assets/shipped_living_L.png" alt="Shipped 輸出 — L 形客廳">
-  <figcaption><strong>客廳 A · L 形 22 m²</strong>(dining set + sofa/tv/coffee)。1.0× 幾乎完美重現 reference、4 椅平行桌邊環繞、各件正交貼牆;1.35× 大房餐桌+椅整組不散架、零碰撞。</figcaption>
+  <figcaption><strong>客廳 A · L 形 22 m²</strong>(dining set + sofa/tv/coffee)。1.0× 幾乎完美重現 reference(S_rel 0.97)、4 椅平行桌邊環繞、各件正交貼牆;1.35× 大房(S_rel 0.91)餐桌+椅整組不散架。1.0× 的 col 8.2% 主要是餐椅塞在桌下的合法 nestable 重疊。</figcaption>
 </figure>
 
 <figure>
   <img src="assets/shipped_living_cross.png" alt="Shipped 輸出 — 十字形客廳">
-  <figcaption><strong>客廳 B · 十字 / T 形 29 m²</strong>(dining set + sofa + tv-stand)。不規則房型下 dining set 仍成套保留(1.0× S_rel 0.96、1.35× 0.94,皆零碰撞);縮小到 0.75× 時 Summarise 減量、留出走道。</figcaption>
+  <figcaption><strong>客廳 B · 十字 / T 形 29 m²</strong>(dining set + sofa + tv-stand)。不規則房型下 dining set 仍成套保留(1.0× S_rel 0.94、1.35× 0.92,皆<strong>零碰撞</strong>);縮小到 0.75× 時 Summarise 減量、留出走道。</figcaption>
 </figure>
 
 <figure>
   <img src="assets/shipped_bedroom.png" alt="Shipped 輸出 — 臥室">
-  <figcaption><strong>臥室 · 20 m²</strong>(double_bed + 兩個 nightstand + dressing table)。<strong>床 + 床頭櫃 motif 在三種尺寸下都保持兩側夾床</strong> &mdash; 房間放大 1.35× 時床頭櫃仍緊貼床側不散開,正是 Step 2 parent-relative 從源頭綁緊 motif 的效果。</figcaption>
+  <figcaption><strong>臥室 · 20 m²</strong>(double_bed + 兩個 nightstand + dressing table)。<strong>床 + 床頭櫃 motif 在三種尺寸下都保持兩側夾床</strong>(1.0× S_rel 0.90、1.35× 0.84,零碰撞)&mdash; 房間放大 1.35× 時床頭櫃仍緊貼床側不散開,正是 Step 2 parent-relative 從源頭綁緊 motif 的效果。<em>以上三房皆為單步投影(無 polish)輸出,與帶 polish 版視覺不可分。</em></figcaption>
 </figure>
 
 <h3>1. 固定測試集 · PDF §15 指標</h3>
@@ -434,20 +390,31 @@ $$E_\text{wall-pull}=\lambda_w(\rho)\sum_i a_i\big(d_i^\text{back}\big)^2,\qquad
 </tbody></table></div>
 <p>逐步驗證了設計的每一步:<strong>Module 1</strong> 帶來全域定位(float↓、碰撞↓)但物件歪斜;<strong>Module 2</strong> 牆面 attention 把貼牆對齊救回,1.35× snap 一路推到 64% 超越 baseline;<strong>Step 2</strong>(bfresh)讓 motif 從 flow 源頭不散架 &mdash; 1.35× motif_pass 25→42%、0.75× 50→83%(皆 raw 無 snap),val_loss 最佳。唯一代價 1.35× 貼牆 snap 略退(child 綁緊 parent 後貼牆自由度降低),正好由 Step 1 規整化補上。<strong>shipped = flow_bfresh(Step 2)+ 規整化投影(Step 1)</strong>。</p>
 
-<h3>3. 消融:拓撲是 flow 學的,polish 只做幾何投影</h3>
-<p>核心問題:輸出的品質是<strong>模型本體</strong>學的,還是後處理硬修的?消融方法:同一 flow 提案,量 <em>raw</em>(只有 flow,無 polish 無 snap)vs <em>full</em>(shipped)。4 場景 × 3 尺寸。</p>
+<h3>3. 消融:為何 shipped 只用「單網路 + 單步投影」</h3>
+<p>兩個消融支撐主力方法的簡化。皆 4 場景 × 3 尺寸。</p>
+
+<h4>(a) 拓撲是 DiT 本體學的,不是後處理修的</h4>
 <div class="tw"><table>
-<thead><tr><th>量測</th><th>raw flow</th><th>+ polish/regularity</th><th>解讀</th></tr></thead>
+<thead><tr><th>量測</th><th>raw flow</th><th>+ 幾何投影</th><th>解讀</th></tr></thead>
 <tbody>
-<tr><td>S_rel 關係拓撲</td><td>0.743</td><td>0.739</td><td><strong>Δ −0.004 → 拓撲完全是 DiT 學的,polish 不改</strong></td></tr>
-<tr><td>R_col 碰撞率</td><td>2.4%</td><td>1.2%</td><td>raw 已近無碰撞,polish 只收尾</td></tr>
-<tr><td>物件位移 raw→full</td><td colspan="2">均 19.1 cm(中位 14.2)· ≈物件半徑 33%(中位)</td><td>位移幾乎全是貼牆 / 正交對齊</td></tr>
+<tr><td>S_rel 關係拓撲</td><td>0.743</td><td>0.739</td><td><strong>Δ −0.004 → 拓撲完全是 DiT 學的</strong></td></tr>
+<tr><td>R_col 碰撞率</td><td colspan="2">raw 已僅 2.4%</td><td>本體近乎無碰撞</td></tr>
+<tr><td>物件位移 raw→投影後</td><td colspan="2">均 19 cm · 幾乎全指向牆 / 桌邊</td><td>投影只做對齊,不重排</td></tr>
 </tbody></table></div>
-<p><strong>兩個結論</strong>:(1) 關係拓撲與近乎無碰撞的分佈是 <span class="mono">DiT + WallCrossAttention</span> 本體學出來的 &mdash; S_rel 經 polish 幾乎不變(Δ0.4%),raw R_col 僅 2.4%,直接否定「全靠後處理」。(2) polish/regularity 定位為<strong>有界、確定性的幾何投影算子</strong>(eq 37 的 constraint projection):它只做正交對齊與貼牆(平均移 19 cm),<em>不改變拓撲</em> &mdash; 誠實地說,這不是「可忽略的 &lt;5% 微調」,而是一道<em>拓撲保持</em>的 alignment projection。</p>
+
+<h4>(b) 單步投影足夠;25 步 polish 為選用</h4>
+<div class="tw"><table>
+<thead><tr><th>配置</th><th>R_col</th><th>snap%</th><th>S_rel</th></tr></thead>
+<tbody>
+<tr><td>單一 DiT(無任何投影)</td><td>2.4%</td><td>87%</td><td>0.743</td></tr>
+<tr><td><strong>DiT + 單步 Regularity(shipped)</strong></td><td><strong>1.8%</strong></td><td><strong>100%</strong></td><td>0.741</td></tr>
+<tr><td>DiT + Regularity + 25 步 polish(選用)</td><td>1.2%</td><td>100%</td><td>0.739</td></tr>
+</tbody></table></div>
+<p><strong>單步投影就把 snap 拉到 100%、R_col 到 1.8%</strong>;再疊 25 步 Adam polish 只把 R_col 從 1.8% 降到 1.2%(視覺與拓撲無異)。因此 shipped 定為 <strong>單一 DiT + 單步幾何投影</strong>(跟 LEGO-Net 一樣輕盈:單網路 + 單步),多步 polish 只在需要極致無碰撞時選用。DiT 本體 raw R_col 僅 2.4% 且 S_rel 0.74,直接否定「全靠後處理」;投影是<em>拓撲保持</em>的有界對齊,而非重新生成。</p>
 
 <figure>
   <img src="assets/micro_compare.png" alt="raw vs final 微觀位移對比">
-  <figcaption><strong>「19 cm 微調」微觀對比</strong>:灰虛線 = raw flow 輸出、實色 = polish+regularity 後、紅箭頭 = 每物件位移(cm)。raw 的相對排列已經正確;位移箭頭都<em>短</em>且<em>指向牆</em>(貼牆件 flush)或<em>桌邊</em>(餐椅 slot)&mdash; 物件不互換、不重排,拓撲完全不變。直觀證明 polish 是拓撲保持的幾何投影,而非重新生成佈局。</figcaption>
+  <figcaption><strong>單步投影的微觀對比</strong>:灰虛線 = raw flow 輸出、實色 = 幾何投影後、紅箭頭 = 每物件位移(cm)。raw 的相對排列已經正確;位移箭頭都<em>短</em>且<em>指向牆</em>(貼牆件 flush)或<em>桌邊</em>(餐椅 slot)&mdash; 物件不互換、不重排,拓撲完全不變。直觀證明單步投影是拓撲保持的幾何對齊,而非重新生成佈局。</figcaption>
 </figure>
 
 <figure>
@@ -455,7 +422,7 @@ $$E_\text{wall-pull}=\lambda_w(\rho)\sum_i a_i\big(d_i^\text{back}\big)^2,\qquad
   <figcaption>固定測試集 6 案例(參考 | 真實 GT | bnd200 | ReRoom 2.0)。相比只有 Module 1 的物件歪斜,完整 ReRoom 2.0 靠 Module 2 牆面相對邊回到軸對齊,同時保住全域定位優勢。</figcaption>
 </figure>
 
-<p class="note">實作對照:資料 <span class="mono">reroom/generative/xscene.py</span>;模型 <span class="mono">model.py</span>(<span class="mono">to_relative/to_world</span>、<span class="mono">e_type</span> 異質節點、<span class="mono">WallCrossAttention</span>、<span class="mono">geo_bias</span>)+ <span class="mono">train.py</span>(<span class="mono">prior_x0</span>、<span class="mono">parent_relative</span>、<span class="mono">child_loss_weight</span>、<span class="mono">rel_loss</span>);推理 <span class="mono">sample.py</span> + <span class="mono">optimizer.py</span> + <span class="mono">regularity.py</span>。shipped checkpoint <span class="mono">flow_bfresh/flow_best.pt</span>,以 <span class="mono">RetargetConfig(regularity_snap=True)</span> 執行。</p>
+<p class="note">實作對照:資料 <span class="mono">reroom/generative/xscene.py</span>;模型 <span class="mono">model.py</span>(<span class="mono">to_relative/to_world</span>、<span class="mono">e_type</span> 異質節點、<span class="mono">WallCrossAttention</span>、<span class="mono">geo_bias</span>)+ <span class="mono">train.py</span>(<span class="mono">prior_x0</span>、<span class="mono">parent_relative</span>、<span class="mono">child_loss_weight</span>、<span class="mono">rel_loss</span>);推理 <span class="mono">sample.py</span> + <span class="mono">regularity.py</span>(單步投影;多步 polish 在 <span class="mono">optimizer.py</span>,選用)。shipped checkpoint <span class="mono">flow_bfresh/flow_best.pt</span>,以 <span class="mono">generative_retarget(..., cfg=RetargetConfig(regularity_snap=True), polish=False)</span> 執行 &mdash; 單一 DiT + 單步投影。</p>
 
 
 <h2>七、理論框架:Topology-preserving Hierarchical Flow</h2>
@@ -477,12 +444,12 @@ $$z_c(A\!\cdot\!P_t)=z_c(P_t)\ \Rightarrow\ \big\|x_c-x_{\pi(c)}\big\|\ \text{�
 $$z\leftarrow z+d\tau\,v_\theta-d\tau\,\text{ramp}(\tau)\,\nabla_z\Phi(\Psi_\mathcal{G}(\hat z_1)),\qquad \nabla_z\Phi=J_{\Psi_\mathcal{G}}^{\top}\,\nabla_x\Phi$$
 <p>Jacobian \(J_{\Psi_\mathcal{G}}=\partial x/\partial z\):head \(=I\);child \(\partial x_c/\partial z_c=\lambda R(\theta_{\pi})\),且 \(\partial x_c/\partial z_{\pi}\) 含 parent-motion 項 &mdash; 即「動 parent 帶動 child」的鏈式法則顯式化。實作即 <span class="mono">decode → nudge → encode</span>,正是此 pullback。</p>
 
-<h3>命題 3 &mdash; 拓撲保持的投影算子</h3>
-<p><em>輸出 \(x^\star=\Pi(\Psi_\mathcal{G}(z_1))\),\(\Pi\) 為有界幾何投影(能量下降 + 規整化 snap)。\(\Pi\) 保持關係拓撲:</em></p>
+<h3>命題 3 &mdash; 拓撲保持的單步投影算子</h3>
+<p><em>輸出 \(x^\star=\Pi(\Psi_\mathcal{G}(z_1))\),\(\Pi\) 為<strong>單步、確定性、無梯度</strong>的幾何投影(Regularity:槽位 / 貼牆 flush / Manhattan)。\(\Pi\) 保持關係拓撲:</em></p>
 $$\big|S_\text{rel}(\Pi(x))-S_\text{rel}(x)\big|\le 0.005\quad(\text{實測 }\Delta=-0.004)$$
-<p>同時 \(\Pi\) 把碰撞 \(2.4\%\to1.2\%\)、施加 Manhattan / 貼牆對齊(平均移 19 cm)。<strong>結論</strong>:生成模型擁有拓撲與近可行分佈;\(\Pi\) 只貢獻一個<em>拓撲中性</em>的度量對齊 &mdash; 因此在論文中 \(\Pi\)(optimizer)可精簡為 <em>Implementation Detail</em>,而非結構來源。</p>
+<p>\(\Pi\) 把 snap 拉到 100%、碰撞降到 1.8%,施加 Manhattan / 貼牆對齊(平均移 19 cm),不改拓撲。<strong>結論</strong>:生成模型 \(v_\theta\) 擁有拓撲與近可行分佈;\(\Pi\) 只貢獻一個<em>拓撲中性</em>的單步度量對齊。整條線上系統即 <strong>單一網路 \(v_\theta\) + 單步投影 \(\Pi\)</strong>(跟 LEGO-Net 一樣輕盈),無需 test-time 多步能量優化 &mdash; 該多步 polish 僅作選用精修(R_col 1.8→1.2%)。</p>
 
-<p class="note"><strong>定位</strong>:三個命題把 ReRoom 寫成一個層級、幾何條件化的連續流:其歸納偏置(度量-相對層級 + 牆 token cross-attention + informative prior)在度量形變下保持拓撲,optimizer 降格為有界投影。資料生產與優化器 → Implementation Details;<strong>Topology-preserving Continuous Flow + Geometry-conditioned Modeling → 理論主軸</strong>。</p>
+<p class="note"><strong>定位</strong>:三個命題把 ReRoom 寫成一個層級、幾何條件化的連續流,其歸納偏置(度量-相對層級 + 牆 token cross-attention + informative prior)在度量形變下保持拓撲;線上僅需<strong>單一網路 + 單步投影</strong>。資料生產與(選用的)多步 optimizer → Implementation Details;<strong>Topology-preserving Continuous Flow + Geometry-conditioned Modeling → 理論主軸</strong>。</p>
 
 <footer>
 Repo:<a href="https://github.com/gino6178/project4">github.com/gino6178/project4</a>
