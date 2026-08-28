@@ -56,10 +56,54 @@ class RetargetConfig:
     allow_addition: bool = True
     allow_substitution: bool = True
     use_motif_init: bool = True
+    regularity_snap: bool = True     # ReRoom 2.0 (shipped main method): 1-step
+                                     # layout to orthogonal / wall-flush / slot
+                                     # structure (regularity projector).
+    walkable: bool = False           # PhyScene-style walkability: capacity prune
+                                     # (Summarise) + door-box/affordance push
+                                     # (Polish) + A* nav penalty (Ranking).
+    walkable_min: float = 0.55       # free-floor ratio below which capacity
+                                     # prune kicks in.
+    relational_select: bool = False  # partial-relational-transport SELECTION:
+                                     # when the room forces pruning, choose WHICH
+                                     # objects to keep by maximising retained
+                                     # design-graph relational mass (gwselect.
+                                     # relational_keep) rather than the greedy
+                                     # importance/Summarise mask.  Preserves more
+                                     # design identity under capacity (probe:
+                                     # +0.12 S_rel over the flow's mask).
     use_elasticity: bool = True
     weights: EnergyWeights = field(default_factory=EnergyWeights)
     projection_scale: float = 6.0
     exact_topk: int = 4
+    # polish step used by the generative pipeline: a light, position-only
+    # constraint projection AFTER in-sampling guidance (eq (37) coexisting).
+    # anchor_w > 0 keeps projected positions close to the sampled ones so the
+    # surrogate's E_col cannot spread motifs apart while it fixes wall-hug
+    # gaps and residual OOB.  Steps kept short (guidance did the heavy lift).
+    polish_steps: int = 25            # 50-step gave better col/OOB but *worse*
+                                      # 1.35x wall float (28 vs 22 cm): more
+                                      # polish time lets E_col push wall pieces
+                                      # further inward to make space for others,
+                                      # overpowering the asymmetric anchor.
+                                      # 25 steps is the shipped balance.
+    polish_lr: float = 0.02
+    polish_anchor: float = 100.0
+    # Two-phase polish schedule (user-proposed, Plan A).  Phase 1 = first
+    # ~half of polish_steps: weaken E_col and the tangent anchor so wall-
+    # affinity objects can slide diagonally to the wall without being
+    # blocked by transient collisions or a stiff tangential spring.  Phase 2
+    # restores full weights for local cleanup.  Defaults chosen so this is
+    # ON by default -- Plan A analysis suggests it directly addresses the
+    # "multi-energy tug-of-war + diagonal locking" root cause behind the
+    # 1.35x residual float.
+    # Plan A + Phase 2.2 tuning: two-phase schedule with LONGER Phase 1
+    # (65% instead of 50%) and 3× wall-pull boost during Phase 1 so wall
+    # objects reach the wall before E_col comes back on.
+    polish_phase1_frac: float = 0.65
+    polish_phase1_col: float = 0.15
+    polish_phase1_tan: float = 0.10
+    polish_phase1_wall: float = 3.0    # E_func (wall_flush) scale during Phase 1
     # feasibility tolerances are *fractions of the total furniture footprint*
     # (plus a small absolute floor), because 0.04 m^2 of overhang means one
     # thing in a studio and another in a 40 m^2 living room -- and because an
@@ -333,7 +377,18 @@ def initial_layout(intent: DesignIntent, target_room: Room, keep: np.ndarray,
 def refine_continuous(problem: TorchProblem, xy0: np.ndarray, yaw0: np.ndarray,
                       steps: int, lr: float, weights_scale: float = 1.0,
                       allow_resize: bool = False, s0: np.ndarray | None = None,
-                      freeze_yaw: bool = False):
+                      freeze_yaw: bool = False,
+                      anchor_w: float = 0.0,
+                      wall_aff: np.ndarray | None = None,
+                      wall_normal: np.ndarray | None = None,
+                      anchor_w_tangent: float = 100.0,
+                      anchor_w_normal: float = 8.0,
+                      parent_idx: np.ndarray | None = None,
+                      wall_dist_init: np.ndarray | None = None,
+                      phase1_frac: float = 0.0,
+                      phase1_col_scale: float = 1.0,
+                      phase1_tan_scale: float = 1.0,
+                      phase1_wall_scale: float = 1.0):
     """Adam on the differentiable surrogate, batched over restarts.
 
     Objects the user pinned have their gradients zeroed rather than merely
@@ -381,9 +436,110 @@ def refine_continuous(problem: TorchProblem, xy0: np.ndarray, yaw0: np.ndarray,
         + ([log_s] if log_s is not None else [])
     opt = torch.optim.Adam(params, lr=lr)
     sched = torch.optim.lr_scheduler.CosineAnnealingLR(opt, T_max=max(steps, 1))
-    for _ in range(steps):
+    # ``anchor_w > 0`` keeps the projected positions close to their initial
+    # values.  This turns the projection into a *polish* around a proposal:
+    # feasibility gets fixed (a wall gap closes, an OOB corner comes in) but
+    # the layout cannot rearrange itself, so the coherence of the sampled
+    # motifs is preserved.  Without it, the surrogate's E_col gradient will
+    # spread even legitimately-close pairs (a sofa and its side_table) apart
+    # to drive collision to zero.
+    #
+    # Anisotropic form (wall_aff + wall_normal provided): for objects with
+    # high wall affinity, the anchor is *decomposed* into a strong tangential
+    # component (parallel to the nearest wall — keeps the wall-line formation)
+    # and a WEAK normal component (toward/away the wall — lets wall_pull /
+    # E_func slide the object inward without a stiff opposing spring).  This
+    # is the fix for the "20 cm float locked in by uniform anchor" deadlock.
+    #
+    # Parent-child form (parent_idx provided): a motif child's anchor is
+    # against (xy_child - xy_parent) rather than absolute xy_child.  When
+    # E_func pulls the parent to the wall, the child rides along by
+    # construction, preserving the motif's internal geometry.
+    anchor_xy = xy.detach().clone() if anchor_w > 0.0 else None
+    aff_t = norm_t = par_t = None
+    if anchor_xy is not None:
+        dev_a = xy.device
+        if wall_aff is not None:
+            aff_t = torch.as_tensor(wall_aff, dtype=torch.float32, device=dev_a)
+        if wall_normal is not None:
+            norm_t = torch.as_tensor(wall_normal, dtype=torch.float32, device=dev_a)
+        if parent_idx is not None:
+            par_t = torch.as_tensor(parent_idx, dtype=torch.long, device=dev_a)
+        wd_init_t = None
+        if wall_dist_init is not None:
+            wd_init_t = torch.as_tensor(wall_dist_init, dtype=torch.float32,
+                                         device=dev_a)
+    # Two-phase scheduling: Phase 1 (first `phase1_frac` of steps) weakens
+    # E_col and the tangent anchor so wall-hugging pieces (with any motif
+    # children they carry) can slide diagonally to their target wall without
+    # being blocked by transient collision spikes or a stiff tangential
+    # spring.  Phase 2 restores the full weights for local collision cleanup
+    # once the coarse "get to the wall" step has already happened.
+    p1_steps = int(steps * phase1_frac) if phase1_frac > 0.0 else 0
+    _w_col_full = float(problem.w.col)
+    _w_func_full = float(problem.w.func)
+    for step_i in range(steps):
+        in_p1 = step_i < p1_steps
+        if p1_steps > 0:
+            problem.w.col = _w_col_full * (phase1_col_scale if in_p1 else 1.0)
+            problem.w.func = _w_func_full * (phase1_wall_scale if in_p1 else 1.0)
+        eff_tan = anchor_w_tangent * (phase1_tan_scale if in_p1 else 1.0)
         e = problem.energy(xy, yaw, log_s)
         loss = e.sum()
+        if anchor_xy is not None:
+            if par_t is not None:
+                # replace child's anchor with parent-relative offset
+                # anchor_xy_child_rel = anchor_xy[child] - anchor_xy[parent]
+                # current_offset = xy[child] - xy[parent]
+                # penalise |current_offset - anchor_offset|
+                child_mask = (par_t >= 0)
+                if bool(child_mask.any()):
+                    p = par_t.clamp(min=0)
+                    a_off = anchor_xy - anchor_xy[:, p, :]         # (R, N, 2)
+                    c_off = xy - xy[:, p, :]                       # (R, N, 2)
+                    delta_rel = (c_off - a_off) * child_mask[None, :, None]
+                    delta_abs = (xy - anchor_xy) * (~child_mask)[None, :, None].float()
+                else:
+                    delta_rel = xy.new_zeros(xy.shape)
+                    delta_abs = xy - anchor_xy
+            else:
+                delta_rel = xy.new_zeros(xy.shape)
+                delta_abs = xy - anchor_xy
+            delta = delta_abs + delta_rel                          # (R, N, 2)
+            # anisotropic split for wall-affinity objects
+            if aff_t is not None and norm_t is not None:
+                # normalise the wall normal (world-space, inward)
+                nn = norm_t / (norm_t.norm(dim=-1, keepdim=True) + 1e-6)   # (N, 2)
+                tan = torch.stack([-nn[..., 1], nn[..., 0]], dim=-1)       # (N, 2)
+                # scalar components of delta along tangent / normal
+                d_n_s = (delta * nn[None, :, :]).sum(-1)                   # (R, N)
+                d_t_s = (delta * tan[None, :, :]).sum(-1)                  # (R, N)
+                gate = aff_t[None, :]                                       # (1, N)
+                # Plan B — distance-gated tangent: the tangent anchor only
+                # kicks in when the object is *close* to its wall.  Far from
+                # the wall the object needs to slide diagonally around
+                # obstacles; a stiff tangent spring blocks that path
+                # ("diagonal locking").  Close to the wall we want the
+                # tangent formation locked to preserve reference arrangement.
+                # Current inward distance = initial dist + (delta · n).
+                if wd_init_t is not None:
+                    curr_dist = wd_init_t[None, :] + d_n_s.detach()   # (R, N)
+                    # sigmoid ramp: near ≤ 5 cm -> 1.0, far ≥ 15 cm -> ~0.1
+                    dist_gate = torch.sigmoid((0.10 - curr_dist) / 0.03)
+                else:
+                    dist_gate = torch.ones_like(d_t_s)
+                pen_wall_tan = eff_tan * (d_t_s ** 2) * gate * dist_gate
+                # normal: ASYMMETRIC single-sided penalty — only penalise moving
+                # *inward* (away from the wall).  d_n_s > 0 means the object
+                # drifted toward room centre (bad).  d_n_s < 0 means it moved
+                # further outward toward the wall (this is exactly what
+                # wall_pull / E_func want, so give it a free pass).
+                inward_drift = torch.relu(d_n_s)
+                pen_wall_nrm = anchor_w_normal * (inward_drift ** 2) * gate
+                pen_free     = anchor_w * (delta ** 2).sum(-1) * (1.0 - gate)
+                loss = loss + pen_wall_tan.sum() + pen_wall_nrm.sum() + pen_free.sum()
+            else:
+                loss = loss + anchor_w * (delta ** 2).sum()
         opt.zero_grad(set_to_none=True)
         loss.backward()
         torch.nn.utils.clip_grad_norm_(params, 20.0)
@@ -391,6 +547,10 @@ def refine_continuous(problem: TorchProblem, xy0: np.ndarray, yaw0: np.ndarray,
         sched.step()
     if weights_scale != 1.0:
         problem.w = old
+    # restore col & func weights if we scaled them in the phase-1 schedule
+    if p1_steps > 0:
+        problem.w.col = _w_col_full
+        problem.w.func = _w_func_full
     with torch.no_grad():
         e = problem.energy(xy, yaw, log_s)
     ls = (log_s.detach().clamp(-problem.max_log_s, problem.max_log_s)

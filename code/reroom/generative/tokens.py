@@ -118,12 +118,20 @@ def from_frame(state: np.ndarray, fr: RoomFrame) -> tuple[np.ndarray, float]:
 
 
 def boundary_samples(room: Room, n: int = N_BOUNDARY) -> np.ndarray:
-    """(n, 4): boundary points and inward normals in the room's own frame."""
+    """(n, 6): boundary points in *both* MRR-normalised and metric coords.
+
+    The extra two channels carry ``(u*h1, v*h2)``, i.e. the boundary point's
+    position in the frame basis in metres.  Scale-invariant shape lives in the
+    first two channels; metric size lives in the middle two.  A wall-hugging
+    model that sees only the normalised (u, v) cannot tell a 3 m wall from a
+    6 m wall -- adding the metric pair fixes exactly this, without giving up
+    the shape prior the normalised pair provides.
+    """
     fr = room_frame(room)
     poly = as_polygon(room)
     ring = poly.exterior
     L = ring.length
-    out = np.zeros((n, 4), dtype=np.float32)
+    out = np.zeros((n, 6), dtype=np.float32)
     for k in range(n):
         p = ring.interpolate((k + 0.5) / n * L)
         q = ring.interpolate(((k + 0.5) / n + 1e-3) * L)
@@ -132,9 +140,12 @@ def boundary_samples(room: Room, n: int = N_BOUNDARY) -> np.ndarray:
         t = t / nl if nl > 1e-9 else np.array([1.0, 0.0])
         nrm = np.array([-t[1], t[0]])
         d = np.array([p.x, p.y]) - fr.centre
-        out[k] = [float(np.dot(d, fr.axis1)) / fr.half1,
-                  float(np.dot(d, fr.axis2)) / fr.half2,
-                  float(np.dot(nrm, fr.axis1)), float(np.dot(nrm, fr.axis2))]
+        u = float(np.dot(d, fr.axis1)) / fr.half1
+        v = float(np.dot(d, fr.axis2)) / fr.half2
+        out[k] = [u, v,                                    # normalised shape
+                  u * fr.half1, v * fr.half2,              # metric position (m)
+                  float(np.dot(nrm, fr.axis1)),
+                  float(np.dot(nrm, fr.axis2))]            # inward normals
     return out
 
 
@@ -152,6 +163,8 @@ class TokenBatch:
     boundary: np.ndarray         # (N_BOUNDARY, 4)
     room_type: int
     mask: np.ndarray             # (N,) bool -- valid tokens
+    mgrp: np.ndarray             # (N,) int -- motif group id, -1 for none
+    parent: np.ndarray           # (N,) int -- parent (head) token index, -1 none
     meta: dict
 
 
@@ -173,6 +186,21 @@ def build_tokens(intent: DesignIntent, target_room: Room,
     motif = np.array([_MOTIF_IX.get(
         motif_of_idx[i].name if i in motif_of_idx else "none", 0) for i in range(n)],
         dtype=np.int64)
+    # Per-token motif group id for L_rel (Step 2).  -1 means singleton / not in
+    # any motif.  Groups are indexed by their position in intent.motifs.
+    _grp_of = {}
+    for _gi, _m in enumerate(intent.motifs):
+        for _i in _m.members: _grp_of[_i] = _gi
+    # Per-token PARENT index (ReRoom 2.0 Step 2): a non-head motif member points
+    # at its motif head; heads and non-motif objects get -1.  Children can then
+    # be predicted as an offset relative to the parent (scale-invariant).
+    _parent_of = {}
+    for _m in intent.motifs:
+        for _i in _m.members:
+            if _i != _m.head:
+                _parent_of[_i] = _m.head
+    mgrp = np.array([_grp_of.get(i, -1) for i in range(n)], dtype=np.int64)
+    parent = np.array([_parent_of.get(i, -1) for i in range(n)], dtype=np.int64)
 
     cond = np.zeros((n, TOKEN_COND_DIM), dtype=np.float32)
     for i, o in enumerate(objs):
@@ -213,16 +241,24 @@ def build_tokens(intent: DesignIntent, target_room: Room,
          float(intent.scale_hint[0]), float(intent.scale_hint[1]),
          float(intent.target_density)]]).astype(np.float32)
 
+    # present1[i] = 1 iff source object i survives into the GT target scene.
+    # D1 (joint discrete-continuous flow): this is the *existence* target the
+    # mask-flow learns.  ``mask`` stays "all real source tokens are valid
+    # candidates" so a to-be-dropped object still participates in attention and
+    # the model can arrange survivors around the hole it leaves.  For non-drop
+    # data present1 is all-ones, so mask_flow-off training is byte-identical.
+    present1 = np.ones(n, dtype=np.float32)
     if target_scene is not None:
         lut = {o.oid: o for o in target_scene.objects}
         state = np.zeros((n, STATE_DIM), dtype=np.float32)
-        mask = np.zeros(n, dtype=bool)
+        mask = np.ones(n, dtype=bool)
         for i, o in enumerate(objs):
             t = lut.get(o.oid)
-            if t is None:
+            if t is None:                       # dropped in GT -> existence 0
+                present1[i] = 0.0
+                state[i] = to_frame(o.xy, o.yaw, fr_src)   # prior pose, unused
                 continue
             state[i] = to_frame(t.xy, t.yaw, fr_tgt)
-            mask[i] = True
     else:
         state = np.zeros((n, STATE_DIM), dtype=np.float32)
         mask = np.ones(n, dtype=bool)
@@ -232,8 +268,9 @@ def build_tokens(intent: DesignIntent, target_room: Room,
     return TokenBatch(state=state, cat=cat, motif=motif, cond=cond,
                       edge_index=ei, edge_feat=ef, glob=glob,
                       boundary=boundary_samples(target_room),
-                      room_type=rt, mask=mask,
+                      room_type=rt, mask=mask, mgrp=mgrp, parent=parent,
                       meta={"frame_tgt": fr_tgt, "frame_src": fr_src,
+                            "present1": present1,
                             "oids": [o.oid for o in objs]})
 
 
@@ -253,19 +290,27 @@ def collate(items: list[TokenBatch], device=None):
     cat = z(B, N, dtype=torch.long)
     motif = z(B, N, dtype=torch.long)
     mask = z(B, N, dtype=torch.bool)
+    mgrp = torch.full((B, N), -1, dtype=torch.long, device=device)
+    parent = torch.full((B, N), -1, dtype=torch.long, device=device)
     edge_feat = z(B, E, EDGE_DIM)
     edge_index = z(B, 2, E, dtype=torch.long)
     edge_mask = z(B, E, dtype=torch.bool)
     glob = z(B, GLOBAL_DIM)
-    boundary = z(B, N_BOUNDARY, 4)
+    boundary = z(B, N_BOUNDARY, 6)
     rt = z(B, dtype=torch.long)
+    frame_h = z(B, 2)                       # metric half-sizes (h1, h2)
+    present1 = z(B, N)                       # D1 existence target (0 in padding)
     for b, it in enumerate(items):
         n = len(it.cat)
         state[b, :n] = torch.as_tensor(it.state)
+        _p1 = it.meta.get("present1")
+        present1[b, :n] = torch.as_tensor(_p1) if _p1 is not None else 1.0
         cond[b, :n] = torch.as_tensor(it.cond)
         cat[b, :n] = torch.as_tensor(it.cat)
         motif[b, :n] = torch.as_tensor(it.motif)
         mask[b, :n] = torch.as_tensor(it.mask)
+        mgrp[b, :n] = torch.as_tensor(it.mgrp)
+        parent[b, :n] = torch.as_tensor(it.parent)
         e = it.edge_feat.shape[0]
         if e:
             edge_feat[b, :e] = torch.as_tensor(it.edge_feat)
@@ -274,7 +319,11 @@ def collate(items: list[TokenBatch], device=None):
         glob[b] = torch.as_tensor(it.glob)
         boundary[b] = torch.as_tensor(it.boundary)
         rt[b] = it.room_type
+        fr = it.meta.get("frame_tgt")
+        if fr is not None:
+            frame_h[b, 0] = float(fr.half1); frame_h[b, 1] = float(fr.half2)
     return {"state": state, "cond": cond, "cat": cat, "motif": motif,
             "mask": mask, "edge_feat": edge_feat, "edge_index": edge_index,
             "edge_mask": edge_mask, "glob": glob, "boundary": boundary,
-            "room_type": rt}
+            "room_type": rt, "frame_h": frame_h, "mgrp": mgrp,
+            "parent": parent, "present1": present1}

@@ -34,6 +34,14 @@ def main():
                          "object diversity and clutter, not room geometry")
     ap.add_argument("--sage-weight", type=float, default=1.0,
                     help="how many times to repeat the SAGE half")
+    ap.add_argument("--hybrid", action="store_true",
+                    help="use the cross-scene / motif-rigid HybridPairs pipeline "
+                         "(real targets) instead of affine-warp RetargetPairs")
+    ap.add_argument("--forward-frac", type=float, default=0.7,
+                    help="HybridPairs: fraction of forward-deform pairs (rest "
+                         "are filtered cross-pairing)")
+    ap.add_argument("--init-from", default="",
+                    help="warm-start checkpoint (copies shape-matching layers)")
     a = ap.parse_args()
 
     scenes = [s for s in iter_scenes(a.corpus, limit=a.limit or None,
@@ -63,7 +71,9 @@ def main():
     el = load_elasticity(a.elasticity) if os.path.exists(a.elasticity) else None
     cfg = TrainConfig(epochs=a.epochs, batch=a.batch, lr=a.lr,
                       workers=a.workers, device=a.device, depth=a.depth,
-                      d_model=a.d_model, out=a.out)
+                      d_model=a.d_model, out=a.out,
+                      use_hybrid=a.hybrid, hybrid_forward_frac=a.forward_frac,
+                      init_from=a.init_from)
     train_flow(train, val, cfg, elasticity=el)
     print("done ->", os.path.join(a.out, "flow.pt"))
 

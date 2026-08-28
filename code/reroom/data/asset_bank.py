@@ -129,6 +129,7 @@ class AssetBank:
                  lambda_f: float = 1.0, lambda_s: float = 1.0,
                  topk: int = 1, exclude: set[str] | None = None,
                  max_size: np.ndarray | None = None,
+                 min_size: np.ndarray | None = None,
                  rng: np.random.Generator | None = None,
                  ref_shape: np.ndarray | None = None,
                  lambda_g: float = 0.6
@@ -145,6 +146,11 @@ class AssetBank:
         if max_size is not None:
             over = np.maximum(sizes[:, :2] - np.asarray(max_size)[:2], 0.0).sum(1)
             ds = ds + 4.0 * over
+        if min_size is not None:
+            # symmetric to ``max_size``: reject a degenerate too-small asset (a
+            # mislabelled 0.4 m double bed) so shrink-to-fit stays physical
+            under = np.maximum(np.asarray(min_size)[:2] - sizes[:, :2], 0.0).sum(1)
+            ds = ds + 4.0 * under
         df = np.zeros_like(ds)
         if ref_embedding is not None:
             embs = self._category_embeddings(category)

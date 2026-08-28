@@ -190,14 +190,41 @@ def concave_perturb(poly: np.ndarray, rng: np.random.Generator,
 # --------------------------------------------------------------------------
 # sampler
 # --------------------------------------------------------------------------
+def _u_shaped(rng: np.random.Generator, lo: float, hi: float,
+              lo_prob: float = 0.5) -> float:
+    """Sample from a U-shaped distribution over [lo, hi], with the density
+    peaked at the two tails and thinner near the identity (1.0).
+
+    Realised as a Beta(0.5, 0.5) mapped to [lo, hi]; ``lo_prob`` biases the
+    sample toward the low tail (scale down, i.e. ref smaller than target).
+    """
+    x = float(rng.beta(0.5, 0.5))       # U-shaped on [0, 1]
+    # asymmetry: shift the midpoint so lo tail gets more mass when lo_prob>0.5
+    # (kept symmetric by default)
+    return lo + x * (hi - lo)
+
+
 def sample_deform(poly: np.ndarray, level: int, rng: np.random.Generator,
-                  strength: float = 1.0) -> tuple[np.ndarray, DeformSpec]:
-    """Draw one deformation of the requested difficulty level."""
+                  strength: float = 1.0,
+                  l1_range: tuple = (0.5, 2.0),
+                  l1_u_shape: bool = True) -> tuple[np.ndarray, DeformSpec]:
+    """Draw one deformation of the requested difficulty level.
+
+    ``l1_range`` widens L1 uniform_scale beyond the original [0.7, 1.4] so the
+    3-sizes test (s=0.75 / 1.35) sits closer to the *body* of the training
+    distribution instead of the tails.  ``l1_u_shape=True`` samples from a
+    Beta(0.5, 0.5) mapping so the density is peaked at the extremes -- this
+    is what removes the near-identity samples (ratio ~ 1.0) that teach the
+    model very little.
+    """
     base = normalize_polygon(poly)
     n = len(base)
     for _attempt in range(60):
         if level == 1:
-            s = float(rng.uniform(0.7, 1.4))
+            if l1_u_shape:
+                s = _u_shaped(rng, l1_range[0], l1_range[1])
+            else:
+                s = float(rng.uniform(l1_range[0], l1_range[1]))
             s = 1.0 + (s - 1.0) * strength
             out = uniform_scale(base, s)
             spec = DeformSpec(1, "uniform_scale", {"s": s})
@@ -306,10 +333,13 @@ def _replace_openings(new_poly: np.ndarray,
 
 
 def deform_room(room: Room, level: int, rng: np.random.Generator,
-                strength: float = 1.0) -> DeformResult:
+                strength: float = 1.0,
+                l1_range: tuple = (0.7, 1.4),
+                l1_u_shape: bool = False) -> DeformResult:
     """Sample a target room of the requested difficulty from a source room."""
     src = room.polygon
-    new_poly, spec = sample_deform(src, level, rng, strength)
+    new_poly, spec = sample_deform(src, level, rng, strength,
+                                   l1_range=l1_range, l1_u_shape=l1_u_shape)
     anchored = _anchor_openings(room)
     openings = _replace_openings(new_poly, anchored, len(src))
     new_room = Room(polygon=new_poly, height=room.height,

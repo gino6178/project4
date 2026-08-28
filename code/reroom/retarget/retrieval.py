@@ -63,6 +63,7 @@ def substitute_assets(scene: Scene, intent: DesignIntent, bank: AssetBank,
                             lambda_f, lambda_s, topk=1,
                             exclude={o.jid} if o.jid else None,
                             max_size=np.array([2.2 * inr, 2.2 * inr]),
+                            min_size=lo,
                             ref_shape=(o.meta.get("shape")
                                        if o.meta.get("shape") is not None
                                        else bank.shape_of(o.jid)),
@@ -70,6 +71,12 @@ def substitute_assets(scene: Scene, intent: DesignIntent, bank: AssetBank,
         if not hit:
             continue
         asset, cost = hit[0]
+        # hard floor: never accept an asset whose footprint collapses below the
+        # allowed shrink (``lo`` = reference * (1 - max_rel_change)).  The soft
+        # ``min_size`` penalty ranks these last; this rejects the case where the
+        # whole category is degenerate and a tiny asset still wins.
+        if float(np.prod(asset.size[:2])) < 0.9 * float(np.prod(lo)):
+            continue
         gain = float(np.abs(np.log(np.maximum(o.size[:2], 1e-3))
                             - np.log(np.maximum(req[:2], 1e-3))).mean())
         new_gap = float(np.abs(np.log(np.maximum(asset.size[:2], 1e-3))

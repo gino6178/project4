@@ -61,8 +61,9 @@ class GuidanceConfig:
 
     def __init__(self, bound: float = 3.0, coll: float = 1.0,
                  clear: float = 0.2, corridor: float = 0.25,
-                 wall_align: float = 0.0, wall_pull: float = 0.0,
+                 wall_align: float = 0.0, wall_pull: float = 1.5,
                  wall_min: float = 0.5, wall_slack: float = 0.75,
+                 wall_flush: float = 0.06,
                  start: float = 0.5, nestable_slack: float = 0.6,
                  bound_margin: float = 0.12):
         # E_func wall term (section 8): an object that hugged a wall in the
@@ -77,6 +78,9 @@ class GuidanceConfig:
         self.wall_pull = wall_pull
         self.wall_min = wall_min
         self.wall_slack = wall_slack
+        # a wall-lover is pulled in until its nearest footprint corner is within
+        # ``wall_flush`` metres of a wall (the reference rooms sit at ~2-5 cm)
+        self.wall_flush = wall_flush
         # E_clear (section 8): objects from *different* functional groups need a
         # gap a person can pass through.  ``corridor`` is that gap in metres;
         # ``clear`` weights it.  Only cross-motif pairs are pushed -- objects
@@ -160,11 +164,11 @@ def feasibility_grad(x1_hat: torch.Tensor, batch: dict, frames: list,
     # boundary samples: (B, Nb, 4) = point(u,v) + inward normal(world).  Map the
     # sample points to world too, and penalise a centre that lies on the
     # outward side of its nearest boundary segment by more than its radius.
-    bnd = batch["boundary"]                                        # (B, Nb, 4)
-    bp_uv = bnd[..., :2]
-    # the stored normal is in frame-basis components (n.axis1, n.axis2); rebuild
-    # it in world coordinates so it matches the world-space displacement below
-    bn_fb = bnd[..., 2:]                                          # (B, Nb, 2)
+    bnd = batch["boundary"]                                        # (B, Nb, 6)
+    bp_uv = bnd[..., :2]                                           # normalised (u, v)
+    # channels 2:4 are the metric (u*h1, v*h2) — carried for the encoder but
+    # not needed here; the normals sit at the tail.
+    bn_fb = bnd[..., 4:6]                                          # frame-basis normals
     bn = (bn_fb[..., 0:1] * a1[:, None, :]
           + bn_fb[..., 1:2] * a2[:, None, :])                     # world normal
     bp_world = (bp_uv[..., 0:1] * h1[:, None, None] * a1[:, None, :]
@@ -236,21 +240,49 @@ def feasibility_grad(x1_hat: torch.Tensor, batch: dict, frames: list,
     if cfg.wall_align > 0.0 or cfg.wall_pull > 0.0:
         aff = batch["cond"][..., -1]                             # (B, N) reference affinity
         gate = (aff * (aff > cfg.wall_min).float()) * mask       # soft, thresholded
-        dc = torch.cdist(world, bp_world)                        # (B, N, Nb)
-        nnc = dc.argmin(-1)
-        n_c = torch.gather(bn, 1, nnc[..., None].expand(-1, -1, 2))   # inward normal
-        p_c = torch.gather(bp_world, 1, nnc[..., None].expand(-1, -1, 2))
+        # Continuous polygon-SDF wall pull (upgrade from point-argmin).  Take
+        # consecutive boundary samples as line segments; for each object
+        # centre, compute point-to-segment distance for every segment, take
+        # the min.  Result: as the object moves, the nearest *edge* changes
+        # much less abruptly than the nearest *sampled point*, so gradients
+        # are smoother -- the biggest complaint about the discrete version
+        # (PhyScene borrows this exact idea).
+        bp_next = torch.roll(bp_world, -1, dims=1)                  # (B, Nb, 2)
+        ab = bp_next - bp_world                                    # (B, Nb, 2)
+        L2_seg = (ab * ab).sum(-1) + 1e-9                          # (B, Nb)
+        ap = world[:, :, None, :] - bp_world[:, None, :, :]        # (B, N, Nb, 2)
+        t_seg = (ap * ab[:, None, :, :]).sum(-1) / L2_seg[:, None, :]
+        t_seg = t_seg.clamp(0.0, 1.0)                              # projection param
+        proj = bp_world[:, None, :, :] + t_seg[..., None] * ab[:, None, :, :]
+        d_seg = torch.norm(world[:, :, None, :] - proj, dim=-1)    # (B, N, Nb)
+        d_min, k_min = d_seg.min(-1)                                # nearest edge index
+        # gather that edge's inward normal (use the start-point's normal --
+        # segment endpoints share normals when the polygon is convex/smooth
+        # enough at this resolution; small error acceptable for pull)
+        n_c = torch.gather(bn, 1, k_min[..., None].expand(-1, -1, 2))
+        # nearest point on that edge (already have proj at index k_min)
+        p_c = torch.gather(proj, 2, k_min[..., None, None].expand(-1, -1, 1, 2)).squeeze(2)
+        if cfg.wall_pull > 0.0:
+            # pull a floating wall-lover in until its *back face* is flush with
+            # its nearest wall.  The target inward depth is the object's own
+            # half-extent along that wall's normal, so a deep object is pulled
+            # the right amount and a shallow one is not over-pulled -- and it is
+            # centre-based (not a min over corners), so the gradient is smooth
+            # and does not oscillate between corners/walls when the pull is
+            # strong.  This is what re-seats an object the flow left floating
+            # after the room was scaled (the reference hugged the wall; the
+            # scaled proposal does not, and E_bound/E_col call floating "legal").
+            rn = (right * n_c).sum(-1).abs()
+            fn = (fwd * n_c).sum(-1).abs()
+            depth_half = hx.squeeze(-1) * rn + hy.squeeze(-1) * fn   # (B, N)
+            signed_c = ((world - p_c) * n_c).sum(-1)                # centre inward dist
+            pull_pen = gate * torch.relu(signed_c - depth_half - cfg.wall_flush)
+            phi = phi + cfg.wall_pull * (pull_pen ** 2).sum()
         if cfg.wall_align > 0.0:
             # object facing (world +y) should be parallel to +/- the wall normal
             fdot = (fwd * n_c).sum(-1)                           # cos(angle facing<->normal)
             align_pen = gate * (1.0 - fdot ** 2)                # 0 when parallel/anti-parallel
             phi = phi + cfg.wall_align * align_pen.sum()
-        if cfg.wall_pull > 0.0:
-            # slide a floating wall-lover in; only past ``wall_slack`` of centre
-            # distance, so an object already at its natural depth is left alone
-            signed = ((world - p_c) * n_c).sum(-1)              # inward distance of centre
-            pull_pen = gate * torch.relu(signed - cfg.wall_slack)
-            phi = phi + cfg.wall_pull * (pull_pen ** 2).sum()
 
     # degenerate case: a fully feasible predicted layout makes phi structurally
     # zero, with no gradient to take -- the correction is legitimately nothing.

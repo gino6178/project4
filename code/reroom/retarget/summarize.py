@@ -23,6 +23,30 @@ from ..intent.importance import removal_order
 from ..intent.motifs import Motif, structured_prune
 from .target import DesignIntent
 
+
+# Anchor categories per room type — the semantic core that MUST survive
+# summarization no matter how tight the target room is.  A "living room" is
+# not a living room without a sofa; a bedroom is not a bedroom without a bed.
+# Dropping the anchor drove the shrunk-room qualitative failure ("keeps the
+# dining set, throws out the sofa").  Substitution can shrink the anchor to a
+# smaller variant, but the category itself stays.
+ANCHOR_CATEGORIES: dict[str, tuple] = {
+    "living_room": ("sofa", "sofa_bed"),
+    "bedroom":     ("bed", "double_bed", "single_bed", "kids_bed", "baby_bed"),
+    "dining_room": ("dining_table",),
+    "office":      ("desk", "office_desk"),
+    "kitchen":     ("kitchen_cabinet",),
+}
+
+
+def _anchor_indices(scene: Scene) -> set:
+    """Objects whose category is the room's semantic anchor; never dropped."""
+    room_type = getattr(scene.room, "room_type", "") or ""
+    anchors = ANCHOR_CATEGORIES.get(room_type, ())
+    if not anchors:
+        return set()
+    return {i for i, o in enumerate(scene.objects) if o.category in anchors}
+
 __all__ = ["SummarizationPlan", "plan_summarization", "area_budget",
            "fits_in_room"]
 
@@ -78,11 +102,16 @@ def plan_summarization(intent: DesignIntent, target_room,
     demanded = float(sum(o.footprint_area for o in objs))
     plan = SummarizationPlan(keep=keep, budget=budget, demanded=demanded)
 
-    # objects that simply cannot fit are removed regardless of the budget
+    # objects that simply cannot fit are removed regardless of the budget --
+    # EXCEPT semantic anchors (sofa in living_room, bed in bedroom, etc.).
+    # Anchors that don't fit stay in the keep-set here; the substitution stage
+    # (§11) is then responsible for swapping them for a smaller same-category
+    # asset from the bank so they fit.
     locked = {i for i, o in enumerate(objs) if o.locked}
+    anchors = _anchor_indices(scene)
     for i, o in enumerate(objs):
-        if i in locked:
-            continue                       # C_t: the user pinned this one
+        if i in locked or i in anchors:
+            continue
         if _too_big(o, target_room):
             keep[i] = False
             plan.log.append(f"drop {o.category}[{i}]: does not fit target room")
@@ -95,6 +124,14 @@ def plan_summarization(intent: DesignIntent, target_room,
     protected = set(order[:max(protect_top_motifs, 0)])
     motifs = {m.mid: m for m in intent.motifs}
     zeta = intent.zeta
+    # anchor-containing motifs cannot be dropped whole (the anchor object
+    # must stay).  Prune inside them is still allowed to save area.
+    for mid, m in motifs.items():
+        if any(i in anchors for i in m.members):
+            protected.add(mid)
+    # protect anchor objects from every deletion path (motif-drop and the
+    # importance-order fallback both consult `locked`).
+    locked = locked | anchors
 
     def cur_area() -> float:
         return float(sum(objs[i].footprint_area for i in range(n) if keep[i]))
