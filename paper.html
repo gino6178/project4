@@ -306,7 +306,7 @@ $$\Pi_\theta(\hat x_1)=\underset{x}{\arg\min}\;\underbrace{w_a\lVert x-\hat x_1\
 <thead><tr><th>Variant</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Proj. latency ↓</th></tr></thead>
 <tbody>
 <tr><td>Raw DiT (no projection)</td><td class="win">0.707±.32</td><td>1.15±2.3%</td><td>80±24%</td><td>—</td></tr>
-<tr><td>+ Test-time 25-step polish</td><td class="bad">0.680±.31</td><td>1.23±2.3%</td><td>86±23%</td><td class="bad">+289 ms</td></tr>
+<tr><td>+ Test-time 25-step polish</td><td class="bad">0.680±.31</td><td>1.23±2.3%</td><td>86±23%</td><td class="bad">+263 ms</td></tr>
 <tr><td>+ Hard heuristic snap</td><td class="bad">0.676±.31</td><td>1.59±2.6%</td><td>87±20%</td><td>+0.8 ms</td></tr>
 <tr class="ours"><td>+ Differentiable \(\Pi_\theta\) (Ours)</td><td class="win">0.703±.32</td><td>1.04±1.9%</td><td>80±23%</td><td>+170 ms</td></tr>
 </tbody></table></div>
@@ -436,7 +436,7 @@ $$\Pi_\theta(\hat x_1)=\underset{x}{\arg\min}\;\underbrace{w_a\lVert x-\hat x_1\
 <tr><td>Affine warp (baseline)</td><td>0.6</td></tr>
 <tr><td>ReRoom flow — sample only</td><td>1378</td></tr>
 <tr><td>&nbsp;&nbsp;+ hard snap</td><td>+1.2</td></tr>
-<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\) (ours)</td><td class="win">+173</td></tr>
+<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\) (ours)</td><td class="win">+170</td></tr>
 <tr><td>&nbsp;&nbsp;+ heavy multi-step projection (the operator \(\Pi_\theta\) replaces)</td><td>+2674</td></tr>
 </tbody></table></div>
 <p><strong>Table 11.</strong> Latency breakdown. As a projection step, \(\Pi_\theta\) (173 ms) is <strong>≈15× cheaper</strong> than the multi-step test-time projection it replaces (2674 ms); end-to-end, ReRoom (flow + \(\Pi_\theta\), 1551 ms) is 2.6× faster than the same flow finished by that multi-step optimizer (4052 ms), at 34M parameters and 155 MB peak VRAM (§6). Total cost is dominated by the \(k{=}16\) candidate sampling, which every finishing strategy shares; the hard snap is fastest but destroys relational structure (Table 8).</p>
