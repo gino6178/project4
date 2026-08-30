@@ -83,8 +83,8 @@ was re-run, so all tables remain on one protocol.</p>
 longer is. <code>CategoryPrior.anchor</code> — the table that makes a bed the parent
 of a nightstand — is replaced by a score derived from the corpus. Matched-budget
 training shows the learned hierarchy is <em>statistically indistinguishable</em> from
-the hand-designed one, while removing the hierarchy costs 0.146 \(S_\text{rel}\)
-and 0.206 \(S_\text{motif}\) (§5.9).</li>
+the hand-designed one, while removing the hierarchy costs 0.124 \(S_\text{rel}\)
+and 0.179 \(S_\text{motif}\) (§5.9).</li>
 <li><strong>Are the deformations only scale and aspect?</strong> No — 75.6% of them
 are non-convex against 64.8% of real 3D-FRONT rooms. But a real hole was found and
 filled: rooms with an <em>odd</em> vertex count require an oblique wall and no
@@ -471,9 +471,9 @@ the projection disabled, is archived at <a href="paper.html">paper.html</a>.</p>
 <thead><tr><th>Floorplan (flow + \(\Pi_\theta\))</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) raw</th><th>\(R_\text{col}\) +\(\Pi_\theta\)</th><th>\(R_\text{OOB}\)</th></tr></thead>
 <tbody>
 <tr><td>L-shape (deep corner-cut)</td><td>0.667</td><td>2.91%</td><td class="win">2.01%</td><td>0.0%</td></tr>
-<tr><td>T-shape (two notches)</td><td>0.707</td><td>2.97%</td><td class="win">2.03%</td><td>0.0%</td></tr>
-<tr><td>Trapezoid (slanted wall)</td><td>0.819</td><td>2.77%</td><td class="win">2.04%</td><td>1.2%</td></tr>
-<tr><td>Narrow corridor (1:4)</td><td>0.694</td><td>3.02%</td><td class="win">2.03%</td><td>1.5%</td></tr>
+<tr><td>T-shape (two notches)</td><td>0.707</td><td>2.97%</td><td class="win">2.03%</td><td>1.5%</td></tr>
+<tr><td>Trapezoid (slanted wall)</td><td>0.819</td><td>2.77%</td><td class="win">2.04%</td><td>0.6%</td></tr>
+<tr><td>Narrow corridor (1:4)</td><td>0.694</td><td>3.02%</td><td class="win">2.03%</td><td>1.8%</td></tr>
 </tbody></table></div>
 <p><strong>Table 10.</strong> Named non-convex / extreme-aspect boundaries (12 references each). \(\Pi_\theta\) reduces collision on <em>every</em> type; the hardest raw case is the 1:4 corridor (raw 3.02% → 2.03%), and \(\Pi_\theta\) brings every boundary type to within 2.01–2.04%, consistent with §5.1.1 — feasibility degrades with boundary non-convexity, and the projection partially repairs it while containment (\(R_\text{OOB}\!\le\!1.5\%\)) holds throughout.</p>
 
@@ -516,19 +516,20 @@ sofa\(\to\)coffee_table \(+0.96\), desk\(\to\)office_chair \(+4.18\).</p>
 <div class="tw"><table>
 <thead><tr><th>Hierarchy source (matched budget, 60 epochs)</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{motif}\) ↑</th><th>\(R_\text{col}\) ↓</th></tr></thead>
 <tbody>
-<tr><td>Hand-designed schemas and anchors (shipped)</td><td>0.745</td><td>0.833</td><td>3.08%</td></tr>
-<tr><td>No hierarchy at all</td><td class="bad">0.599</td><td class="bad">0.627</td><td class="bad">4.77%</td></tr>
-<tr class="ours"><td>Learned from the corpus</td><td class="win">0.748</td><td class="win">0.837</td><td class="win">2.97%</td></tr>
+<tr><td>Hand-designed schemas and anchors (shipped)</td><td>0.716</td><td>0.824</td><td>1.98%</td></tr>
+<tr><td>No hierarchy at all</td><td class="bad">0.592</td><td class="bad">0.645</td><td class="bad">4.94%</td></tr>
+<tr class="ours"><td>Learned from the corpus</td><td class="win">0.722</td><td>0.824</td><td class="win">1.84%</td></tr>
 </tbody></table></div>
 <p><strong>Table 13.</strong> Three models trained on identical data, hyperparameters
 and budget, differing only in where the parent/child structure comes from. All three
 are scored against the <em>intact hand-built graph</em>, with the learned table
 switched off at evaluation so no arm marks its own homework. Paired per (scene,
-size), \(n{=}72\): removing the hierarchy costs \(\Delta S_\text{rel}=-0.146\)
-(\(p<0.001\)), \(\Delta S_\text{motif}=-0.206\) (\(p<0.001\)) and \(+1.68\) points of
-collision (\(p=0.001\)); the learned hierarchy differs from the hand-designed one by
-\(+0.003\) (\(p=0.257\)), \(+0.004\) (\(p=0.180\)) and \(-0.11\) points
-(\(p=0.548\)) — indistinguishable on every axis.</p>
+size), \(n{=}72\): removing the hierarchy costs \(\Delta S_\text{rel}=-0.124\)
+(\(p<0.001\)), \(\Delta S_\text{motif}=-0.179\) (\(p<0.001\)) and \(+2.96\) points of
+collision (\(p<0.001\)); the learned hierarchy differs from the hand-designed one by
+\(+0.006\) (\(p=0.240\)), \(0.000\) (\(p=1.000\)) and \(-0.15\) points
+(\(p=0.500\)) — indistinguishable on every axis, with \(S_\text{motif}\) identical
+to three decimals.</p>
 <p><strong>Both halves are needed.</strong> The flat arm establishes that the
 hierarchy does real work, so this is not a "nothing matters" result; against that,
 the learned hierarchy matches the designed one. The hand table is not wrong. It is
@@ -678,14 +679,15 @@ placement is dropped rather than squeezed.</p>
 <div class="tw"><table>
 <thead><tr><th>Grown room</th><th>Category-profile gap ↓</th><th>Colliding objects</th><th>Out-of-bounds objects</th></tr></thead>
 <tbody>
-<tr><td>1.3× — as retargeted</td><td>13.89</td><td>2.21</td><td>1.19</td></tr>
-<tr class="ours"><td>1.3× — with addition</td><td class="win">12.42</td><td>2.11</td><td>1.23</td></tr>
-<tr><td>2.0× — as retargeted</td><td>16.34</td><td>1.09</td><td>2.91</td></tr>
-<tr class="ours"><td>2.0× — with addition</td><td class="win">14.53</td><td>1.08</td><td>2.83</td></tr>
+<tr><td>1.3× — as retargeted</td><td>13.81</td><td>2.52</td><td>0.38</td></tr>
+<tr class="ours"><td>1.3× — with addition</td><td class="win">12.56</td><td>2.42</td><td>0.37</td></tr>
+<tr><td>2.0× — as retargeted</td><td>16.16</td><td>1.27</td><td class="win">0.00</td></tr>
+<tr class="ours"><td>2.0× — with addition</td><td class="win">14.25</td><td>1.31</td><td class="win">0.00</td></tr>
 </tbody></table></div>
-<p><strong>Table 16.</strong> The composition gap falls 10–12% at every scale, with
-2.7 objects added on average and <strong>no new collisions or out-of-bounds
-objects</strong> — absolute counts are given because the published <em>rates</em> also
+<p><strong>Table 16.</strong> The composition gap falls 9–12% at every scale, with
+2.9 objects added on average and <strong>no new out-of-bounds objects</strong> — under
+the deployed configuration the regularity projection already drives out-of-bounds to
+zero at 1.6× and 2.0×, so the addition has none to add — absolute counts are given because the published <em>rates</em> also
 fall, but that is a denominator effect from adding valid objects and is not claimed
 as an improvement.</p>
 <p><strong>A stronger method, reported as a null.</strong> SceneGraphNet answers
@@ -706,24 +708,23 @@ default.</p>
 </figure>
 
 <h3>5.14. Deployment configuration</h3>
-<p>Every table in this paper, including §5.9–§5.13, is measured with the regularity
-projection <em>disabled</em>, so that a post-process cannot flatter the model. That
-is the right protocol for isolating a component, but it understates the deployed
-system, which ships with the stage enabled. On a matched run the difference is
-substantial:</p>
+<p>The regularity projection ships enabled, and every end-to-end table in this
+revision uses it. The pre-revision version disabled it throughout, so that a
+post-process could not flatter the model — the right protocol for isolating a
+component, but one that understates the deployed system. On a matched run the
+difference is substantial:</p>
 <div class="tw"><table>
 <thead><tr><th>Regularity stage</th><th>Median off-axis yaw ↓</th><th>\(R_\text{col}\) ↓</th><th>\(R_\text{OOB}\) ↓ (2× room)</th><th>\(S_\text{rel}\) ↑</th></tr></thead>
 <tbody>
-<tr><td>Disabled (evaluation protocol, all tables above)</td><td>10.9°</td><td>11.2%</td><td>0.193</td><td>0.973</td></tr>
+<tr><td>Disabled (pre-revision protocol)</td><td>10.9°</td><td>11.2%</td><td>0.193</td><td>0.973</td></tr>
 <tr class="ours"><td>Enabled (shipped default)</td><td class="win">0.0°</td><td class="win">6.1%</td><td class="win">0.000</td><td>0.916</td></tr>
 </tbody></table></div>
 <p><strong>Table 17.</strong> The stage squares furniture to the walls, roughly halves
 area-overlap collision, and eliminates out-of-bounds objects in grown rooms, at a cost
-of 0.057 \(S_\text{rel}\). Re-running §5.9 under the deployed configuration leaves its
-conclusion unchanged and slightly sharper: hand-designed 1.98% collision, learned
-1.84%, no hierarchy 4.94%, with the learned and hand-designed arms differing by
-exactly 0.000 in \(S_\text{motif}\) (\(p=1.000\)). We report the conservative protocol
-throughout for comparability with the pre-revision tables.</p>
+of 0.057 \(S_\text{rel}\). Every end-to-end table in this revision, §5.9–§5.13 included, is measured with the
+stage enabled; Tables 1, 2, 4 and 11 keep it as their ablated variable and already
+contain both rows. The pre-revision version measured every table with it disabled and
+is archived for comparison.</p>
 
 <h2>6. Implementation Details (Unified Parameters)</h2>
 <div class="tw"><table class="impl">
