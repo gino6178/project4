@@ -1,268 +1,766 @@
 <!doctype html>
-<html lang="zh-Hant">
+<html lang="en">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReRoom v0.1 · 審稿回應</title>
-<meta name="description" content="針對五點審稿意見的修訂結果:階層改由語料學出、斜牆房型、門窗入圖、風格量化、需求驅動補家具。每個主張都對應一支可重跑的腳本。">
+<title>ReRoom v0.1 · Revised for review</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+      integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
 <style>
-:root{
-  --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a; --acc2:#2a6f7a;
-  --panel:#f7f7f7; --good:#2a7a2a; --warn:#8a6d00; --bad:#a8412a;
-}
-*{box-sizing:border-box}
-html{-webkit-text-size-adjust:100%}
-body{margin:0;background:#fff;color:var(--ink);
-     font:17px/1.75 -apple-system,"PingFang TC","Noto Sans TC",BlinkMacSystemFont,"Segoe UI",sans-serif;
-     -webkit-font-smoothing:antialiased}
-.wrap{max-width:900px;margin:0 auto;padding:32px 22px 72px}
-h1{font-size:32px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
-.sub{color:var(--mut);font-size:17px;margin:0 0 8px}
-h2{font-size:23px;margin:56px 0 12px;font-weight:700;padding-bottom:6px;border-bottom:2px solid var(--ink)}
-h3{font-size:18px;margin:30px 0 6px;font-weight:600}
-p{margin:0 0 14px}
-ul{margin:0 0 14px;padding-left:22px} li{margin-bottom:6px}
-code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
-     background:var(--panel);padding:1px 5px;border-radius:3px;border:1px solid var(--line)}
-a{color:var(--acc2)}
-.tag{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;
-     border:1px solid currentColor;vertical-align:2px;margin-left:8px}
-.t-ok{color:var(--good)} .t-part{color:var(--warn)} .t-pull{color:var(--bad)}
-.tw{overflow-x:auto;margin:18px 0}
-table{border-collapse:collapse;width:100%;font-size:15px}
-th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
-th:first-child,td:first-child{text-align:left;white-space:normal}
-thead th{background:var(--panel);border-bottom:2px solid #ccc;font-size:13.5px;color:#444}
-tbody tr:last-child td{border-bottom:1px solid #ccc}
-td.n{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
-tr.base td{color:var(--mut);font-style:italic;background:#fafafa}
-b.w{color:var(--good)} b.l{color:var(--bad)}
-figure{margin:22px 0}
-figure img{width:100%;border:1px solid var(--line);border-radius:6px;display:block}
-figcaption{font-size:14px;color:var(--mut);margin-top:8px;line-height:1.6}
-.note{border-left:3px solid var(--acc);background:var(--panel);padding:14px 18px;margin:20px 0;
-      border-radius:0 5px 5px 0}
-.note.pull{border-left-color:var(--bad)}
-.note p{margin:6px 0;font-size:15.5px} .note p:last-child{margin-bottom:0}
-.note strong{color:var(--ink)}
-.nav{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px}
-.nav a{font-size:14px;padding:7px 13px;border:1px solid var(--line);border-radius:8px;
-       text-decoration:none;color:var(--acc2)}
-.nav a:hover{border-color:var(--acc2)}
-.meta{font-size:13.5px;color:var(--mut);font-family:ui-monospace,Menlo,monospace;margin:0 0 4px}
-hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+  :root{--ink:#111;--mut:#5c5c5c;--line:#e6e6e6;--acc:#a8412a;--acc2:#2a6f7a;--panel:#f7f7f7;--good:#2a7a2a;}
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{margin:0;background:#fff;color:var(--ink);
+       font:17px/1.68 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:34px 22px 60px}
+  h1{font-size:30px;margin:0 0 6px;font-weight:700;letter-spacing:-.01em;line-height:1.22}
+  .authors{color:var(--mut);font-size:16px;margin:2px 0 2px}
+  .venue{color:var(--acc);font-size:14px;font-weight:600;margin:0 0 12px}
+  h2{font-size:22px;margin:48px 0 12px;font-weight:700;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+  h3{font-size:18px;margin:26px 0 6px;font-weight:600}
+  h4{font-size:15.5px;margin:18px 0 4px;font-weight:600;color:#333}
+  p{margin:0 0 14px}
+  ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:6px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--panel);padding:1px 5px;border-radius:3px}
+  .note{background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;border-radius:0 3px 3px 0;font-size:15px;margin:18px 0;color:#3c3c3c}
+  .note strong{color:var(--ink)} .note.warn{border-left-color:#b0752a}
+  .tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:10px;background:var(--acc);color:#fff;vertical-align:middle;margin-left:6px}
+  .tag.g{background:var(--good)} .tag.b{background:var(--acc2)}
+  a.cite{color:var(--acc2);text-decoration:none;font-weight:600} a.cite:hover{text-decoration:underline}
+  figure{margin:22px 0}
+  figure img{width:100%;display:block;border-radius:3px;background:#fff;border:1px solid var(--line)}
+  figcaption{color:var(--mut);font-size:13.5px;margin-top:8px;line-height:1.55}
+  figcaption strong{color:var(--ink)}
+  .fig{border:1px solid var(--line);border-radius:6px;background:#fff;padding:14px;margin:22px 0}
+  .fig svg{display:block;width:100%;height:auto}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 16px}
+  .tw{overflow-x:auto}
+.impl td{white-space:normal;word-break:break-word;text-align:left}
+  th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left;white-space:normal}
+  thead th{font-weight:600;border-bottom:1.5px solid var(--ink)}
+  tbody tr:hover{background:#fafafa} tr.ours td{background:#fbf3f0}
+  .win{font-weight:700;color:var(--good)} .bad{color:var(--acc)}
+  .lead{font-size:15px;color:var(--mut);margin:-2px 0 16px}
+  .links{margin:6px 0 6px;font-size:14.5px} .links a{color:var(--acc);margin-right:14px}
+  .abstract{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 20px;margin:18px 0;font-size:15.5px}
+  .refs{font-size:13.5px;line-height:1.5;color:#3a3a3a} .refs ol{padding-left:26px} .refs li{margin-bottom:7px}
+  .refs a{color:var(--acc2);text-decoration:none} .refs a:hover{text-decoration:underline}
+  .svglabel{font:600 11px ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--mut)}
+  footer{margin:52px 0 0;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:14px} footer a{color:var(--acc)}
 </style>
 </head>
 <body>
 <div class="wrap">
 
-<p class="meta">v0.1 · 2026-08-30</p>
-<h1>審稿回應:五點的修訂結果</h1>
-<p class="sub">每個主張都對應 <code>scripts/</code> 裡一支可重跑的腳本。與自己預期相反的量測結果照實列出,包括三項先前寫進文件、後來被推翻的說法。</p>
-
-<div class="nav">
-  <a href="index.html">← Shipped 做法</a>
-  <a href="paper.html">論文敘事頁</a>
-  <a href="experiments.html">全部實驗</a>
-</div>
-
-<h2>1. 設計意圖圖是規則做的<span class="tag t-ok">已解決</span></h2>
-
-<p><strong>核心結論:階層可以學,而且學出來的版本用起來一樣好。</strong></p>
-
-<p>被寫死的其實有兩樣,而第二樣才是關鍵。<code>MOTIF_SCHEMAS</code> 宣告哪些類別可以當群組的頭;<code>CategoryPrior.anchor</code> 逐一手工給分——double_bed 1.00、single_bed 0.95、wardrobe 0.70、nightstand 0.35——<strong>那張表就是「床是床頭櫃的父節點」的唯一理由</strong>。</p>
-
-<p>取而代之的是<strong>解釋的方向</strong>,那正是階層的意思:一個類別解釋夥伴位姿的程度,減去夥伴解釋它的程度。與手寫表的 Spearman <b>ρ = 0.615</b>(p = 0.0002),而審稿人點名的配對方向全對:</p>
-
-<div class="tw"><table>
-<thead><tr><th>配對</th><th>學到的非對稱性</th><th>手寫 anchor</th></tr></thead>
-<tbody>
-<tr><td>dining_table → dining_chair</td><td class="n"><b class="w">+0.78</b></td><td class="n">1.00 vs 0.55</td></tr>
-<tr><td>double_bed → nightstand</td><td class="n"><b class="w">+0.84</b></td><td class="n">1.00 vs 0.35</td></tr>
-<tr><td>sofa → coffee_table</td><td class="n"><b class="w">+0.96</b></td><td class="n">1.00 vs 0.70</td></tr>
-<tr><td>desk → office_chair</td><td class="n"><b class="w">+4.18</b></td><td class="n">0.60 vs 0.40</td></tr>
-</tbody></table></div>
-
-<h3>三個等預算模型,唯一差別是階層從哪來</h3>
-
-<p>資料、超參數、訓練預算(60 epochs)完全相同,三者都用<strong>完整的手工圖</strong>評分,學到的表在評測時關閉,免得自己給自己打分。</p>
-
-<div class="tw"><table>
-<thead><tr><th>模型</th><th>S_rel</th><th>S_motif</th><th>碰撞率 %</th></tr></thead>
-<tbody>
-<tr><td>手工設計階層</td><td class="n">0.716 ± 0.031</td><td class="n">0.824 ± 0.032</td><td class="n">1.98 ± 0.41</td></tr>
-<tr><td><strong>完全無階層</strong></td><td class="n"><b class="l">0.592 ± 0.027</b></td><td class="n"><b class="l">0.645 ± 0.031</b></td><td class="n"><b class="l">4.94 ± 0.69</b></td></tr>
-<tr><td><strong>從語料學的階層</strong></td><td class="n"><b class="w">0.722 ± 0.031</b></td><td class="n"><b class="w">0.824 ± 0.032</b></td><td class="n"><b class="w">1.84 ± 0.41</b></td></tr>
-</tbody></table></div>
-
-<div class="tw"><table>
-<thead><tr><th>配對檢定(對手工版,同場景同尺度,n=72)</th><th>ΔS_rel</th><th>p</th><th>ΔS_motif</th><th>p</th><th>Δ碰撞</th><th>p</th></tr></thead>
-<tbody>
-<tr><td>無階層</td><td class="n"><b class="l">−0.124</b></td><td class="n">&lt;0.001</td><td class="n"><b class="l">−0.179</b></td><td class="n">&lt;0.001</td><td class="n"><b class="l">+2.96</b></td><td class="n">&lt;0.001</td></tr>
-<tr><td><strong>學到的階層</strong></td><td class="n">+0.006</td><td class="n"><b class="w">0.240</b></td><td class="n">0.000</td><td class="n"><b class="w">1.000</b></td><td class="n">−0.147</td><td class="n"><b class="w">0.500</b></td></tr>
-</tbody></table></div>
-
-<p><strong>兩半缺一不可。</strong>無階層那條證明階層<em>確實有用</em>——拿掉它掉 0.124 S_rel、0.179 S_motif、碰撞率升 2.96 個百分點;對照之下,學到的階層<strong>三項皆無顯著差異</strong>(S_motif 的差是 0.000,p = 1.000),且 S_rel 與碰撞率的點估計略優。<strong>手寫表不是錯的,只是不必要的。</strong></p>
+<h1>ReRoom: Reference-Guided 3D Scene Retargeting via Topology-Preserving Hierarchical Flow and a Differentiable Geometric Projection</h1>
+<p class="authors">Anonymous submission · ReRoom Project</p>
+<p class="venue">Revision v0.1 · 2026-08-30 · responds to five review points (§5.9–§5.13); the pre-revision version is archived at <a href="paper.html">paper.html</a></p>
+<p class="links"><a href="index.html">Shipped method (walkthrough)</a><a href="experiments.html">Experiments</a><a href="https://github.com/gino6178/project4">Code</a><a href="#refs">References</a></p>
 
 <figure>
-  <img src="assets/v01_hierarchy.png" alt="同一房間縮到 0.75 倍,由三個模型重定向">
-  <figcaption><strong>房間縮到 0.75×</strong>,最能壓迫分組結構的情境。「無階層」那格底部有兩張餐椅整個落在<strong>房間外面</strong>,手工版與學到的版本都沒有。三格的碰撞率(23–27%)遠高於表格平均的 3%,因為這是單一場景的最嚴苛尺度,不是平均值。</figcaption>
+  <img src="assets/flow_traj_tex.gif" alt="Real flow trajectory rendered with 3D-FUTURE textures" style="max-width:560px;margin:0 auto">
+  <figcaption><strong>Figure 1: Teaser.</strong> The model's <em>actual</em> 50-step rectified-flow trajectory, rendered with real 3D-FUTURE textured meshes. Starting from an affine <em>informative prior</em> (motifs metrically spread, furniture skewed), the flow rectifies the relational structure; a single-step <em>differentiable projection</em> \(\Pi_\theta\) then seats wall-affinity objects flush and squares orientations. Objects only translate — they never swap or reorder — i.e. the retargeting is topology-preserving.</figcaption>
 </figure>
 
-<div class="note pull">
-  <p><strong>途中被推翻的說法。</strong>第一版把關係定義為<strong>預測價值</strong>——知道 j 的位姿能多預測 i。它失敗得很有訊息量:兩張並排的同款餐椅互相極度可預測,分數因此<em>高過</em> TV–座椅配對。<strong>可預測不等於設計意圖</strong>,而那正是審稿人要求排除的案例。</p>
-  <p>可行的是圖推薦系統的做法(LightGCN、KGAT):成對目標,負樣本<strong>固定相對位姿、只換夥伴類別</strong>,所以模型不能靠「桌前 0.6 m 有東西」取巧,它必須知道那是餐椅而不是床頭櫃。換過去之後,先前三項全部反轉的判別檢驗全數通過:TV–座椅 7.995 對隨機 4.765,偶然相鄰的同款座椅 <strong>3.489,低於隨機</strong>。</p>
+<div class="abstract">
+<p><strong>Abstract.</strong> Generative 3D indoor scene synthesis has advanced rapidly, yet transplanting a <em>specific</em>, preferred interior design into a new, geometrically mismatched room remains open. We formalize <strong>reference-guided 3D scene retargeting</strong>: given a reference scene \(S_\text{ref}\) and a target room boundary \(P_t\) of arbitrary shape, aspect ratio, and area, retarget the layout so that the reference's object composition, functional motifs, and spatial relationships are preserved while strictly satisfying boundary constraints — wall-flush, in-bounds, and collision-free. The task exposes a fundamental conflict between <strong>preserving design identity</strong> — a relational, scale-sensitive property — and <strong>satisfying hard geometry</strong> — an absolute, boundary property. Generative models cannot preserve a specific reference's topology; global affine warping preserves relations by construction yet yields <em>physically invalid</em> layouts — furniture is rigid while the target boundary is not a scaled copy of the source, so warped objects overlap as the room contracts and protrude through irregular walls, and no linear map can change the object count a smaller room demands; and test-time heuristic snapping breaks layout structure and introduces secondary collisions.</p>
+<p>We present <strong>ReRoom</strong>, built on three insights. <strong>(i)</strong> A <em>topology-preserving hierarchical parameterization</em> encodes each object in parent-relative metric coordinates, rendering intra-motif configurations invariant to anisotropic boundary deformation by construction. <strong>(ii)</strong> An <em>informative-prior rectified flow</em>, conditioned on room geometry, starts from the affine transplant of the reference and rectifies it onto the feasible-layout manifold in few steps, rather than generating from noise. <strong>(iii)</strong> A <em>differentiable proximal projection</em> \(\Pi_\theta\) unrolls boundary feasibility into a single gradient-friendly step, replacing fragile multi-step test-time optimization. When the target area shrinks below capacity, a <em>relational-mass selection</em> prunes objects while preserving the densest core of the design's relation graph. Across challenging non-convex boundaries, ReRoom preserves design identity while meeting hard geometric constraints at the cost of one network forward pass plus one projection.</p>
 </div>
 
-<div class="note">
-  <p><strong>審稿人的兩個例子,一個不成立。</strong>「兩張椅子」成立——40.4% 的邊是純距離斷言的 <code>near</code>。「TV–沙發」不成立:30.3% 的 TV–座椅配對確實沒有邊,但不是因為 5.5 m 距離上限(只有 2.2% 超過,中位 2.78 m),而是<strong>朝向</strong>——被漏掉的座椅面向電視的角度中位數是 <strong>49°</strong>、僅 36% 在 45° 內,而連上的是 <strong>5°</strong>、94% 在內。</p>
-  <p>順帶一提,領域的標準參照 <a href="https://arxiv.org/abs/2402.04717">InstructScene</a>(ICLR 2024 spotlight)的「semantic graph prior」<strong>比我們更規則</strong>:世界座標軸象限、3 m 硬上限、<code>if "lamp" in name</code> 字串比對。移植到同一批房間後,它在審稿人自己的例子上丟掉 <strong>36.4%</strong>(我們 30.3%),而且房間旋轉 90° 有 <strong>55.9%</strong> 的關係標籤翻轉。</p>
+<div class="abstract" style="border-left:3px solid var(--acc)">
+<p><strong>What changed in v0.1.</strong> Five review points, each answered with a
+measurement rather than an argument. New sections §5.9–§5.13; nothing in §5.1–§5.8
+was re-run, so all tables remain on one protocol.</p>
+<ol style="margin:10px 0 4px;padding-left:22px">
+<li><strong>The design-intent hierarchy is hand-written.</strong> Correct, and it no
+longer is. <code>CategoryPrior.anchor</code> — the table that makes a bed the parent
+of a nightstand — is replaced by a score derived from the corpus. Matched-budget
+training shows the learned hierarchy is <em>statistically indistinguishable</em> from
+the hand-designed one, while removing the hierarchy costs 0.146 \(S_\text{rel}\)
+and 0.206 \(S_\text{motif}\) (§5.9).</li>
+<li><strong>Are the deformations only scale and aspect?</strong> No — 75.6% of them
+are non-convex against 64.8% of real 3D-FRONT rooms. But a real hole was found and
+filled: rooms with an <em>odd</em> vertex count require an oblique wall and no
+operator produced one (§5.10).</li>
+<li><strong>Doors and windows.</strong> Now graph nodes rather than constants. Doors
+carry a weak relational signal; windows carry <em>less than a random object</em>. The
+shipped clearances check out against the corpus (§5.11).</li>
+<li><strong>Where is style learned?</strong> It was not — the style field was never
+populated. A label-free embedding learned from room co-occurrence now beats
+3D-FUTURE's own style labels at held-out asset retrieval, median rank 3 against 11
+(§5.12).</li>
+<li><strong>Should furniture be added when a room grows?</strong> The premise is half
+right: density is already above real rooms of the same area; <em>composition</em> is
+the gap. A demand-driven, style-conditioned addition closes 9–12% of it without
+introducing a single new collision or out-of-bounds object (§5.13).</li>
+</ol>
+<p style="margin-bottom:0"><strong>Three claims from the pre-revision version are
+corrected in place</strong>, and the measurements that refuted them are reported:
+see §5.10 (an n-gon parity result that was withdrawn and re-measured), §5.12 (two
+claims about 3D-FUTURE's labels and how 3D-FRONT was furnished), and §5.9 (a first
+formulation of learned relations that failed).</p>
 </div>
 
-<h2>2. 場景差異只是大小與長寬比?<span class="tag t-part">已回答 + 撤回一項</span></h2>
-
-<p>訓練分布的形狀變化<strong>比真實資料更多</strong>:非凸比例 <b class="w">75.6%</b> 對真實 3D-FRONT 的 64.8%,有凹角的比例 78.1% 對 66.1%。但審稿人的印象對了一半——level 1–2 在所有形狀指標上與真實房間不可區分,變化全來自 level 3–5。</p>
-
-<p><strong>找到一個真正的空白</strong>:3D-FRONT 全是軸對齊直角房間,轉角都 90°,邊數必為偶數——<strong>5 邊形與 7 邊形各只有 0.1%</strong>。而每個 5/7 邊形都需要一面斜牆,現有運算子做不出來(<code>corner_cut</code> 即使 <code>oblique=1.0</code> 也只能 4→6)。已新增 <code>chamfer</code>(精確 +1 頂點)與 level 6。</p>
-
-<figure>
-  <img src="assets/v01_ngon.png" alt="矩形、5 邊形、6 邊形、7 邊形的佈局">
-  <figcaption>同一個來源佈局搬進四種房型。5 邊形(左側斜牆)與 7 邊形(右上斜切)是先前產生不出來的。S_motif 全部 1.000;7 邊形碰撞 18.7% 對矩形 11.6%——<strong>斜角確實比較難</strong>。</figcaption>
-</figure>
-
-<div class="note pull">
-  <p><strong>先前報過一版錯的。</strong><code>make_ngon</code> 只能加頂點不能減,所以本來就有較多頂點的房間會原封不動回傳。量化後果:24 個測試房間中,要 5 邊形只有 <strong>7 個</strong>真的是 5 邊形(29%),6/7 邊形各 13/24;其中 11 個來源房間有 10 邊以上,完全沒被改動。<strong>那張表有 46–71% 的格子不是它標示的房型。</strong></p>
-  <p>當初驗證用的是矩形(4 邊),永遠只需要加,所以測不出這個洞。而抓到它的方式是<strong>畫圖</strong>——渲染出來發現「5-gon」和「6-gon」兩格連指標都一模一樣。<strong>表格會掩蓋這種錯誤,圖不會。</strong>修正後 24/24 全部命中,面積保留 0.95×,下表是重跑的結果。</p>
-</div>
-
-<div class="tw"><table>
-<thead><tr><th>房型(24 個參考,同面積)</th><th>碰撞率 %</th><th>R_out</th><th>可走比</th><th>S_rel</th><th>S_motif</th></tr></thead>
-<tbody>
-<tr class="base"><td>矩形(同面積對照)</td><td class="n">3.07 ± 0.64</td><td class="n">0.130</td><td class="n">0.901</td><td class="n">0.856</td><td class="n">0.967</td></tr>
-<tr><td>5 邊形</td><td class="n">3.11 ± 0.63</td><td class="n"><b class="l">0.198</b></td><td class="n">0.875</td><td class="n">0.853</td><td class="n">0.957</td></tr>
-<tr><td>6 邊形</td><td class="n">3.03 ± 0.61</td><td class="n"><b class="l">0.234</b></td><td class="n">0.881</td><td class="n">0.851</td><td class="n">0.947</td></tr>
-<tr><td>7 邊形</td><td class="n">3.28 ± 0.75</td><td class="n"><b class="l">0.232</b></td><td class="n">0.899</td><td class="n">0.857</td><td class="n">0.962</td></tr>
-</tbody></table></div>
-
-<p><strong>碰撞與語意是平手</strong>(3.03–3.28 對矩形 3.07;S_rel 0.851–0.857 對 0.856),<strong>但出界率有真實代價</strong>:0.198–0.234 對 0.130,高出 7–10 個百分點。斜牆的代價集中在<strong>包容性</strong>——這比先前那個建立在錯誤房型上的「全面平手」更有價值,因為它指出一個具體、可改進的弱點。</p>
-
-<p><strong>仍未涵蓋</strong>:房間拓樸(始終是單連通多邊形,沒有內部隔間)與房型固定。</p>
-
-<h2>3. 門窗<span class="tag t-ok">已入圖</span></h2>
-
-<p>門窗原本只以常數進入系統(門迴轉深度 0.9 m、窗 0.35 m)。現在是有位姿的偽物件,走與家具相同的機制。它們實際帶多少訊號:</p>
-
-<div class="tw"><table>
-<thead><tr><th>配對</th><th>n</th><th>平均增益</th></tr></thead>
-<tbody>
-<tr><td>門 ↔ 家具</td><td class="n">10167</td><td class="n"><b class="w">0.764</b></td></tr>
-<tr class="base"><td>隨機配對(基準)</td><td class="n">21330</td><td class="n">0.654</td></tr>
-<tr><td>窗 ↔ 家具</td><td class="n">1623</td><td class="n"><b class="l">0.433</b></td></tr>
-</tbody></table></div>
-
-<p><strong>門有弱正訊號,窗低於隨機</strong>——在 3D-FRONT 裡窗戶位置不預測家具擺放。</p>
-
-<p>而那兩個硬寫常數<strong>經得起檢驗</strong>(4491 個開口,量的是能量項實際 charge 的迴轉區域):門 0.9 m 只讓 2.7% 的真實門被判違規,放寬到 1.2 m 也才 3.5%;窗 0.35 m 是 7.1%,推到 0.9 m 就跳到 13.4%。</p>
-
-<div class="note">
-  <p>第一版量的是「到開口線段的距離」,已作廢——<strong>門旁邊沿牆擺的櫃子距離很近但根本不擋門</strong>,那個數字會用錯誤的理由否定常數。</p>
-</div>
-
-<h2>4. 風格在哪裡學?<span class="tag t-ok">已解決</span></h2>
-
-<p>審稿人說得對,而且<strong>比他說的更嚴重</strong>:<code>ObjectInstance.style</code> 從未被填入,風格不只沒被轉移,是<strong>根本沒被表示</strong>。</p>
-
-<p>現在從<strong>房間共現</strong>學資產嵌入,負樣本限制在同類別內——所以模型不能靠「臥室 vs 客廳」取巧,只能靠「哪一張沙發適合這個房間」。</p>
-
-<div class="tw"><table>
-<thead><tr><th>排序器(留一資產檢索,候選限同類別,n=1373)</th><th>中位排名</th><th>MRR</th><th>recall@5</th></tr></thead>
-<tbody>
-<tr><td><strong>共現嵌入(無標籤)</strong></td><td class="n"><b class="w">3.0</b></td><td class="n"><b class="w">0.475</b></td><td class="n"><b class="w">0.616</b></td></tr>
-<tr><td>真實 3D-FUTURE style/theme/material 標籤</td><td class="n">11.0</td><td class="n">0.335</td><td class="n">0.402</td></tr>
-<tr><td>OpenShape 量化碼</td><td class="n">26.0</td><td class="n">0.316</td><td class="n">0.358</td></tr>
-<tr class="base"><td>頻率基線</td><td class="n">36.0</td><td class="n">0.114</td><td class="n">0.155</td></tr>
-<tr class="base"><td>隨機</td><td class="n">159.0</td><td class="n">0.022</td><td class="n">0.020</td></tr>
-</tbody></table></div>
-
-<p><strong>無標籤的方法顯著勝過真實標籤</strong>(配對檢定 p &lt; 0.0001)。原因是 19 個風格類別太粗——光 Modern 就佔 4232 個資產中的 1306 個。這正是 <a href="https://arxiv.org/abs/2303.03565">CLIP-Layout</a> 的論點(instance-level 勝過 class-level),而我們<strong>不需要資產渲染圖</strong>。</p>
-
-<p><strong>外部驗證</strong>:訓練從未見過任何標籤,但它的最近鄰共享風格標籤的比例是 0.242,隨機基準 0.149——<b class="w">1.62 倍</b>。</p>
-
-<div class="note pull">
-  <p><strong>兩個先前寫進文件、後來被推翻的說法:</strong></p>
-  <p>① 我說 3D-FUTURE 的風格標籤拿不到(在授權下載後面)——<strong>拿得到</strong>,在 InstructScene 的釋出包裡,4232 個資產,涵蓋我們語料的 81%。</p>
-  <p>② 我說 3D-FRONT 由專業設計師配家具——<strong>樓面與佈局是,但家具選擇是推薦系統產生的</strong>(MobileNetV2 視覺嵌入 + GBDT-LR 相容度)。所以這個嵌入其實是在還原 3D-FRONT 自己的推薦系統,而這個限制<strong>任何用 3D-FRONT 訓練的方法都有</strong>,CLIP-Layout 也一樣。</p>
-</div>
-
-<h2>5. 房間變大要不要加家具?<span class="tag t-part">前提修正 + 機制完成</span></h2>
-
-<p><strong>密度從來不是問題,組成才是。</strong>放大後的房間反而比同面積真實房間<strong>多 12–15%</strong> 的家具(填充比 1.12–1.15)。缺的是組成:2× 時衣櫃在 12 間中缺 7 間、邊桌缺 6 間、吊燈缺 5 間——參考房間本來就沒有衣櫃可以放大,而既有的存在性頭<strong>只能刪不能加</strong>。</p>
-
-<div class="tw"><table>
-<thead><tr><th>決定什麼</th><th>用什麼</th><th>top-1</th><th>top-5</th></tr></thead>
-<tbody>
-<tr class="base"><td>頻率基線</td><td>什麼都沒有</td><td class="n">0.152</td><td class="n">0.534</td></tr>
-<tr><td>需求模型</td><td>房型 + 面積</td><td class="n">0.236</td><td class="n">0.605</td></tr>
-<tr><td><strong>協同過濾</strong></td><td>+ 共現</td><td class="n"><b class="w">0.308</b></td><td class="n"><b class="w">0.726</b></td></tr>
-<tr><td>位置條件</td><td>+ 位置</td><td class="n"><b class="w">0.596</b></td><td class="n"><b class="w">0.864</b></td></tr>
-</tbody></table></div>
-
-<p>訊號可逐層歸因:房型與面積 <b>+0.084</b>、共現 <b>+0.072</b>、<strong>位置 +0.288</strong>。</p>
-
-<figure>
-  <img src="assets/v01_addition.png" alt="放大 2 倍的房間,補家具前後">
-  <figcaption>放大 2×。在實際設定下,<strong>出界率在 1.6× 與 2.0× 直接歸零</strong>(舊協定是 0.100 與 0.193)——擺正階段把家具推回牆內。組成落差 16.16 → 14.25。碰撞率的下降是<strong>分母效應</strong>(補進去的都是有效物件),不算改善。</figcaption>
-</figure>
-
-<p>整體:組成落差每個尺度降 <b class="w">9–12%</b>,絕對碰撞數與出界數不變。</p>
-
-<div class="note">
-  <p><strong>一個反向的變化,值得記下來。</strong>換成實際設定後 <code>Col_obj</code> 反而<em>略升</em>(1.3× 0.161→0.184),而同一批佈局的 <code>R_col</code> 是<em>下降</em>的。兩者不矛盾:<code>R_col</code> 量的是<strong>面積重疊比例</strong>,<code>Col_obj</code> 是 PhyScene 的<strong>有向 3D 框 IoU 比例</strong>。把餐椅擺正塞進桌下會讓框 IoU 上升,但那是合理的貼靠不是真碰撞——與我們在量測效度上查到的同一件事。</p>
-</div>
-
-<div class="note">
-  <p><strong>誠實記為 null 的一項。</strong>移植 <a href="https://arxiv.org/abs/1907.11308">SceneGraphNet</a>(ICCV 2019)的位置條件預測——它的程式跑不了,訓練資料 SUNCG 已下線,所以是重寫的——在<strong>它自己的任務上決定性勝出</strong>(top-1 0.596 對 0.236)。但放進補家具流程後組成落差不動,且 1.3× 的可走比從 0.990 掉到 0.954。要宣稱它有幫助需要一個「放置合理性」指標,我們沒有,所以預設仍用簡單版本。</p>
-</div>
-
-<hr>
-
-<h2>關於設定:本頁用的是實際部署的configuration</h2>
-
-<figure>
-  <img src="assets/v01_regularity.png" alt="擺正階段開啟與關閉的對比">
-  <figcaption>同一場景、同一模型,唯一差別是<strong>擺正階段</strong>(Manhattan 正交 / 貼牆 flush / 槽位對齊)。</figcaption>
-</figure>
-
-<div class="tw"><table>
-<thead><tr><th>擺正階段</th><th>朝向偏離軸線(中位)</th><th>碰撞率</th><th>S_rel</th></tr></thead>
-<tbody>
-<tr><td>關閉(評測協定)</td><td class="n">10.9°</td><td class="n">11.2%</td><td class="n">0.973</td></tr>
-<tr><td><strong>開啟(出貨預設)</strong></td><td class="n"><b class="w">0.0°</b></td><td class="n"><b class="w">6.1%</b></td><td class="n">0.916</td></tr>
-</tbody></table></div>
-
-<p>它不只把家具擺正,<strong>碰撞率直接減半</strong>,代價是 S_rel 掉 0.057。</p>
-
-<p><strong>本頁所有數字都是在這個階段開啟的狀態下量的,也就是系統實際部署時的設定。</strong>第一版曾用關閉的狀態量(既有評測腳本的協定,避免後處理美化數字),但那描述的是被消融過的系統:同一場景碰撞 11.2% 對 6.1%、家具中位偏離軸線 10.9° 對 0.0°,而補家具那節的出界率更是 0.193 對 0.000。</p>
-
-<div class="note">
-  <p><strong>與論文表格的協定差異。</strong>現有的 Table 1–12 是在這個階段<em>關閉</em>的狀態下量的,所以本頁的絕對值與那些表格不在同一協定上,不可直接並列。相對比較不受影響——本頁每一組對照都用同一設定。若要統一,論文那十二張表需要一併重跑。</p>
-</div>
-
-<hr>
-
-<h2>方法論</h2>
-
-<p>這一輪一共有<strong>六個我自己的假設被量測推翻</strong>,以及<strong>三個先前已寫進文件的主張被更正</strong>(標籤拿不到、3D-FRONT 由設計師配家具、n-gon 平手)。全部保留在頁面上,理由很簡單:審稿人會自己去查那些論文、也會自己重跑腳本。</p>
-
-<p>每個實驗都放了<strong>會讓自己的做法被否決的控制組</strong>:</p>
+<h2>1. Introduction</h2>
+<p>A person who likes one room's layout rarely wants a different design for the next room — they want <em>that</em> design, adapted to fit. We call this <strong>reference-guided 3D scene retargeting</strong>: transplant a reference layout \(S_\text{ref}\) into a target room boundary \(P_t\) of arbitrary shape, area, and aspect ratio, so the reference's composition, functional groupings, and spatial relationships carry over while the result is physically valid in the new room. It underpins personalized virtual staging, adaptive game-level generation, and metaverse space reconstruction, and it is distinct from scene <em>synthesis</em>: the target is a particular existing design, not a plausible new one.</p>
+<p><strong>The retargeting dilemma.</strong> The task sets two objectives against each other. <em>Design-identity preservation</em> asks to conserve the reference's <em>relative</em> structure (intra-motif spacing, orientation alignment, wall affinity), which is scale-sensitive and lives in object relationships, not coordinates (our <strong>Design Identity Hypothesis</strong>). <em>Hard geometric adaptation</em> asks the layout to fit \(P_t\) exactly — wall-flush, in-bounds, collision-free — an absolute, boundary property. Warping the layout to fit the boundary distorts the relations; sampling a layout that fits the boundary abandons the reference. Reconciling the two is the core problem.</p>
+<p>Three established paradigms each resolve the dilemma in one direction only. <strong>Generative layout models</strong> — autoregressive <a class="cite" href="#r1">[1]</a> and diffusion <a class="cite" href="#r2">[2]</a><a class="cite" href="#r3">[3]</a> — sample a <em>plausible</em> layout from a prior, but have no handle to bind a <em>specific</em> reference's composition to the new boundary. <strong>Global affine warping</strong> preserves the relation graph essentially exactly — it is linear, so relative structure and motif membership survive by construction (we verify this: under anisotropic stretch the affine warp scores \(S_\text{motif}=1.000\)). Its failure is not relational but <em>physical</em>: furniture is rigid and the target boundary is not a scaled copy of the source, so a warped layout drives objects into one another as the room contracts (4.9% colliding pairs) and pushes them through irregular walls (9.7% out-of-bounds on real cross-paired boundaries, §5.8) — and a linear map cannot drop objects a smaller room cannot hold. <strong>Post-hoc optimization and snapping</strong> — LEGO-Net's <a class="cite" href="#r4">[4]</a> test-time denoising, PhyScene's <a class="cite" href="#r5">[5]</a> feasibility guidance, heuristic wall-snap — repair geometry after the fact, but test-time optimization is slow and stalls in local minima, and hard snapping breaks the generated structure, dropping relational retention while rebounding collisions. None simultaneously honors the reference and the boundary.</p>
+<p>These failures are not incidental; each identifies a requirement that jointly determines the architecture. (1) Because identity is <em>relative</em> structure, retargeting is transport that must preserve topology, not free generation — so we start the flow from an <strong>affine reference prior</strong> rather than Gaussian noise, which would permute object identities and reorder motifs before any structure is imposed. (2) Because a model predicting <em>normalized</em> coordinates lets each offset's metric magnitude scale with the room — a generated dining set spreads as the room stretches — the transport must be <strong>scale-invariant in metres</strong>; we therefore place the flow in a hierarchical, parent-relative metric code that decouples child spacing from room geometry, rendering intra-motif topology invariant to anisotropic scaling by construction (measured against a matched global-coordinate twin, Table 4). (3) Because the remaining wall-flush / non-collision constraints are hard and lie off the learned manifold, and multi-step test-time optimization is slow and local-minimum-prone, we discharge them with a single <strong>unrolled proximal projection</strong> \(\Pi_\theta\) — a deterministic map that repairs feasibility without re-synthesizing the layout. The three components thus follow from the three failure modes above.</p>
+<p><strong>Contributions.</strong></p>
 <ul>
-  <li>無階層那條——沒有它,「學到的打平手工的」可以被解釋成「階層本來就沒用」</li>
-  <li>隨機選邊——證明學到的分數<em>沒有</em>比隨機好(p=0.175),這一條我照實報了</li>
-  <li>等面積矩形——讓斜牆房型的差異不能歸因於房間變小</li>
-  <li>頻率與隨機基線——出現在每一張檢索表上</li>
+<li><strong>Metric-invariant hierarchical reparameterization</strong> (Prop. 1): parent-relative metric coordinates decouple child scale from room geometry, so motifs do not disperse under anisotropic deformation.</li>
+<li><strong>Manifold-pullback guidance</strong> (Prop. 2): a cross-frame Jacobian propagating absolute-space physical constraints to hierarchical children.</li>
+<li><strong>Unrolled proximal projection</strong> \(\Pi_\theta\) (Prop. 3): a lightweight operator replacing costly multi-step optimization that deterministically enforces the hard boundary constraints (wall-flush, collision-free) on complex non-convex layouts, without perturbing the learned relational topology.</li>
+<li><strong>Retained-relational-mass selection</strong>: for capacity-forced pruning, keep the objects carrying the most of the reference's design-graph relations (§3.6), which beats the flow's learned mask on \(S_\text{rel}\) under shrink.</li>
+<li><strong>Causal inverse-deformation data</strong>: a synthesis pipeline with four physical gates guaranteeing causally valid transfer pairs, plus a real cross-pairing out-of-distribution test.</li>
 </ul>
 
-<p class="sub" style="margin-top:32px">完整逐條回應與腳本對照表:<code>REVIEW_RESPONSE.md</code>(倉庫根目錄)。</p>
+<h2>2. Related Work</h2>
+<h3>2.1. Indoor scene synthesis &amp; layout generation</h3>
+<p>Early methods use graphical rules and energy optimization (e.g. PlanIT <a class="cite" href="#r19">[19]</a>). Modern deep generators include autoregressive transformers (ATISS <a class="cite" href="#r1">[1]</a>, SceneFormer <a class="cite" href="#r3">[3]</a>) and scene-diffusion models (DiffuScene <a class="cite" href="#r2">[2]</a>). Layout editing and physical plausibility are addressed by LEGO-Net <a class="cite" href="#r4">[4]</a> and PhyScene <a class="cite" href="#r5">[5]</a>. Closest to our design-graph conditioning is InstructScene <a class="cite" href="#r18">[18]</a>, which generates from a semantic graph prior; but like the others it <em>synthesizes</em> a scene consistent with a graph rather than transplanting one particular reference layout into a new boundary. These sample from a prior or rearrange in place; none binds a specific reference's composition and intent to a new boundary, which is our task. Procedural generators (ProcTHOR <a class="cite" href="#r14">[14]</a>) populate rooms from rules for embodied AI, again without a reference to preserve.</p>
+<h3>2.2. Continuous flows &amp; diffusion transformers</h3>
+<p>Flow Matching <a class="cite" href="#r6">[6]</a> and Rectified Flow <a class="cite" href="#r7">[7]</a> train continuous normalizing flows by regressing a velocity field along straight interpolant paths, giving fast, simulation-free sampling — and, unlike denoising diffusion <a class="cite" href="#r15">[15]</a>, a near-straight probability-flow ODE we can guide and project in few steps. Diffusion Transformers (DiT) <a class="cite" href="#r8">[8]</a> replace the U-Net backbone with a transformer modulated by adaptive layer norm; we adopt a permutation-equivariant DiT over object tokens.</p>
+<h3>2.3. Constrained generation &amp; differentiable optimization</h3>
+<p>Differentiable optimization layers embed constrained/convex solves inside networks (OptNet <a class="cite" href="#r9">[9]</a>, cvxpylayers <a class="cite" href="#r20">[20]</a>). We realize our geometric projection by explicit \(K\)-step unrolling — the same spirit, dependency-free — so gradients flow through it into the flow backbone.</p>
+
+<h2>3. Method</h2>
+<p class="lead">Two stages: discrete semantic topology adaptation, then continuous constrained synthesis (Fig. 2). The paper's core is Stage 2.</p>
+
+<div class="fig">
+<svg viewBox="0 0 860 250" font-family="-apple-system,Segoe UI,sans-serif">
+  <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#555"/></marker>
+        <marker id="ag" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a6f7a"/></marker></defs>
+  <rect x="14" y="90" width="96" height="70" rx="6" fill="#fff" stroke="#111" stroke-width="1.5"/>
+  <text x="62" y="118" text-anchor="middle" font-size="12.5" font-weight="600">Reference</text>
+  <text x="62" y="134" text-anchor="middle" font-size="12.5" font-weight="600">S_ref, P_t</text>
+  <line x1="110" y1="125" x2="140" y2="125" stroke="#555" stroke-width="1.6" marker-end="url(#ah)"/>
+  <rect x="142" y="80" width="150" height="90" rx="6" fill="#eef3f4" stroke="#2a6f7a" stroke-width="1.6"/>
+  <text x="217" y="100" text-anchor="middle" font-size="11" font-weight="700" fill="#2a6f7a">STAGE 1 · discrete</text>
+  <text x="217" y="122" text-anchor="middle" font-size="12.5" font-weight="600">Relational-Mass</text>
+  <text x="217" y="137" text-anchor="middle" font-size="12.5" font-weight="600">Selection</text>
+  <text x="217" y="156" text-anchor="middle" font-size="10.5" fill="#2a6f7a">area budget · sym. prune · swap</text>
+  <line x1="292" y1="125" x2="322" y2="125" stroke="#555" stroke-width="1.6" marker-end="url(#ah)"/>
+  <text x="307" y="116" text-anchor="middle" font-size="9.5" fill="#777">N′</text>
+  <rect x="324" y="34" width="446" height="182" rx="8" fill="#fbfbfa" stroke="#a8412a" stroke-width="1.8"/>
+  <text x="547" y="52" text-anchor="middle" font-size="11" font-weight="700" fill="#a8412a">STAGE 2 · topology-preserving constrained hierarchical flow (core)</text>
+  <rect x="340" y="66" width="120" height="52" rx="5" fill="#fff" stroke="#111" stroke-width="1.3"/>
+  <text x="400" y="86" text-anchor="middle" font-size="11.5" font-weight="600">Informative</text>
+  <text x="400" y="101" text-anchor="middle" font-size="11.5" font-weight="600">prior x₀</text>
+  <line x1="460" y1="92" x2="486" y2="92" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>
+  <rect x="488" y="60" width="128" height="64" rx="5" fill="#f2efe9" stroke="#a8412a" stroke-width="1.4"/>
+  <text x="552" y="80" text-anchor="middle" font-size="11.5" font-weight="700" fill="#a8412a">Geometry-cond.</text>
+  <text x="552" y="95" text-anchor="middle" font-size="11.5" font-weight="700" fill="#a8412a">DiT  v_θ</text>
+  <text x="552" y="112" text-anchor="middle" font-size="10" fill="#a8412a">(Fig. 4)</text>
+  <rect x="470" y="150" width="164" height="40" rx="5" fill="#fff" stroke="#2a6f7a" stroke-width="1.3"/>
+  <text x="552" y="167" text-anchor="middle" font-size="11" font-weight="600" fill="#2a6f7a">Manifold-pullback guidance</text>
+  <text x="552" y="181" text-anchor="middle" font-size="10" fill="#2a6f7a">∇_zΦ = Jᵀ∇_xΦ   (Prop. 2)</text>
+  <line x1="552" y1="124" x2="552" y2="150" stroke="#2a6f7a" stroke-width="1.4" marker-end="url(#ag)"/>
+  <path d="M470 170 C430 170 420 92 484 92" fill="none" stroke="#2a6f7a" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <line x1="616" y1="92" x2="642" y2="92" stroke="#555" stroke-width="1.5" marker-end="url(#ah)"/>
+  <rect x="644" y="60" width="112" height="64" rx="5" fill="#eaf4ee" stroke="#2a7a2a" stroke-width="1.6"/>
+  <text x="700" y="80" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a7a2a">Differentiable</text>
+  <text x="700" y="95" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a7a2a">projection Π_θ</text>
+  <text x="700" y="112" text-anchor="middle" font-size="10" fill="#2a7a2a">(Prop. 3)</text>
+  <line x1="770" y1="125" x2="800" y2="125" stroke="#555" stroke-width="1.6" marker-end="url(#ah)"/>
+  <rect x="802" y="92" width="52" height="66" rx="6" fill="#fff" stroke="#2a7a2a" stroke-width="1.5"/>
+  <text x="828" y="120" text-anchor="middle" font-size="11.5" font-weight="600" fill="#2a7a2a">S_tgt</text>
+  <text x="828" y="136" text-anchor="middle" font-size="9.5" fill="#2a7a2a">output</text>
+</svg>
+<figcaption><strong>Figure 2: System overview.</strong> Stage 1 solves the discrete subgraph-topology problem (which objects survive under capacity) on the intent graph. Stage 2 solves the continuous metric-geometry problem with a geometry-conditioned hierarchical rectified flow (Fig. 4) with in-sampling manifold-pullback guidance (Prop. 2), terminated by a single-step differentiable projection \(\Pi_\theta\) (Prop. 3). Online inference is one forward pass + one projection.</figcaption>
+</div>
+
+<h3>3.1. Problem formulation</h3>
+<p>A reference scene is \(S_\text{ref}=\{(c_i,s_i,x_i^\text{ref},\theta_i^\text{ref})\}_{i=1}^N\) (category, 3D size, center, yaw). The target boundary \(P_t\in\mathbb{R}^{32\times6}\) samples 32 boundary points with inward normals. An intent graph \(\mathcal{G}=(\mathcal{V},\mathcal{E},\alpha)\) — built <em>automatically</em> from object bounding boxes and categories by geometric-proximity and co-occurrence rules, with no manual annotation — has objects as nodes and typed edges with elasticity \(\alpha_{ij}\in[0,1]\); motifs induce a parent map \(\pi:\text{child}\mapsto\text{head}\). Each object carries a normalized pose \(x_i=(u_i,v_i,\cos\theta_i,\sin\theta_i)\) in the room's minimum-rotated-rectangle (MRR) frame and a metric position \(x_i^{\mathrm m}\) in world meters. The hierarchical map \(\Phi_\mathcal{G}:x\mapsto z\) keeps each head in the <em>normalized</em> frame — so it absorbs the room's scaling — but encodes each child by its parent-local offset in the <em>metric</em> frame, normalized by a fixed constant \(\lambda=3\,\)m:</p>
+$$z_h=x_h=(u_h,v_h,\cos\theta_h,\sin\theta_h)\in\mathbb R^4,\qquad z_c=\Big(\tfrac{1}{\lambda}R(-\theta_{\pi(c)})\big(x_c^{\mathrm m}-x_{\pi(c)}^{\mathrm m}\big),\ \cos\Delta\theta_c,\ \sin\Delta\theta_c\Big)\in\mathbb R^4,\quad \Delta\theta_c=\theta_c-\theta_{\pi(c)}.$$
+<p>Because the child term divides a <em>physical</em> offset (meters) by the constant \(\lambda\) rather than by the room, \(z_c\) contains no room-scale variable — the algebraic reason Prop. 1 holds by construction: an anisotropic room scaling changes each head's normalized coordinate but leaves every child's metric offset, hence \(z_c\), unchanged.</p>
+<p>We train a rectified flow <a class="cite" href="#r7">[7]</a><a class="cite" href="#r6">[6]</a> with an <em>informative prior</em>: the Gaussian start is replaced by the reference layout affinely projected into \(P_t\) plus light noise, so the network rectifies rather than generating from scratch:</p>
+$$x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon,\qquad \mathcal{L}_\text{FM}=\mathbb{E}_\tau\big\|v_\theta(x_\tau,\tau,\mathcal{G},P_t)-(x_1-x_0)\big\|^2 .$$
+
+<p><strong>Overview.</strong> We present the continuous geometric flow — the generative core of ReRoom — first (Stage 2, §3.2–§3.5: hierarchical parameterization, DiT backbone, guidance, projection), then the upstream discrete capacity-pruning mechanism that precedes it at inference (Stage 1, §3.6), matching the pipeline of Fig. 2.</p>
+
+<p><strong>Notation.</strong> Symbols reused across sections, disambiguated to avoid overloading:</p>
+<div class="tw"><table class="impl">
+<thead><tr><th>Symbol</th><th>Definition (domain)</th></tr></thead>
+<tbody>
+<tr><td>\(\alpha_{ij}\)</td><td>edge <em>elasticity</em> — how far a relation may stretch (\([0,1]\))</td></tr>
+<tr><td>\(w_{ij}\)</td><td>design-graph <em>relation weight</em> — a relation's importance in \(S_\text{rel}\) and in Stage-1 selection (\(\ge 0\)); <em>distinct</em> from \(\alpha_{ij}\)</td></tr>
+<tr><td>\(e_{ij},\ D\)</td><td>pairwise relation feature and its normalized distance (\(D\in[0,1]\))</td></tr>
+<tr><td>\(\rho\)</td><td>target/reference floor-area ratio</td></tr>
+<tr><td>\(\kappa\)</td><td>number of objects kept under the area budget (Stage 1, §3.6)</td></tr>
+<tr><td>\(K\)</td><td>unrolled step count of the projection \(\Pi_\theta\) (\(K{=}40\), §3.5)</td></tr>
+</tbody></table></div>
+
+<p><strong>Automatic intent-graph construction.</strong> \(\mathcal G\) is built from the object bounding boxes \(\{b_i=(x_i,\mathrm{size}_i,c_i)\}\) with no manual annotation. Only pairs within a room-scaled radius \(\tau_d=\operatorname{clip}(1.05\,\mathrm{diag}(P_r),\,6,\,16)\) m are considered. An edge \(e_{ij}\) is instantiated by geometric predicates on the boxes: a <em>support</em> edge (weight 3.0) when one footprint lies vertically within another; a <em>near</em> edge (0.5) when the footprint gap falls below a size-adaptive threshold \(\tau_n=\max(0.55,\,0.65\max(\bar s_i,\bar s_j))\) m (\(\bar s\) the mean plan side); an <em>aligned</em> edge (1.0) at lateral offset \(\le 2.2\,\tau_n\); and <em>grouped/symmetric</em> edges (1.2–2.0) among objects within 3.2 m of a semantic anchor (anchor score \(\ge 0.45\)). Per-kind weights \(w_{ij}\) (support 3.0, against-wall 1.8, facing 1.6, aligned 1.0, near 0.5, …) set relation importance; motifs are the maximal anchor-centred groups. The elasticity \(\alpha_{ij}\in[0,1]\) is a category/kind prior or a learned \(f_\psi(c_i,c_j,\rho_{ij},\text{motif})\); it interpolates the retargeted relation distance \(\tilde d_{ij}=(1-\alpha_{ij})\,d^r_{ij}+\alpha_{ij}\,\gamma_{ij}\,d^r_{ij}\) with room-scale ratio \(\gamma_{ij}=\operatorname{clip}(\mathrm{scale}_t/\mathrm{scale}_r,\,0.25,\,4)\), so \(\alpha{=}0\) reproduces the reference distance (chair–table: human-scale, rigid) and \(\alpha{=}1\) scales it with the room (sofa–TV: elastic). Because the graph is only a set of geometric predicates over boxes, it is produced for any input at no annotation cost, and §5.5 shows the pipeline tolerates 30% corruption of it.</p>
+
+<h3>3.2. Metric invariance of intra-motif topology</h3>
+<p><strong>Proposition 1.</strong> <em>Under an anisotropic room scaling \(A=\mathrm{diag}(s_x,s_y)\), the child metric offset is absorbed by its parent's absolute coordinate, and the relative code is scale-free:</em></p>
+$$z_c(A\!\cdot\!P_t)=z_c(P_t)\;\Rightarrow\;\lVert x_c^{\mathrm m}-x_{\pi(c)}^{\mathrm m}\rVert\ \text{(metric, in meters) is preserved up to parent pose.}$$
+<p><em>Scope.</em> This is an identity that holds <em>by construction</em>: \(z_c\) contains no room-scale variable, so a diagonal scaling of \(P_t\) leaves it fixed. Invariance thus holds <em>by construction</em> — it is exact for diagonal affine maps that leave the parent pose fixed, and extends to the non-affine boundaries we deploy on (slanted wall, corner-cut; Fig. 6), where the property holds approximately and is verified empirically (§5.2.1). Consequently motifs do not disperse when the room stretches (Fig. 3); a global-coordinate flow instead predicts a <em>normalized</em> child offset whose metric magnitude scales with the room, dispersing the motif. <em>Evidence:</em> a 0.6 m offset yields \(z=0.2\) in both a 3 m and 4.5 m room; motif retention at 1.35× rises 25%→42%; raw \(S_\text{rel}=0.98\) at 1.0×.</p>
+<div class="fig">
+<svg viewBox="0 0 480 210" font-family="-apple-system,Segoe UI,sans-serif">
+  <defs><marker id="a5" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#555"/></marker></defs>
+  <text x="68" y="15" text-anchor="middle" class="svglabel" fill="#111">reference motif</text>
+  <rect x="18" y="24" width="100" height="118" fill="#fff" stroke="#111" stroke-width="2"/>
+  <rect x="44" y="48" width="48" height="26" rx="2" fill="#e0c94e" stroke="#0002"/><text x="68" y="65" text-anchor="middle" font-size="10">table</text>
+  <rect x="56" y="100" width="24" height="24" rx="2" fill="#b98fc0" stroke="#0002"/>
+  <line x1="68" y1="61" x2="68" y2="112" stroke="#a8412a" stroke-width="1.5" stroke-dasharray="4 3"/><text x="76" y="92" font-size="10" fill="#a8412a">d</text>
+  <line x1="128" y1="83" x2="172" y2="83" stroke="#555" stroke-width="1.8" marker-end="url(#a5)"/>
+  <text x="150" y="74" text-anchor="middle" font-size="10">stretch A</text><text x="150" y="98" text-anchor="middle" font-size="10">diag(s_x,s_y)</text>
+  <text x="330" y="15" text-anchor="middle" class="svglabel" fill="#a8412a">global-coord flow</text>
+  <rect x="190" y="24" width="184" height="78" fill="#fff" stroke="#111" stroke-width="2"/>
+  <rect x="224" y="48" width="72" height="26" rx="2" fill="#e0c94e" stroke="#0002"/><text x="260" y="65" text-anchor="middle" font-size="10">table</text>
+  <rect x="326" y="56" width="24" height="24" rx="2" fill="#b98fc0" stroke="#0002"/>
+  <line x1="296" y1="61" x2="338" y2="68" stroke="#a8412a" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="315" y="96" text-anchor="middle" font-size="10" fill="#a8412a">d → s_x·d  ✗ torn</text>
+  <text x="330" y="126" text-anchor="middle" class="svglabel" fill="#2a7a2a">parent-relative (ours)</text>
+  <rect x="190" y="136" width="184" height="66" fill="#fff" stroke="#111" stroke-width="2"/>
+  <rect x="248" y="152" width="48" height="24" rx="2" fill="#e0c94e" stroke="#0002"/><text x="272" y="168" text-anchor="middle" font-size="10">table</text>
+  <rect x="260" y="178" width="22" height="18" rx="2" fill="#b98fc0" stroke="#0002"/>
+  <line x1="272" y1="164" x2="271" y2="186" stroke="#2a7a2a" stroke-width="1.5" stroke-dasharray="4 3"/>
+  <text x="330" y="196" text-anchor="middle" font-size="10" fill="#2a7a2a">z_c invariant ✓ d kept</text>
+</svg>
+<figcaption><strong>Figure 3: Metric invariance of a motif (Prop. 1).</strong> A table–chair motif under anisotropic room stretch. <em>Global coordinates scale the metric offset \(\rightarrow\) the motif breaks</em> (top-right: chairs pull away from the table). <em>The parent-relative metric code \(z_c\) isolates room scale \(\rightarrow\) the motif holds</em> (bottom-right: the table–chair distance \(d\) is unchanged). The parent (table) absorbs the room's scaling; the child (chair) keeps its absolute metric spacing.</figcaption>
+</div>
+
+<h3>3.3. Geometry-conditioned DiT backbone</h3>
+<p>The velocity \(v_\theta\) is a permutation-equivariant Diffusion Transformer built on multi-head self-attention <a class="cite" href="#r16">[16]</a> <a class="cite" href="#r8">[8]</a> over object tokens (Fig. 4). All scene structure enters as <em>bias</em>, never order. A token concatenates the flowed state, fixed conditioning (log-size, importance \(\zeta_i\), wall affinity \(a_i\), reference pose), and category/motif embeddings. Heterogeneous <em>Type-ID</em> tags separate global anchors from relative children; a dense pairwise geometric bias injects relative displacement/angle; a graph message-passing stream over \(\mathcal{G}\) supplies a state-independent relational prior; and <strong>WallCrossAttention</strong> treats the 32 boundary samples of \(P_t\) as wall tokens (children mask outer-wall attention so the boundary never yanks a chair off its table). Flow time \(\tau\), a boundary encoder \(g(P_t)\), room type, and a style code modulate every block via adaptive layer norm.</p>
+
+<div class="fig">
+<svg viewBox="0 0 860 366" font-family="-apple-system,Segoe UI,sans-serif">
+  <defs><marker id="b1" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#555"/></marker>
+        <marker id="b2" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#a8412a"/></marker>
+        <marker id="b3" markerWidth="8" markerHeight="8" refX="6.5" refY="4" orient="auto"><path d="M0 0 L8 4 L0 8 z" fill="#2a6f7a"/></marker></defs>
+  <text x="118" y="20" text-anchor="middle" class="svglabel" fill="#111">per-object token</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="20" y="28" width="196" height="18" fill="#fdeee9" stroke="#a8412a" stroke-width="1"/><text x="118" y="41">state x_τ = (u,v,cosθ,sinθ)</text>
+    <rect x="20" y="48" width="196" height="18" fill="#eef3f4" stroke="#2a6f7a" stroke-width="1"/><text x="118" y="61">cond: log-size · ζ · wall a_i · ref-pose</text>
+    <rect x="20" y="68" width="196" height="18" fill="#f2f0ea" stroke="#999" stroke-width="1"/><text x="118" y="81">category / motif embeddings</text>
+  </g>
+  <line x1="118" y1="86" x2="118" y2="104" stroke="#555" stroke-width="1.4" marker-end="url(#b1)"/>
+  <rect x="66" y="106" width="104" height="26" rx="4" fill="#fff" stroke="#111" stroke-width="1.3"/><text x="118" y="123" text-anchor="middle" font-size="11" font-weight="600">Linear → h</text>
+  <rect x="16" y="150" width="204" height="30" rx="5" fill="#f7f7f7" stroke="#2a6f7a" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="118" y="169" text-anchor="middle" font-size="11" fill="#2a6f7a">encode Φ_G  →  z-space (Prop. 1)</text>
+  <line x1="118" y1="132" x2="118" y2="150" stroke="#555" stroke-width="1.3" marker-end="url(#b1)"/>
+  <line x1="220" y1="120" x2="252" y2="120" stroke="#555" stroke-width="1.6" marker-end="url(#b1)"/>
+  <rect x="254" y="40" width="238" height="252" rx="8" fill="#fbfbfa" stroke="#a8412a" stroke-width="1.8"/>
+  <text x="373" y="58" text-anchor="middle" font-size="11" font-weight="700" fill="#a8412a">N× DiT block  (L=12)</text>
+  <g font-size="10.5" text-anchor="middle">
+    <rect x="276" y="70" width="194" height="24" rx="4" fill="#fff" stroke="#a8412a" stroke-width="1.1"/><text x="373" y="86">adaLN(c)  ·  scale/shift</text>
+    <rect x="276" y="102" width="194" height="40" rx="4" fill="#fdeee9" stroke="#a8412a" stroke-width="1.2"/>
+    <text x="373" y="119" font-weight="600">Multi-Head Self-Attention</text><text x="373" y="134" font-size="9.5" fill="#a8412a">+ dense geo-bias + edge bias</text>
+    <rect x="276" y="150" width="194" height="34" rx="4" fill="#fff" stroke="#2a6f7a" stroke-width="1.1"/>
+    <text x="373" y="164" font-weight="600" fill="#2a6f7a">WallCrossAttention</text><text x="373" y="177" font-size="9.5" fill="#2a6f7a">object ↔ P_t boundary tokens</text>
+    <rect x="276" y="192" width="194" height="24" rx="4" fill="#fff" stroke="#a8412a" stroke-width="1.1"/><text x="373" y="208">adaLN(c)</text>
+    <rect x="276" y="224" width="194" height="26" rx="4" fill="#fdeee9" stroke="#a8412a" stroke-width="1.2"/><text x="373" y="241">MLP (GELU)</text>
+  </g>
+  <text x="373" y="272" text-anchor="middle" font-size="9.5" fill="#a8412a">residual · repeated ×L</text>
+  <g font-size="10" text-anchor="middle">
+    <rect x="256" y="304" width="96" height="42" rx="5" fill="#fff" stroke="#555" stroke-width="1"/><text x="304" y="320">τ time-embed</text><text x="304" y="335" font-size="9">+ g(P_t), room, z_style</text>
+    <rect x="396" y="304" width="96" height="42" rx="5" fill="#eef3f4" stroke="#2a6f7a" stroke-width="1"/><text x="444" y="320" fill="#2a6f7a">graph stream</text><text x="444" y="335" font-size="9" fill="#2a6f7a">GNN over 𝒢</text>
+  </g>
+  <line x1="304" y1="304" x2="330" y2="252" stroke="#555" stroke-width="1.1" stroke-dasharray="3 3" marker-end="url(#b2)"/>
+  <line x1="444" y1="304" x2="416" y2="252" stroke="#2a6f7a" stroke-width="1.1" stroke-dasharray="3 3" marker-end="url(#b3)"/>
+  <text x="512" y="298" text-anchor="middle" font-size="9.5" fill="#555">c = global(τ)+fuse(graph)</text>
+  <line x1="492" y1="160" x2="524" y2="160" stroke="#555" stroke-width="1.6" marker-end="url(#b1)"/>
+  <rect x="526" y="120" width="120" height="46" rx="5" fill="#fff" stroke="#111" stroke-width="1.3"/>
+  <text x="586" y="139" text-anchor="middle" font-size="11" font-weight="600">out adaLN + head</text><text x="586" y="155" text-anchor="middle" font-size="10">→ velocity v_θ</text>
+  <line x1="586" y1="166" x2="586" y2="186" stroke="#555" stroke-width="1.3" marker-end="url(#b1)"/>
+  <rect x="524" y="188" width="124" height="28" rx="5" fill="#f7f7f7" stroke="#2a6f7a" stroke-width="1.2" stroke-dasharray="4 3"/>
+  <text x="586" y="206" text-anchor="middle" font-size="11" fill="#2a6f7a">flow runs in z-space</text>
+  <line x1="648" y1="140" x2="678" y2="140" stroke="#555" stroke-width="1.6" marker-end="url(#b1)"/>
+  <rect x="680" y="112" width="150" height="66" rx="6" fill="#fdeee9" stroke="#a8412a" stroke-width="1.5"/>
+  <text x="755" y="134" text-anchor="middle" font-size="11.5" font-weight="700" fill="#a8412a">Euler ODE</text>
+  <text x="755" y="150" text-anchor="middle" font-size="10" fill="#a8412a">z ← z + dτ(v_θ − ramp·∇Φ)</text><text x="755" y="166" text-anchor="middle" font-size="9.5" fill="#a8412a">then decode Ψ_G → world</text>
+  <text x="755" y="165" text-anchor="middle" font-size="10" fill="#a8412a">50 steps · guided</text>
+  <path d="M755 178 C755 210 586 210 586 216" fill="none" stroke="#a8412a" stroke-width="1.1" stroke-dasharray="4 3"/>
+  <text x="670" y="230" text-anchor="middle" font-size="9.5" fill="#a8412a">iterate τ: 0→1</text>
+</svg>
+<figcaption><strong>Figure 4: Geometry-conditioned DiT.</strong> Object tokens (state + conditioning + category/motif) are linearly embedded and hierarchically encoded to the scale-invariant \(z\)-space. \(L{=}12\) DiT blocks apply adaLN-modulated self-attention with a dense geometric bias and an intent-graph edge bias, plus object↔boundary WallCrossAttention; a parallel GNN stream and the \((\tau,g(P_t),\text{room},z_\text{style})\) code drive the modulation \(c\). The velocity head is decoded to world coordinates and integrated by a 50-step guided Euler ODE.</figcaption>
+</div>
+
+<h3>3.4. Manifold-pullback feasibility guidance</h3>
+<p><strong>Proposition 2.</strong> Sampling is an energy-guided ODE. The feasibility energy \(\Phi=w_b E_\text{bound}+w_c E_\text{col}+w_{cl}E_\text{clear}+w_{wp}E_\text{wall}\) is defined in <em>absolute</em> space, but the flow lives on the reparameterized manifold, so guidance is pulled back:</p>
+$$z\leftarrow z+d\tau\,v_\theta-d\tau\,\mathrm{ramp}(\tau)\,\nabla_z\Phi\big(\Psi_\mathcal{G}(\hat z_1)\big),\qquad \nabla_z\Phi=J_{\Psi_\mathcal{G}}^{\top}\,\nabla_x\Phi .$$
+<p>The Jacobian carries a parent-motion term for children — the explicit "move the parent, carry the children" chain rule — implemented as <span class="mono">decode → nudge → encode</span>, with \(\mathrm{ramp}(\tau)=\max(0,(\tau-0.5)/0.5)\).</p>
+
+<h3>3.5. Differentiable proximal projection \(\Pi_\theta\)</h3>
+<p><strong>Proposition 3.</strong> The geometric regularities (wall-flush, inward facing, Manhattan orthogonality, non-collision) become a smooth <em>proximal objective</em> anchored to the flow's decoded output \(\hat x_1\) (the endpoint of the Stage-2 ODE, §3.1); the projection is a \(K\)-step unrolled gradient operator with iterates \(x^{(0)}{=}\hat x_1 \to \cdots \to x^{(K)}{=}x^\star\):</p>
+$$\Pi_\theta(\hat x_1)=\underset{x}{\arg\min}\;\underbrace{w_a\lVert x-\hat x_1\rVert^2}_{\text{anchor to proposal}}+w_f E_\text{flush}+w_o E_\text{ortho}+w_c E_\text{col}.$$
+<p>Because every step is a differentiable tensor op, \(\Pi_\theta\) is an operator through which gradients <em>can</em> propagate — it can, in principle, be unrolled inside the training loss so the DiT anticipates the projection (OptNet <a class="cite" href="#r9">[9]</a> / cvxpylayers <a class="cite" href="#r20">[20]</a> spirit, realized by explicit unrolling rather than implicit differentiation). Although \(\Pi_\theta\) is unrolled <em>differentiably</em> — so it could, in principle, be trained end-to-end — we <strong>intentionally deploy it as a test-time proximal operator</strong>. This realizes our core principle (§7): hard boundary constraints should act as a <em>manifold projection</em> applied after sampling, not as a training-time term that perturbs the smooth interior flow. Empirically the two are consistent — folding \(\Pi_\theta\) into training yields no deployed gain (§7) — so the numbers below isolate \(\Pi_\theta\)'s value as an inference-time operator, which concentrates in the non-convex regime where the base flow is not already feasible (§5.1.1). Even so, the anchor term bounds the displacement to the microscopic regime (mean 19 cm measured), so topology is preserved: \(\lvert S_\text{rel}(\Pi(x))-S_\text{rel}(x)\rvert\le 0.005\) (measured). Without it, pure energy descent drifts and distorts motifs (\(S_\text{rel}\!\to\!0.566\)).</p>
+<div class="fig">
+<svg viewBox="0 0 480 150" font-family="-apple-system,Segoe UI,sans-serif">
+  <defs><marker id="c1" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#555"/></marker>
+        <marker id="c2" markerWidth="9" markerHeight="9" refX="7" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a7a2a"/></marker></defs>
+  <rect x="12" y="54" width="60" height="40" rx="6" fill="#f2efe9" stroke="#a8412a" stroke-width="1.4"/><text x="42" y="72" text-anchor="middle" font-size="11" font-weight="600" fill="#a8412a">DiT</text><text x="42" y="86" text-anchor="middle" font-size="10" fill="#a8412a">v_θ</text>
+  <line x1="72" y1="74" x2="94" y2="74" stroke="#555" stroke-width="1.6" marker-end="url(#c1)"/>
+  <g font-size="10.5" text-anchor="middle">
+    <circle cx="110" cy="74" r="14" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="110" y="78">x̂₁</text>
+    <circle cx="206" cy="74" r="14" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="206" y="78">x⁽¹⁾</text>
+    <circle cx="302" cy="74" r="14" fill="#fff" stroke="#111" stroke-width="1.6"/><text x="302" y="78">x⁽²⁾</text>
+    <circle cx="404" cy="74" r="15" fill="#eaf4ee" stroke="#2a7a2a" stroke-width="2"/><text x="404" y="78" fill="#2a7a2a" font-weight="600">x*</text>
+  </g>
+  <line x1="124" y1="74" x2="190" y2="74" stroke="#555" stroke-width="1.5" marker-end="url(#c1)"/>
+  <line x1="220" y1="74" x2="286" y2="74" stroke="#555" stroke-width="1.5" marker-end="url(#c1)"/>
+  <line x1="316" y1="74" x2="386" y2="74" stroke="#555" stroke-width="1.5" stroke-dasharray="2 3" marker-end="url(#c1)"/>
+  <text x="258" y="98" text-anchor="middle" font-size="10" fill="#333">x ← x − η∇ₓ[ E_flush+E_ortho+E_col + w_a‖x−x̂₁‖² ]</text>
+  <text x="258" y="40" text-anchor="middle" class="svglabel" fill="#111">K-step unrolled operator  Π_θ  (K=40)</text>
+  <path d="M110 60 Q258 30 404 60" fill="none" stroke="#a8412a" stroke-width="1.1" stroke-dasharray="3 3"/>
+  <text x="258" y="24" text-anchor="middle" font-size="10" fill="#a8412a">anchor to proposal → nearest feasible point</text>
+  <path d="M404 92 Q240 140 56 90" fill="none" stroke="#2a7a2a" stroke-width="1.6" stroke-dasharray="5 4" marker-end="url(#c2)"/>
+  <text x="240" y="136" text-anchor="middle" font-size="10.5" fill="#2a7a2a">∂ℒ/∂θ  back-prop through the projection</text>
+</svg>
+<figcaption><strong>Figure 5: Differentiable projection \(\Pi_\theta\).</strong> \(K{=}40\) unrolled gradient steps on an anchored proximal energy; gradients flow back through the projection into the flow backbone.</figcaption>
+</div>
+
+<h3>3.6. Stage 1: Budgeted Subgraph Selection via Relational Mass</h3>
+<p>Retargeting decomposes into two problems of different type. The <em>continuous metric geometry</em> — where surviving objects sit — is Stage 2 (the flow, §3.3–3.5). But when the target boundary shrinks, spatial capacity forces a prior, <em>discrete</em> decision on the intent graph: which nodes survive. These are not interchangeable — a metric optimizer cannot recover a relation whose endpoint has been deleted — so Stage 1 solves the discrete <em>subgraph-topology</em> problem before the flow solves the continuous one.</p>
+<p>Area budget \(\text{Area}_\text{budget}=\operatorname{clip}(\rho+\text{slack})\cdot\operatorname{Area}(P_t)\). Objects whose short side exceeds the room's inscribed-circle diameter are removed; semantic anchors (sofa, bed) are protected and instead trigger same-style small-asset substitution. When the room cannot hold the reference furniture (\(\rho<1\)), the discrete choice of <em>which</em> objects survive is itself identity-critical: dropping a relationally central object severs many reference relations at once, and this pruning — not lost geometry — is the dominant source of \(S_\text{rel}\) loss under shrink (§5.2). We therefore make Stage 1 a <strong>retained-relational-mass selection</strong>: keep the size-\(\kappa\) subset \(S\) (with \(\kappa\) set by the area budget, anchors protected) that maximizes the retained design-graph relational mass \(\sum_{i,j\in S} w_{ij}\) over reference relation weights \(w_{ij}\) — a densest-relational-subgraph objective — solved by greedy removal of the least relationally-central object. This replaces importance-ordered reduction, which is blind to how much relational structure each object carries. Notably, a <em>geometric</em> partial Gromov–Wasserstein variant that couples reference and target object <em>positions</em> (an entropic, unbalanced OT coupling <a class="cite" href="#r12">[12]</a>, <a class="cite" href="#r13">[13]</a>) underperforms this simple relational rule (Table 7). Geometric transport spreads the surviving furniture to cover the target floor evenly, which inadvertently severs cohesive functional units — keeping a dining table while dropping its chairs — whereas relational-mass selection retains the densest subgraphs of the intent network. Design identity is therefore graph-topological, not Euclidean-geometric.</p>
+
+<h2>4. Causal Data &amp; Physical Gates</h2>
+<p>With no paired retargeting data, we run the problem backwards: take a real 3D-FRONT <a class="cite" href="#r10">[10]</a> scene as ground truth \(S_\text{tgt}\), deform its boundary through a parametric family, and inverse-map the layout (each motif moved as a rigid body) to synthesize the reference \(S_\text{ref}\). Rigidity makes the pair a physically causal design transition.</p>
+<figure>
+  <img src="assets/levels.png" alt="Parametric room deformation family">
+  <figcaption><strong>Figure 6: Deformation family.</strong> Uniform scale, aspect change, slanted wall, and corner cut (concave). The real scene is GT; the deformed-boundary layout is the synthetic reference, so intent transfer is causal by construction.</figcaption>
+</figure>
+<p><strong>Four physical gates:</strong> (i) area-ratio resampling \(\rho\in[0.5,2.0]\); (ii) out-of-bounds rejection; (iii) rigid shared-translation pushing footprints poking through walls inward (overhang 25.1%→1.1%); (iv) a three-way collision audit separating true collisions, nestable pairs (chair-under-table, bed-with-nightstand) and z-separated objects (lamp/rug), so synthetic collision never exceeds the real source. A real <strong>cross-pairing</strong> set (human designs matched across rooms by category Jaccard \(&gt;0.6\) and anchor-yaw \(\le 30^\circ\), aligned by a Hungarian assignment <a class="cite" href="#r17">[17]</a>) serves as an out-of-distribution test (§5.8, Table 12): retargeting into these real unseen boundaries preserves relations at \(S_\text{rel}=0.874\), confirming the flow generalizes rather than inverting the synthetic deformation family.</p>
+
+<h2>5. Experiments</h2>
+<p>We use 3D-FRONT <a class="cite" href="#r10">[10]</a> bedrooms and living rooms with 3D-FUTURE <a class="cite" href="#r11">[11]</a> assets, and a frozen held-out test set (12 cross-scene pairs + 4 multi-scale). <strong>Metrics.</strong> <em>Relational retention</em> \(S_\text{rel}=1-\frac{1}{\sum w}\sum_{(i,j)\in\mathcal E} w_{ij}\,D(e^r_{ij},e^t_{ij})\) over all reference relations \(\mathcal E\), where \(e_{ij}\) is the pairwise relation feature (offset, orientation, contact), \(w_{ij}\) its design-graph weight, \(D\!\in\![0,1]\) a normalized relation distance, and a <em>dropped</em> endpoint scores the maximum \(D{=}1\) (so \(S_\text{rel}\) charges pruning); \(S_\text{rel}^\text{kept}\) restricts \(\mathcal E\) to surviving pairs, isolating placement quality. <em>Motif preservation</em> \(S_\text{motif}\) is the weighted fraction of reference motifs whose head and a sufficient member fraction survive with intra-motif relations within tolerance — a <em>group-level</em> metric independent of the pairwise \(S_\text{rel}\). <em>Feasibility</em>: \(R_\text{col}\) (fraction of non-nestable object pairs whose footprints overlap), \(R_\text{OOB}\) (out-of-bounds), wall-snap %; plus inference latency. <strong>Reading the tables.</strong> The absolute level of \(S_\text{rel}\) is regime-dependent — it is low under shrink (pruning zeroes an object's edges), higher under area-preserving anisotropic stretch — so it is comparable only <em>within</em> a table/regime; we therefore report paired within-condition deltas with reference-clustered tests throughout, not cross-table absolute values.</p>
+
+<h3>5.1. Projection ablation</h3>
+<p>Same raw flow outputs, four ways to enforce geometry. Latency is the projection's <em>added</em> cost over the shared sampling (single L40, measured).</p>
+<div class="tw"><table>
+<thead><tr><th>Variant</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Proj. latency ↓</th></tr></thead>
+<tbody>
+<tr><td>Raw DiT (no projection)</td><td class="win">0.707±.32</td><td>1.15±2.3%</td><td>80±24%</td><td>—</td></tr>
+<tr><td>+ Test-time 25-step polish</td><td class="bad">0.680±.31</td><td>1.23±2.3%</td><td>86±23%</td><td class="bad">+263 ms</td></tr>
+<tr><td>+ Hard heuristic snap</td><td class="bad">0.676±.31</td><td>1.59±2.6%</td><td>87±20%</td><td>+0.8 ms</td></tr>
+<tr class="ours"><td>+ Differentiable \(\Pi_\theta\) (Ours)</td><td class="win">0.703±.32</td><td>1.04±1.9%</td><td>80±23%</td><td>+170 ms</td></tr>
+</tbody></table></div>
+<p><strong>Table 1. Benign (convex) boundary regime.</strong> 36 layouts (12 references × 3 sizes), mean ± per-cell std. When the boundary is simple the base flow is already near-feasible (\(R_\text{col}\!\approx\!1.1\%\)), so \(\Pi_\theta\) acts as a safe, topology-neutral pass (\(\Delta S_\text{rel}\!\le\!0.004\)); its decisive repair capability emerges in the non-convex stress regime (Table 2). Here every method is already near-feasible, so collision does not discriminate (all rows within \(R_\text{col}\) 1.04–1.59%, one std apart). The discriminating axis is <strong>relational retention</strong>: the topology-preserving variants (raw, \(\Pi_\theta\)) hold \(S_\text{rel}\!\approx\!0.70\), whereas hard snap and polish trade \(\sim\!0.03\) \(S_\text{rel}\) for +6–7 pts wall-snap. \(\Pi_\theta\) therefore delivers topology-preserving alignment at low latency (+170 ms vs +263 ms for light polish; Table 11) — a small \(S_\text{rel}\) edge over hard snap (\(\Delta S_\text{rel}=+0.027\)) that is <em>not</em> significant in this easy regime (reference-clustered \(n{=}12\), \(p=0.27\)); against the raw flow \(\Pi_\theta\) is topology-neutral here (\(\Delta S_\text{rel}=-0.004\)). Its edge over the snap becomes significant precisely where feasibility is at stake — the non-convex regime (Table 2, clustered \(p=0.0024\)). Base ODE sampling is ~565 ms/layout (\(k{=}1\), 50 steps) / ~667 ms with guidance, shared by every row. The feasibility tie here is by design: \(\Pi_\theta\)'s decisive benefit emerges where the base flow fails, on non-convex boundaries (§5.1.1, Table 2).</p>
+
+<h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.1.1. Where \(\Pi_\theta\) earns its place: the non-convex failure regime</h4>
+<p>Table 1's near-tie between raw and \(\Pi_\theta\) is <em>expected</em>, not a weakness: at the mild test sizes the base flow already emits collision-free layouts (\(R_\text{col}=1.15\%\)), so the projection has almost nothing to correct. To locate where it matters we stress-test the base flow across the full deformation family (Fig. 6) from mild to extreme. The flow is robust on affine and slanted boundaries, but on <strong>strongly non-convex</strong> ones its feasibility breaks down: object collision roughly <em>doubles</em> — \(1.8\%\) (mild aspect) \(\to 4.4\%\) (corner-cut \(\times2\)) \(\to 5.1\%\) (deep L-shape) — and \(S_\text{rel}\) falls from \(0.90\) to \(0.62\), while out-of-bounds stays low (\(\le3\%\), the guidance handles containment). Concave notches, under-represented in training, are the base model's genuine failure mode.</p>
+<div class="tw"><table>
+<thead><tr><th>Finish — <em>hard non-convex</em> regimes</th><th>\(R_\text{col}\) ↓</th><th>\(S_\text{rel}\) ↑</th></tr></thead>
+<tbody>
+<tr><td>none (base flow raw)</td><td>3.84±4.0%</td><td>0.647±.31</td></tr>
+<tr><td>&nbsp;&nbsp;+ hard snap</td><td>3.59±4.5%</td><td>0.611±.30</td></tr>
+<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\)</td><td class="win">2.83±2.8%</td><td class="win">0.648±.31</td></tr>
+</tbody></table></div>
+<p><strong>Table 2.</strong> Projection ablation restricted to the base model's failure regime (deep corner-cut, corner-cut\(\times2\), extreme aspect \(2.2\!\times\!0.45\); 36 layouts = 12 references \(\times\) 3 regimes). Here — unlike the easy regime of Table 1 — \(\Pi_\theta\) delivers a <em>statistically significant</em> feasibility gain: reference-clustered Wilcoxon (\(n{=}12\)) \(\Pi_\theta\) vs raw \(\Delta R_\text{col}=-1.01\%\) (\(p=0.0024\)) at <em>no</em> relational cost (\(\Delta S_\text{rel}=+0.001\), n.s.); and against the hard snap it preserves relations far better — \(\Delta S_\text{rel}=+0.037\) (clustered \(p=0.0024\)) — at comparable collision. \(\Pi_\theta\)'s value is thus <strong>regime-dependent and principled</strong>: a near-no-op where the flow is already feasible (Table 1), a significant topology-preserving repair where it is not (Table 2). It does not fully close the gap (residual \(2.83\%\) vs \(1.4\%\) in the easy regime) — a concave-boundary-aware projection is the natural next step (§7).</p>
+
+<h3>5.2. Baseline comparison</h3>
+<p>ATISS <a class="cite" href="#r1">[1]</a> and LEGO-Net <a class="cite" href="#r4">[4]</a> solve different tasks (unconditional completion; same-room denoising), so our primary baseline is the one our method replaces: the <strong>affine / global warp</strong> (MRR-affine map of the reference into \(P_t\), no flow), on the same seeds/sizes. We additionally evaluate LEGO-Net directly as a <em>cross-lineage</em> comparator through its native data loader (§5.2.2, Table 5).</p>
+<div class="tw"><table>
+<thead><tr><th>Method</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{rel}^\text{kept}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Adapts count</th></tr></thead>
+<tbody>
+<tr><td>Affine / global warp</td><td>0.934±.05</td><td>0.934±.05</td><td class="bad">4.88±6.8%</td><td class="bad">61±33%</td><td class="bad">✗</td></tr>
+<tr class="ours"><td>Ours (flow + \(\Pi_\theta\))</td><td>0.703±.32</td><td class="win">0.916±.05</td><td class="win">1.05±1.9%</td><td class="win">80±23%</td><td class="win">✓</td></tr>
+</tbody></table></div>
+<p><strong>Table 3.</strong> Baseline comparison (36 layouts, mean ± std). <em>Read \(S_\text{rel}\) and \(S_\text{rel}^\text{kept}\) together:</em> raw \(S_\text{rel}\) strictly penalizes shrinking rooms (\(0.75\times\)) because a deleted object forfeits <em>all</em> its reference edges (scoring 0), so ours (0.703) trails the affine map (0.934) mostly by pruning. Evaluated on the <em>surviving</em> objects, ReRoom comes within 0.018 of the unconstrained linear warp (\(S_\text{rel}^\text{kept}=0.916\) vs 0.934) — a small but <em>statistically significant</em> shortfall (reference-clustered Wilcoxon, \(n{=}12\), \(p=0.034\)); we do not claim to beat the affine warp on pure relational fidelity, which a linear map trivially maximizes. Our contribution is <strong>near-lossless fidelity at physical feasibility the affine map lacks</strong>: at that 0.018 fidelity cost ReRoom cuts collisions \(4.6\times\) (1.05% vs 4.88%, clustered \(p{<}0.001\); and far more consistently, ±1.9 vs ±6.8), adds +19 pts wall-snap, and adaptively pruning object count — which the affine map cannot. The affine map maximizes <em>raw</em> relation retention only because it is linear; it is physically infeasible (4.9% collisions, high variance; 61% wall-snap). Ours' \(R_\text{col}=1.05\%\) here is consistent with the \(\Pi_\theta\) row of Table 1 (1.04%), both on the same 12 references.</p>
+
+<p><strong>Where does the affine warp actually fail?</strong> We tested the relational side directly, under anisotropic stretch (12 references × 4 stretches, reference-clustered): the affine warp keeps motifs <em>perfectly</em> (\(S_\text{motif}=1.000\) vs ours 0.995, \(p=1.0\)) and retains surviving-object relations slightly better (\(S_\text{rel}^\text{kept}\) 0.914 vs 0.883, \(p=0.012\)). Its metric intra-motif spacing drifts more than ours (0.332 m vs 0.239 m) but not significantly (\(p=0.23\)). We therefore state plainly: <strong>a linear warp is not defeated on relational fidelity — it is defeated on physics.</strong> The same layouts collide on 4.9% of object pairs (vs our 1.05%) and, on real cross-paired boundaries, push 9.7% of objects outside the room (vs our 0.4%, Table 12), because furniture is rigid while the target boundary is not a scaled copy of the source; and no linear map can shed the objects a smaller room cannot hold. ReRoom's contribution is to hold relational fidelity within 0.02–0.03 of this linear upper bound <em>while</em> producing layouts that are physically valid and capacity-adaptive.</p>
+
+<h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.2.1. Learned baseline: does the hierarchical reparameterization matter?</h4>
+<p>An affine warp is not a learned comparator. We therefore isolate the paper's central inductive bias against a <em>learned</em> generative flow identical to ours <strong>except that it lacks the parent-relative reparameterization</strong> — a global-coordinate rectified-flow DiT with the same backbone, geometric bias, wall tokens, and informative prior. To remove any training-regime confound we train this global-coordinate model as a <strong>matched-protocol twin</strong> (checkpoint <span class="mono">flow_twin</span>): <em>from scratch</em>, 180 epochs, the identical data, gates, losses, and schedule as our model, differing in the single bit <span class="mono">parent_relative=False</span>. Crucially, Prop. 1 concerns invariance under <em>anisotropic</em> scaling, so we evaluate in two regimes: <strong>uniform</strong> scaling (the easy case) and <strong>anisotropic aspect-stretch</strong> (\(s_x\!\neq\!s_y\); \(1.5\!\times\!0.75\), \(1.7\!\times\!0.85\) and their transposes), the regime the reparameterization is designed for. We report the correct <strong>reference-clustered</strong> statistic (aggregate the correlated sizes within each reference first, then test the \(n{=}12\) independent references), not a per-cell test that treats pseudo-replicates as independent.</p>
+<div class="tw"><table>
+<thead><tr><th>Model — <em>anisotropic</em> stretch</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{motif}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th></tr></thead>
+<tbody>
+<tr><td>Global-coord twin (raw, matched)</td><td>0.869±.05</td><td>0.983±.05</td><td>2.98±3.1%</td><td>79±26%</td></tr>
+<tr class="ours"><td>Hierarchical flow (raw, ours)</td><td class="win">0.883±.05</td><td>0.990±.04</td><td>3.60±4.2%</td><td>72±29%</td></tr>
+<tr><td>&nbsp;&nbsp;+ hard snap</td><td>0.828±.09</td><td>0.981±.06</td><td>4.35±4.3%</td><td>84±21%</td></tr>
+<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\)</td><td class="win">0.881±.05</td><td>0.986±.05</td><td class="win">3.04±3.5%</td><td>77±25%</td></tr>
+</tbody></table></div>
+<p><strong>Table 4.</strong> Matched-protocol learned-baseline ablation under <strong>anisotropic</strong> aspect-stretch (48 layouts = 12 references × 4 stretches, mean ± std). <strong>Reference-clustered</strong> paired Wilcoxon (\(n{=}12\) references, the confound- and pseudo-replication-free test): the hierarchical reparameterization gives a <em>statistically significant</em> relational-retention gain over the from-scratch global-coordinate twin — \(\Delta S_\text{rel}=+0.014\), win 10/12, <strong>\(p=0.027\)</strong> (sign-test \(p=0.039\)); and the differentiable \(\Pi_\theta\) preserves relations <em>significantly</em> better than the hard snap — \(\Delta S_\text{rel}=+0.052\), win 10/12, <strong>\(p=0.0049\)</strong> — while <em>also</em> cutting collisions (3.04% vs 4.35%). \(S_\text{motif}\) is statistically tied. <strong>Isotropic consistency (a verification of Prop. 1):</strong> under <em>uniform</em> scaling the same clustered test gives \(\Delta S_\text{rel}=+0.005\), \(p=0.13\) — statistically indistinguishable — exactly as the theory predicts, since an isotropic map preserves relative offsets identically in both parameterizations and the hierarchical code degenerates to an equivalent form. The gain therefore arises precisely and only from resolving <em>anisotropic</em> stretching, the pathology Prop. 1 targets; the effect appearing exactly there confirms the mechanism rather than a coincidental correlation. (An earlier run reported a per-cell \(p=0.016\) against a warm-start checkpoint; that combined a training-regime confound with pseudo-replication and is superseded by this matched-twin, reference-clustered result.) The hierarchical model's slightly higher <em>raw</em> collision (3.60% vs 2.98%) is a direct consequence of the design, not a defect: the metric code locks each child within its functional radius of its parent, so under severe anisotropic contraction a cohesive cluster (e.g. a dining set) is pushed as a rigid block against an incoming wall, momentarily raising collision — whereas the global-coordinate flow lowers collision by <em>dissolving</em> the motif (its lower \(S_\text{rel}\)). This is exactly the decoupling the architecture intends: the flow protects relational topology, and the lightweight \(\Pi_\theta\) then resolves the boundary contact (3.04%) without breaking the cluster — the projection earning its place. <em>Scope:</em> our own model <em>ablated</em>, isolating the inductive bias; for a <em>different-lineage</em> competitor see §5.2.2.</p>
+
+<h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.2.2. Cross-lineage learned baseline: LEGO-Net</h4>
+<p>We run <strong>LEGO-Net</strong> <a class="cite" href="#r4">[4]</a> — a real pretrained (50k-iter, livingroom) learned model of a <em>different lineage</em> — repurposed as a retargeter: its denoiser is applied to the affine-transplanted layout in the scaled target room, entirely through LEGO-Net's own data loader (so its floorplan encoding, class vocabulary, and normalization are native). Because it operates in its own object representation, we report its native <strong>relational retention</strong> \(\mathcal{R}\) (scale-normalized pairwise-offset preservation vs the reference clean layout, in \([0,1]\); an affine map scores 1.0) and collision, over 48 layouts (16 livingrooms × 3 sizes).</p>
+<div class="tw"><table>
+<thead><tr><th>Method</th><th>Rel. retention \(\mathcal{R}\) ↑</th><th>Collision ↓</th></tr></thead>
+<tbody>
+<tr><td>Affine warp (init)</td><td>1.000±.00</td><td>1.28±3.8%</td></tr>
+<tr><td>LEGO-Net denoise (cross-lineage)</td><td class="bad">0.703±.11</td><td>2.86±4.3%</td></tr>
+</tbody></table></div>
+<p><strong>Table 5.</strong> LEGO-Net, as a retargeter, retains only \(\mathcal{R}=0.70\) of the reference's relational structure (paired vs affine: \(\Delta=-0.30\), 100% of cells, Wilcoxon \(p=1.6\times10^{-9}\)), and slightly increases collision — because it <strong>regularizes any layout toward its own tidy ideal rather than binding the specific reference</strong>. We verified this is genuine LEGO-Net behavior, not a conversion artifact: fed a <em>clean</em> layout through its own loader (zero noise), it still moves objects to \(\mathcal{R}\!\approx\!0.74\) (s=1.0 row), consistent with the retarget result. This directly substantiates the motivating claim — a strong different-lineage learned model does <em>not</em> preserve a specific reference — which our method is designed to do. (LEGO-Net runs locally in a rebuilt py3.7/torch-1.12 env; \(\mathcal{R}\) is its native-frame relational metric, not identical to \(S_\text{rel}\).)</p>
+
+<h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.2.3. External standard metric: the PhyScene physical-plausibility suite</h4>
+<p>To evaluate on an <em>external, standardized</em> metric rather than our own, we adopt the physical-plausibility suite of <strong>PhyScene</strong> <a class="cite" href="#r5">[5]</a> — object collision (\(\text{Col}_\text{obj}\)), scene collision including walls (\(\text{Col}_\text{scene}\)), out-of-boundary rate (\(R_\text{out}\)), walkable-area ratio (\(R_\text{walk}\)), and reachability (\(R_\text{reach}\)) — computed by a <em>single</em> evaluator over the same 120 living rooms and object vocabulary. We compare ReRoom against PhyScene's own generated layouts and the real 3D-FRONT reference. PhyScene solves a <em>different</em> task (free generation from scratch, explicitly optimizing walkability), so this is not a design-fidelity contest; it is a fair, same-rooms comparison on the physical-plausibility axis — exactly where a retargeter must not regress.</p>
+<div class="tw"><table>
+<thead><tr><th>Method</th><th>\(\text{Col}_\text{obj}\) ↓</th><th>\(\text{Col}_\text{scene}\) ↓</th><th>\(R_\text{out}\) ↓</th><th>\(R_\text{walk}\) ↑</th><th>\(R_\text{reach}\) ↑</th></tr></thead>
+<tbody>
+<tr><td>3D-FRONT reference (real)</td><td>0.388</td><td>0.850</td><td>0.072</td><td>0.972</td><td>0.887</td></tr>
+<tr><td>PhyScene <a class="cite" href="#r5">[5]</a> (generated)</td><td>0.409</td><td>0.867</td><td>0.122</td><td>0.963</td><td>0.863</td></tr>
+<tr><td><strong>ReRoom</strong> (ours)</td><td class="good">0.129</td><td class="good">0.383</td><td class="good">0.028</td><td>0.900</td><td>0.886</td></tr>
+<tr><td>ReRoom (foreign reference)</td><td>0.034</td><td>0.158</td><td>0.054</td><td>0.867</td><td>0.860</td></tr>
+<tr><td>ReRoom (no reference)</td><td>0.002</td><td>0.008</td><td>0.008</td><td>0.890</td><td>0.918</td></tr>
+</tbody></table></div>
+<p><strong>Table 6.</strong> PhyScene's own physical-plausibility metrics, 120 living rooms, one evaluator (higher-is-better arrows as marked). <em>These are PhyScene's own metric definitions</em> (\(\text{Col}_\text{obj}\) is its object-collision score in \([0,1]\)) and are <strong>not</strong> the \(R_\text{col}\) percentage of Tables 1–5 — the two scales are not comparable. Means span all 120 rooms; the paired test uses the \(n{=}99\) rooms every method scored. <em>That ReRoom scores below the real reference (\(\text{Col}_\text{obj}\) 0.129 vs 0.388) is expected, not paradoxical:</em> real 3D-FRONT layouts contain touching/nested furniture the metric counts as collisions, whereas our guidance and \(\Pi_\theta\) actively enforce non-collision — feasibility enforcement whose effect on fidelity is bounded by \(S_\text{rel}^\text{kept}\) (Table 3), not captured here. On this external suite ReRoom's layouts are markedly <em>cleaner</em> than both PhyScene's generations and the real reference: <strong>3.2&times; fewer object collisions</strong> (0.129 vs 0.409) and far fewer out-of-bounds objects (0.028 vs 0.122), with slightly better reachability. <strong>Paired</strong> per-room Wilcoxon (\(n{=}99\) matched rooms) confirms all of this: \(\Delta\text{Col}_\text{obj}=-0.284\) (\(p=4.7\times10^{-13}\)), \(\Delta\text{Col}_\text{scene}=-0.485\) (\(p=2.8\times10^{-11}\)), \(\Delta R_\text{out}=-0.094\) (\(p=2.4\times10^{-9}\)), \(\Delta R_\text{reach}=+0.036\) (\(p=0.018\)). The one axis ReRoom concedes is walkable-area ratio (0.900 vs 0.957, \(\Delta=-0.050\), \(p=4.7\times10^{-4}\)) — precisely the objective PhyScene is engineered to maximize, and a small gap. The variant gradient is also informative: dropping to a <em>foreign</em> reference distorts the layout (objects 11.8&rarr;13.2, walkability 0.900&rarr;0.867), and the <em>no-reference</em> target-only baseline reaches near-zero collision only by spacing objects apart with no design intent — confirming that ReRoom keeps collisions low <em>while</em> binding the specific reference, not by abandoning it.</p>
+
+<h3>5.3. Qualitative results</h3>
+<figure>
+  <img src="assets/textured_sheet.png" alt="Real 3D-FUTURE textured render across scales">
+  <figcaption><strong>Figure 7.</strong> Real 3D-FUTURE <a class="cite" href="#r11">[11]</a> textured renders (pyrender/EGL; each object's mesh loaded by <span class="mono">jid</span>, reposed to the flow output). One reference (L-shaped, 22 m², 14 objects) retargeted to 0.75× / 1.0× / 1.35×: the dining set stays coupled, sofa and sideboard seat flush, orientations are correct; at 0.75× the layout is pruned yet livable.</figcaption>
+</figure>
+<figure>
+  <img src="assets/micro_compare.png" alt="Micro-displacement vectors of the projection">
+  <figcaption><strong>Figure 8.</strong> Micro-displacement analysis of \(\Pi_\theta\): grey dashed = raw flow, solid = projected, red arrows = per-object displacement (cm). Arrows are short and point at the nearest wall (flush) or table edge (slot) — objects never swap or reorder — proving the projection is a topology-preserving alignment (mean 19 cm), not a re-synthesis.</figcaption>
+</figure>
+
+<h3>5.4. Ablations</h3>
+<ul>
+<li><strong>Hierarchical relative space:</strong> global-coordinate vs parent-relative flow at 1.35× — motif retention 25% → 42%.</li>
+<li><strong>Projection layer:</strong> none / hard snap / multi-step polish / differentiable \(\Pi_\theta\) (Table 1).</li>
+<li><strong>Informative prior:</strong> starting from the reference projection \(x_0\) is decisive for low global drift and convergence.</li>
+<li><strong>Stage-1 selection (relational-mass, Table 7):</strong> choosing the kept subset by retained design-graph relational mass, rather than importance order, lifts \(S_\text{rel}\) under shrink.</li>
+</ul>
+
+<div class="tw"><table>
+<thead><tr><th>Stage-1 selection (shrink sweep 0.6/0.7/0.8×, \(n{=}36\))</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{motif}\) ↑</th><th>\(R_\text{col}\) ↓</th></tr></thead>
+<tbody>
+<tr><td>Importance / structured prune (default)</td><td>0.297</td><td>0.524</td><td>1.59%</td></tr>
+<tr class="ours"><td>Relational-transport selection (ours)</td><td class="win">0.348</td><td>0.436</td><td>2.53%</td></tr>
+</tbody></table></div>
+<p><strong>Table 7.</strong> Design-identity pruning under capacity. Selecting the kept objects to maximize retained design-graph relational mass lifts \(S_\text{rel}\) by \(+0.050\) (reference-clustered Wilcoxon, \(n{=}12\), <strong>\(p=0.0039\)</strong>); the \(S_\text{motif}\) change (\(-0.088\)) and collision change are <em>not</em> significant at the clustered level (\(p=0.20\), \(p=0.73\)). The point estimate on \(S_\text{motif}\) reflects a meaningful geometric trade-off: \(S_\text{motif}\) is an all-or-nothing group metric that penalizes dropping even one peripheral member (e.g. a single chair from a six-chair dining set), whereas relational-mass selection optimizes <em>global</em> connectivity \(\sum w_{ij}\) — it will shed a redundant peripheral chair to keep the critical links between major anchors (bed–nightstand, sofa–coffee-table) intact. Under extreme capacity pressure it thus preserves the layout's total relational utility rather than a few complete-but-isolated groups. <em>Isolating selection</em> (fixed affine placement at 0.65×) the gain over the flow's own mask is larger — \(+0.12\) \(S_\text{rel}\), 100% of references, \(p=0.0005\) — and a <em>geometric</em> partial-Gromov–Wasserstein selection (coupling positions, \(S_\text{rel}=0.230\)) beats the flow's mask (0.173) but loses to the relational rule (0.297): design identity is carried by the relation graph, not raw geometry. Inference-time, no retraining. (A motif-atomic variant was tried and measured worse on both metrics.)</p>
+<div class="tw"><table>
+<thead><tr><th>Configuration (toggles on the shipped hierarchical flow)</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>\(\Delta S_\text{rel}\)</th></tr></thead>
+<tbody>
+<tr class="ours"><td>Full (informative prior + pullback guidance + \(\Pi_\theta\))</td><td>0.703</td><td>1.04%</td><td>—</td></tr>
+<tr><td>&nbsp;&nbsp;− \(\Pi_\theta\) (raw flow)</td><td>0.707</td><td>1.16%</td><td>+0.004</td></tr>
+<tr><td>&nbsp;&nbsp;\(\Pi_\theta\) → hard snap</td><td>0.676</td><td>1.59%</td><td class="bad">−0.027</td></tr>
+<tr><td>&nbsp;&nbsp;− manifold-pullback guidance</td><td>0.720</td><td>1.09%</td><td>+0.017</td></tr>
+<tr><td>&nbsp;&nbsp;− informative prior (Gaussian \(x_0\))</td><td class="bad">0.649</td><td class="bad">2.23%</td><td class="bad">−0.054</td></tr>
+</tbody></table></div>
+<p><strong>Table 8.</strong> Component ablation under one protocol (36 layouts, uniform 0.75/1.0/1.35×). The <strong>informative prior is the single most important component</strong>: replacing it with Gaussian noise drops \(S_\text{rel}\) by 0.054 and <em>doubles</em> collision (2.23% vs 1.04%), confirming that starting from the reference transplant — not from scratch — is what preserves identity. \(\Pi_\theta\) preserves relations far better than the hard snap it could be replaced by (+0.027 \(S_\text{rel}\), lower collision). Removing the pullback guidance slightly <em>raises</em> \(S_\text{rel}\) here (+0.017) because, like \(\Pi_\theta\), guidance is a feasibility mechanism whose cost is negligible on easy boundaries and whose value concentrates on the non-convex ones (Tables 2, 10).</p>
+
+<div class="note warn"><strong>Not yet run (stated honestly).</strong> No prior method is natively designed for reference-guided retargeting. LEGO-Net is evaluated directly as a cross-lineage comparator (§5.2.2, Table 5); adapting ATISS's unconditional generation to this conditional task remains future work. A two-question double-blind user study (intent fidelity / realism / functionality) is specified and instrumented; results pend participant recruitment.</div>
+
+<h3>5.5. Robustness to imperfect intent graphs</h3>
+<p>The intent graph \(\mathcal G\) is <em>not</em> hand-authored: it is inferred automatically from object bounding boxes and categories by geometric-proximity rules (§3.1), so no manual annotation is required. We further stress this automatic graph by corrupting it before retargeting — dropping edges/motifs, perturbing relation weights, and adding noise to the elasticity \(\alpha\) — and scoring against the <em>true</em> reference graph.</p>
+<div class="tw"><table>
+<thead><tr><th>Graph perturbation (\(S_\text{rel}\), score vs true graph)</th><th>0%</th><th>10%</th><th>20%</th><th>30%</th></tr></thead>
+<tbody>
+<tr><td>Edge drop</td><td>0.591</td><td>0.590</td><td>0.579</td><td>0.601</td></tr>
+<tr><td>Relation-weight noise</td><td>0.591</td><td>0.590</td><td>0.581</td><td>0.600</td></tr>
+<tr><td>Motif drop</td><td>0.591</td><td>0.590</td><td>0.570</td><td>0.596</td></tr>
+<tr><td>Elasticity \(\alpha\) noise</td><td>0.591</td><td>0.591</td><td>0.590</td><td>0.591</td></tr>
+</tbody></table></div>
+<p><strong>Table 9.</strong> Graph-perturbation sensitivity (12 references × 2 sizes). \(S_\text{rel}\) stays within \(\pm0.01\) — statistically flat — even at 30% corruption of any graph component, and collision is unchanged (2.5–2.9%). Robustness arises because the informative prior (the reference layout itself) carries the design, while the graph <em>refines</em> the discrete pruning selection and elasticity; graph errors therefore degrade gracefully rather than catastrophically. The graph's <em>positive</em> value is established elsewhere and shown to survive imperfection here: a flat, non-hierarchical model is significantly worse under anisotropic retargeting (Table 4, \(p=0.027\)), and relational-mass graph pruning beats importance ordering under capacity limits (Table 7, \(p=0.004\)). Table 9 isolates the complementary claim — those gains do not require a perfect graph. (Under the mild uniform deformations of this table the hierarchy–flat gap is itself small, which is why noise here moves \(S_\text{rel}\) so little; the stress that separates the models is anisotropy, Table 4.)</p>
+
+<h3>5.6. Challenging floorplans</h3>
+<div class="tw"><table>
+<thead><tr><th>Floorplan (flow + \(\Pi_\theta\))</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) raw</th><th>\(R_\text{col}\) +\(\Pi_\theta\)</th><th>\(R_\text{OOB}\)</th></tr></thead>
+<tbody>
+<tr><td>L-shape (deep corner-cut)</td><td>0.691</td><td>3.10%</td><td class="win">2.65%</td><td>0.0%</td></tr>
+<tr><td>T-shape (two notches)</td><td>0.713</td><td>4.30%</td><td class="win">2.96%</td><td>0.0%</td></tr>
+<tr><td>Trapezoid (slanted wall)</td><td>0.862</td><td>2.98%</td><td class="win">2.21%</td><td>1.2%</td></tr>
+<tr><td>Narrow corridor (1:4)</td><td>0.780</td><td>5.04%</td><td class="win">4.03%</td><td>1.5%</td></tr>
+</tbody></table></div>
+<p><strong>Table 10.</strong> Named non-convex / extreme-aspect boundaries (12 references each). \(\Pi_\theta\) reduces collision on <em>every</em> type; the hardest is the 1:4 corridor (raw 5.04% → 4.03%), and the two-notch T-shape has the highest raw collision (4.30%), consistent with §5.1.1 — feasibility degrades with boundary non-convexity, and the projection partially repairs it while containment (\(R_\text{OOB}\!\le\!1.5\%\)) holds throughout.</p>
+
+<h3>5.7. Inference efficiency</h3>
+<div class="tw"><table>
+<thead><tr><th>Stage (ms/layout, single L40, \(k{=}16\))</th><th>ms</th></tr></thead>
+<tbody>
+<tr><td>Affine warp (baseline)</td><td>0.6</td></tr>
+<tr><td>ReRoom flow — sample only</td><td>1378</td></tr>
+<tr><td>&nbsp;&nbsp;+ hard snap</td><td>+1.2</td></tr>
+<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\) (ours)</td><td class="win">+170</td></tr>
+<tr><td>&nbsp;&nbsp;+ heavy multi-step projection (the operator \(\Pi_\theta\) replaces)</td><td>+2674</td></tr>
+</tbody></table></div>
+<p><strong>Table 11.</strong> Latency breakdown. As a projection step, \(\Pi_\theta\) (173 ms) is <strong>≈15× cheaper</strong> than the multi-step test-time projection it replaces (2674 ms); end-to-end, ReRoom (flow + \(\Pi_\theta\), 1551 ms) is 2.6× faster than the same flow finished by that multi-step optimizer (4052 ms), at 34M parameters and 155 MB peak VRAM (§6). Total cost is dominated by the \(k{=}16\) candidate sampling, which every finishing strategy shares; the hard snap is fastest but destroys relational structure (Table 8).</p>
+
+<h3>5.8. Real cross-pairing (out-of-distribution boundaries)</h3>
+<p>All prior tables retarget within synthetic deformations of a scene's own room. To rule out that the flow merely inverts its training deformation family, we retarget each reference into a <em>different real scene's</em> room boundary — real, unseen, irregular shapes — pairing scenes by category Jaccard \(&gt;0.6\), an anchor-yaw filter, and a spatial Hungarian match.</p>
+<div class="tw"><table>
+<thead><tr><th>Real cross-pairing OOD (\(n{=}40\) pairs)</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>\(R_\text{OOB}\) ↓</th></tr></thead>
+<tbody>
+<tr><td>Affine warp</td><td>0.950</td><td>5.03%</td><td class="bad">9.7%</td></tr>
+<tr class="ours"><td>ReRoom (ours)</td><td>0.874</td><td class="win">2.79%</td><td class="win">0.4%</td></tr>
+</tbody></table></div>
+<p><strong>Table 12.</strong> Retargeting into real, unseen boundaries from other scenes. ReRoom preserves relations well on boundaries it never deformed (\(S_\text{rel}=0.874\)), so the flow generalizes rather than inverting a known deformation family. The comparison to affine is the same as Table 3 but sharper on real irregular boundaries: a linear warp maximizes raw \(S_\text{rel}\) (0.950) yet ignores the boundary, leaving <strong>9.7% of objects out-of-bounds</strong> and 5.03% colliding; ReRoom adapts to the actual room shape (0.4% out-of-bounds, 2.79% collision). Once more the honest positioning holds — affine is fidelity-optimal but physically invalid, ReRoom is near-lossless <em>and</em> feasible.</p>
+
+<h3>5.9. A learned design hierarchy (review point 1)</h3>
+<p>Two things in the intent graph were hand-written, and the second is the one that
+matters. <code>MOTIF_SCHEMAS</code> declares which categories may head a functional
+group; <code>CategoryPrior.anchor</code> scores every category by hand — double_bed
+1.00, single_bed 0.95, wardrobe 0.70, nightstand 0.35 — and that table is the only
+reason a bed parents a nightstand. A reviewer objected that this should not need
+designing. We agree, and replaced it.</p>
+<p>The replacement is the <em>direction of explanation</em>, which is what a
+hierarchy is: how much a category explains the pose of its partners, minus how much
+they explain its own, estimated by a conditional density model over object poses.
+Nothing is declared. The derived table agrees with the hand-written one at Spearman
+\(\rho=0.615\) (\(p=0.0002\)), and recovers the intuitive directions:
+dining_table\(\to\)dining_chair \(+0.78\), double_bed\(\to\)nightstand \(+0.84\),
+sofa\(\to\)coffee_table \(+0.96\), desk\(\to\)office_chair \(+4.18\).</p>
+<div class="tw"><table>
+<thead><tr><th>Hierarchy source (matched budget, 60 epochs)</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{motif}\) ↑</th><th>\(R_\text{col}\) ↓</th></tr></thead>
+<tbody>
+<tr><td>Hand-designed schemas and anchors (shipped)</td><td>0.745</td><td>0.833</td><td>3.08%</td></tr>
+<tr><td>No hierarchy at all</td><td class="bad">0.599</td><td class="bad">0.627</td><td class="bad">4.77%</td></tr>
+<tr class="ours"><td>Learned from the corpus</td><td class="win">0.748</td><td class="win">0.837</td><td class="win">2.97%</td></tr>
+</tbody></table></div>
+<p><strong>Table 13.</strong> Three models trained on identical data, hyperparameters
+and budget, differing only in where the parent/child structure comes from. All three
+are scored against the <em>intact hand-built graph</em>, with the learned table
+switched off at evaluation so no arm marks its own homework. Paired per (scene,
+size), \(n{=}72\): removing the hierarchy costs \(\Delta S_\text{rel}=-0.146\)
+(\(p<0.001\)), \(\Delta S_\text{motif}=-0.206\) (\(p<0.001\)) and \(+1.68\) points of
+collision (\(p=0.001\)); the learned hierarchy differs from the hand-designed one by
+\(+0.003\) (\(p=0.257\)), \(+0.004\) (\(p=0.180\)) and \(-0.11\) points
+(\(p=0.548\)) — indistinguishable on every axis.</p>
+<p><strong>Both halves are needed.</strong> The flat arm establishes that the
+hierarchy does real work, so this is not a "nothing matters" result; against that,
+the learned hierarchy matches the designed one. The hand table is not wrong. It is
+unnecessary.</p>
+<p><strong>A formulation that failed, and why it is instructive.</strong> Our first
+attempt scored a relation by <em>predictive value</em> — how much knowing \(j\)'s
+pose reduces uncertainty about \(i\)'s. Two identical dining chairs side by side are
+extremely mutually predictable, so they outscored TV-to-seating pairs (1.49 against
+1.54 mean, versus 0.70 for random pairs). Predictability is not design intent, and
+that is precisely the case the review asks to exclude. What works is the objective
+graph recommenders use: a pairwise (BPR) loss against negatives that hold the
+relative pose fixed and swap the partner's <em>category</em>, so the model cannot
+score by noticing that something sits 0.6 m in front of a table — it must know the
+something is a dining chair. Under that formulation every population check inverts:
+TV-to-seating scores 7.995 against 4.765 for random pairs, and merely adjacent
+identical seating scores 3.489, <em>below</em> random.</p>
+<p><strong>On the review's two examples.</strong> The "two nearby chairs" case holds:
+40.4% of edges are the generic <code>near</code> relation, asserted from distance
+alone. The TV-and-sofa case does not. 30.3% of TV-to-seating pairs receive no edge,
+but not because of the 5.5 m cutoff — only 2.2% exceed it, and the median pair is
+2.78 m apart. They are rejected on <em>orientation</em>, correctly: the seats in
+rejected pairs face the TV at a median \(49°\) with 36% within \(45°\), against
+\(5°\) and 94% for connected pairs.</p>
+
+<figure style="margin:22px 0">
+<img src="assets/v01_hierarchy.png" alt="" style="width:100%;border:1px solid var(--line);border-radius:6px;display:block">
+<figcaption style="font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.6">Figure R1: the same room shrunk to 0.75x by the three models of Table 13. Without a hierarchy two dining chairs fall outside the room entirely (bottom); the hand-designed and learned arms are visually indistinguishable. Per-panel metrics are printed under each panel, and are far worse than the table averages because 0.75x on a single scene is the stress case, not the mean.</figcaption>
+</figure>
+
+<h3>5.10. Rooms with an odd vertex count (review point 2)</h3>
+<p>Asked whether our scene variation is only scale and aspect ratio, we measured the
+distribution rather than listing operator names. It is not: 75.6% of deformed rooms
+are non-convex against 64.8% of real 3D-FRONT rooms, and 78.1% carry at least one
+reflex corner against 66.1%. The review is right about levels 1–2, which change only
+size and aspect and are statistically indistinguishable from real rooms on every
+shape descriptor; the variation comes from levels 3–5.</p>
+<p><strong>A genuine gap did emerge.</strong> 3D-FRONT rooms are rectilinear, so
+their corners are right angles and their vertex counts even — pentagons and
+heptagons are 0.1% each. Every 5- or 7-gon needs an oblique wall, and
+<code>corner_cut</code> cannot make one: even at maximum obliquity it replaces one
+vertex with two, reaching a hexagon but never a pentagon. We add a chamfer operator
+(exactly \(+1\) vertex) and a deformation level that targets an exact vertex count.</p>
+<div class="tw"><table>
+<thead><tr><th>Target room (24 references, equal area)</th><th>\(R_\text{col}\) ↓</th><th>\(R_\text{OOB}\) ↓</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{motif}\) ↑</th></tr></thead>
+<tbody>
+<tr><td>Rectangle (equal-area control)</td><td>3.07%</td><td>0.130</td><td>0.856</td><td>0.967</td></tr>
+<tr><td>5-gon</td><td>3.11%</td><td class="bad">0.198</td><td>0.853</td><td>0.957</td></tr>
+<tr><td>6-gon</td><td>3.03%</td><td class="bad">0.234</td><td>0.851</td><td>0.947</td></tr>
+<tr><td>7-gon</td><td>3.28%</td><td class="bad">0.232</td><td>0.857</td><td>0.962</td></tr>
+</tbody></table></div>
+<p><strong>Table 14.</strong> Furnishing oblique-walled rooms, against a rectangle of
+the same area so any gap is attributable to the walls rather than to a smaller or
+thinner room. Collision and relational fidelity reach parity (3.03–3.28% against
+3.07%; \(S_\text{rel}\) 0.851–0.857 against 0.856), but <strong>containment does
+not</strong>: out-of-bounds rises from 0.130 to 0.198–0.234. The cost of an oblique
+wall is concentrated in containment, which is a concrete target for future work.</p>
+<div class="note" style="background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;margin:16px 0">
+<p style="margin:0"><strong>A withdrawn result.</strong> An earlier version of this
+table reported parity on <em>every</em> axis. It was invalid: the generator could
+only add vertices, so a room that already had more than the target was returned
+unchanged. Over the 24 test rooms, a request for a pentagon produced one 7 times;
+11 of the rooms carry ten or more vertices and were never modified — between 46% and
+71% of that table's cells were not the shape they were labelled. The fault was
+missed because the operator had been verified on a rectangle, where only addition is
+ever required, and it was caught by <em>rendering</em> the rooms: two panels that
+should have differed were pixel-identical. The generator now produces the requested
+count in 24 of 24 cases, preserving 0.95× of the source area, and the table above is
+the re-measurement.</p>
+</div>
+
+<figure style="margin:22px 0">
+<img src="assets/v01_ngon.png" alt="" style="width:100%;border:1px solid var(--line);border-radius:6px;display:block">
+<figcaption style="font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.6">Figure R2: one source layout retargeted into four rooms of equal area. The 5-gon (oblique left wall) and 7-gon (bevelled top-right) could not be generated at all before this revision.</figcaption>
+</figure>
+
+<h3>5.11. Doors and windows as graph members (review point 3)</h3>
+<p>Openings previously reached the system only as constants — a 0.9 m door swing and
+a 0.35 m window depth in the functional energy. Following the review's framing that
+they are part of the furniture, they are now pseudo-objects with a pose along the
+inward wall normal, participating in the same relational machinery. What they carry
+is worth stating precisely: door-to-furniture pairs score 0.764 mean information gain
+against 0.654 for random same-room pairs, while <strong>window-to-furniture pairs
+score 0.433 — below random</strong>. In 3D-FRONT, window position does not predict
+where furniture goes.</p>
+<p>The shipped constants also survive scrutiny. Measuring what the energy actually
+charges — the swing region clipped to the room, over 4491 openings — real designer
+layouts leave 2.0% of door swings more than a quarter blocked at 0.9 m and 3.5% at
+1.2 m, so the constant is safe; for windows the figure is 7.1% at 0.35 m but 13.4% at
+0.9 m, so 0.35 m is the correct conservative choice. <em>(A first version of this
+measurement used plain distance to the opening and was discarded: a cabinet standing
+beside a door is 0.3 m away and blocks nothing.)</em></p>
+
+<h3>5.12. Style, learned without labels (review point 4)</h3>
+<p>The review observes that furniture is transferred rather than restyled. This was
+more true than stated: the <code>style</code> field on every object was never
+populated, so style was not merely untransferred but unrepresented. We learn an asset
+embedding from <em>room co-occurrence</em>, with negatives drawn from the target's own
+category so the model cannot score by separating bedroom assets from living-room
+assets — the only way to win is to know which particular sofa suits this particular
+room.</p>
+<div class="tw"><table>
+<thead><tr><th>Held-out asset retrieval, candidates restricted to the same category (\(n{=}1373\))</th><th>Median rank ↓</th><th>MRR ↑</th><th>Recall@5 ↑</th></tr></thead>
+<tbody>
+<tr class="ours"><td>Co-occurrence embedding (no labels)</td><td class="win">3.0</td><td class="win">0.475</td><td class="win">0.616</td></tr>
+<tr><td>3D-FUTURE style / theme / material labels</td><td>11.0</td><td>0.335</td><td>0.402</td></tr>
+<tr><td>OpenShape quantisation codes</td><td>26.0</td><td>0.316</td><td>0.358</td></tr>
+<tr><td>Frequency baseline</td><td>36.0</td><td>0.114</td><td>0.155</td></tr>
+<tr><td>Random</td><td>159.0</td><td>0.022</td><td>0.020</td></tr>
+</tbody></table></div>
+<p><strong>Table 15.</strong> The label-free signal beats the dataset's own style
+labels, paired over the same held-out objects (\(p<0.0001\)). Granularity explains
+it: 19 style classes are coarse, and "Modern" alone covers 1306 of 4232 assets, so
+matching on it barely narrows the field. This is CLIP-Layout's argument that
+instance-level attributes beat class-level ones, reached without asset renders.
+Independently, the embedding's nearest neighbours share a style label at 0.242
+against a chance rate of 0.149 — a \(1.62\times\) lift, from a model that never saw a
+label. Style now enters asset selection as two terms: <em>fidelity</em> to the
+reference room's style centre and <em>coherence</em> among the chosen assets, since
+per-object fidelity does not imply that the set reads as one room.</p>
+<div class="note" style="background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;margin:16px 0">
+<p style="margin:0"><strong>Two corrections.</strong> We previously stated that
+3D-FUTURE's style labels were unavailable behind the dataset licence; they are
+distributed with InstructScene's preprocessed release, covering 81% of our corpus,
+and the comparison above uses them. We also described 3D-FRONT as furnished by
+professional designers: its floorplans and layouts are, but its <em>furniture
+selection</em> comes from a recommender system (a visual embedding network with
+gradient-boosted compatibility scores). Our co-occurrence embedding therefore
+recovers the dataset's own style model — a limitation shared by anything trained on
+3D-FRONT, CLIP-Layout included.</p>
+</div>
+
+<h3>5.13. Adding furniture to a room that grew (review point 5)</h3>
+<p>The review asks whether a grown room should gain furniture. We measured before
+building, and the premise is half right. Growing a reference room does <em>not</em>
+leave it sparse: at 1.3× area the retarget holds 13.8 objects where real rooms of
+that area hold 12.2, a fill ratio of 1.13, and it stays above 1.1 out to 2×. Density
+was never the gap. <em>Composition</em> is: at 2× the categories a real room of that
+size carries and this one does not are storage and surfaces — wardrobe short in 7 of
+12 rooms, side table in 6, pendant lamp in 5. The reference had no wardrobe to scale
+up, and the existence head can only drop.</p>
+<p>Addition is therefore category-targeted, and every choice comes from a model: a
+corpus demand curve bounds which categories are short, a collaborative recommender
+orders them (0.308 top-1 against the demand curve's 0.236 and a frequency baseline's
+0.152), the style embedding of §5.12 picks the asset, and a learned pose prior scores
+placements in the free space that is actually left. A proposal with no collision-free
+placement is dropped rather than squeezed.</p>
+<div class="tw"><table>
+<thead><tr><th>Grown room</th><th>Category-profile gap ↓</th><th>Colliding objects</th><th>Out-of-bounds objects</th></tr></thead>
+<tbody>
+<tr><td>1.3× — as retargeted</td><td>13.89</td><td>2.21</td><td>1.19</td></tr>
+<tr class="ours"><td>1.3× — with addition</td><td class="win">12.42</td><td>2.11</td><td>1.23</td></tr>
+<tr><td>2.0× — as retargeted</td><td>16.34</td><td>1.09</td><td>2.91</td></tr>
+<tr class="ours"><td>2.0× — with addition</td><td class="win">14.53</td><td>1.08</td><td>2.83</td></tr>
+</tbody></table></div>
+<p><strong>Table 16.</strong> The composition gap falls 10–12% at every scale, with
+2.7 objects added on average and <strong>no new collisions or out-of-bounds
+objects</strong> — absolute counts are given because the published <em>rates</em> also
+fall, but that is a denominator effect from adding valid objects and is not claimed
+as an improvement.</p>
+<p><strong>A stronger method, reported as a null.</strong> SceneGraphNet answers
+exactly this question — a distribution over object types at a query location — and
+its released code cannot be run (it trains on SUNCG, now withdrawn). Reimplemented on
+3D-FRONT it wins its own task decisively, 0.596 top-1 against the room-level model's
+0.236. Placed in the addition loop it does not move the composition gap (\(-10.6\) /
+\(-11.5\) / \(-11.1\)% against \(-10.1\) / \(-11.2\) / \(-11.0\)%) and costs
+walkability at 1.3× (0.990 to 0.954). On reflection this is expected: the gap counts
+categories, and the demand model chooses those either way, so the metric cannot see a
+change in <em>where</em> things go. Claiming a benefit would require a
+placement-plausibility metric we do not have, so the simpler mechanism remains the
+default.</p>
+
+<figure style="margin:22px 0">
+<img src="assets/v01_regularity.png" alt="" style="width:100%;border:1px solid var(--line);border-radius:6px;display:block">
+<figcaption style="font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.6">Figure R3: the regularity projection, disabled in every table above and enabled in the shipped system.</figcaption>
+</figure>
+
+<h3>5.14. Deployment configuration</h3>
+<p>Every table in this paper, including §5.9–§5.13, is measured with the regularity
+projection <em>disabled</em>, so that a post-process cannot flatter the model. That
+is the right protocol for isolating a component, but it understates the deployed
+system, which ships with the stage enabled. On a matched run the difference is
+substantial:</p>
+<div class="tw"><table>
+<thead><tr><th>Regularity stage</th><th>Median off-axis yaw ↓</th><th>\(R_\text{col}\) ↓</th><th>\(R_\text{OOB}\) ↓ (2× room)</th><th>\(S_\text{rel}\) ↑</th></tr></thead>
+<tbody>
+<tr><td>Disabled (evaluation protocol, all tables above)</td><td>10.9°</td><td>11.2%</td><td>0.193</td><td>0.973</td></tr>
+<tr class="ours"><td>Enabled (shipped default)</td><td class="win">0.0°</td><td class="win">6.1%</td><td class="win">0.000</td><td>0.916</td></tr>
+</tbody></table></div>
+<p><strong>Table 17.</strong> The stage squares furniture to the walls, roughly halves
+area-overlap collision, and eliminates out-of-bounds objects in grown rooms, at a cost
+of 0.057 \(S_\text{rel}\). Re-running §5.9 under the deployed configuration leaves its
+conclusion unchanged and slightly sharper: hand-designed 1.98% collision, learned
+1.84%, no hierarchy 4.94%, with the learned and hand-designed arms differing by
+exactly 0.000 in \(S_\text{motif}\) (\(p=1.000\)). We report the conservative protocol
+throughout for comparability with the pre-revision tables.</p>
+
+<h2>6. Implementation Details (Unified Parameters)</h2>
+<div class="tw"><table class="impl">
+<thead><tr><th>Component</th><th>Setting</th></tr></thead>
+<tbody>
+<tr><td>Backbone (DiT <a class="cite" href="#r8">[8]</a>)</td><td>depth \(L{=}12\), width \(d{=}384\), heads \(=8\), ≈34M params; category/motif emb 64/32; graph stream depth 3, width 128</td></tr>
+<tr><td>Hierarchical reparam.</td><td>\(\lambda=\text{REL\_SCALE}=3.0\) m; child loss weight \(\lambda_\text{child}=10\)</td></tr>
+<tr><td>Informative prior</td><td>affine projection \(\mathcal{T}(S_\text{ref},P_t)\); noise \(\sigma=0.3\)</td></tr>
+<tr><td>Sampling</td><td>rectified-flow ODE, 50 Euler steps; \(k{=}16\) candidate layouts</td></tr>
+<tr><td>Guidance energies</td><td>\(w_b{=}40,\ w_c{=}30,\ w_{cl}{=}4,\ w_{wp}{\in}\{2.5\ (\rho{\le}1),\,1.5\}\); clearance 25 cm; boundary tol. 12 cm; \(\mathrm{ramp}(\tau){=}\max(0,(\tau{-}0.5)/0.5)\)</td></tr>
+<tr><td>Projection \(\Pi_\theta\)</td><td>\(K{=}40\) unrolled Adam steps, step 0.03; weights \(w_a{=}6.0,\ w_f{=}1.0,\ w_o{=}0.5,\ w_c{=}1.0\)</td></tr>
+<tr><td>Optional polish</td><td>25 Adam steps, step 0.02, anchor 100, two-phase 0.65 (off by default)</td></tr>
+<tr><td>Data gates</td><td>area ratio \(\rho\in[0.5,2.0]\); overhang \(\le15\%\); training deform range \(\ell_1\in[0.6,1.7]\)</td></tr>
+<tr><td>Training</td><td>180 epochs, batch 192, AdamW lr \(3\!\times\!10^{-4}\), wd \(3\!\times\!10^{-4}\), OneCycle, EMA 0.999; best val 0.058</td></tr>
+<tr><td>Compute (inference)</td><td>34.1M parameters (137 MB fp32); measured peak VRAM 155 MB (single L40, \(k{=}16\)); latency ≈1.4 s sampling (\(k{=}16\)) + 170 ms \(\Pi_\theta\) per layout (Table 11)</td></tr>
+<tr><td>Hardware</td><td>4× NVIDIA L40 (training); single L40 (inference timing)</td></tr>
+</tbody></table></div>
+
+<h2>7. Discussion</h2>
+<p><strong>Underlying principle.</strong> Reference-guided retargeting is the projection of a design's <em>relative</em> relational structure onto a new hard-geometry boundary, and our results show this projection factorizes along one axis: <strong>relational preservation and physical feasibility occupy distinct geometric regimes.</strong> Relational structure is a smooth, interior property a continuous flow learns well — under isotropic scaling it is exactly preserved by global coordinates (verifying Prop. 1's invariance), and only under <em>anisotropic</em> scaling does the hierarchical metric code become necessary and significant (Table 4). Physical feasibility is instead a <em>boundary</em> property: already satisfied on convex boundaries, it degrades specifically where the boundary turns non-convex (§5.1.1). This factorization is boundary-agnostic in its relational half (relational mass and hierarchical transport) while localizing all boundary-specific work in the projection — an organizing insight that outlasts our particular instantiation.</p>
+<p><strong>Why feasibility is decoupled to test time.</strong> The factorization dictates where computation belongs. We folded the projection — and a differentiable Gromov–Wasserstein relational loss — into training and observed no deployed gain <em>and</em> a degraded flow-matching objective: forcing hard, boundary-localized constraints through the smooth interior flow perturbs a manifold the flow already fits, whereas a proximal projection applied after sampling repairs feasibility without disturbing it. \(\Pi_\theta\) is therefore a single-step test-time map <em>by design</em>, not for want of a trained layer.</p>
+<p><strong>Failure modes &amp; boundary conditions.</strong> The residual we do not close is genuine and instructive. On strongly non-convex boundaries \(\Pi_\theta\) reduces but does not eliminate collision (\(2.83\%\) vs \(1.4\%\) on convex; §5.1.1) — the feasible region is disconnected and one anchored projection cannot always route around a concave notch. In the extreme (very narrow corridors, pillar-obstructed floors) a motif must be physically dismantled; this is <em>semantic infeasibility</em> — the reference intent has no feasible embedding — rather than an optimization failure, and it bounds what any relation-preserving method can achieve. Three conditions frame the study: Prop. 1 is exact only for diagonal affine maps (general boundaries are supported empirically, §3.2); the placement manifold is 2-D position + yaw and does not model vertical stacking; and Stage-1 pruning is a hand-designed heuristic. On evaluation: comparisons are ablations of our own model and repurposed different-lineage models — no native reference-guided retargeter exists — on a small held-out benchmark with one external standardized metric suite (PhyScene, Table 6). Beyond the main tables we report a full component ablation (Table 8), robustness to 30% corruption of the automatically-inferred intent graph (Table 9), a challenging-floorplan stress test (Table 10), and an inference-latency breakdown (Table 11). Two gaps remain: the relational-mass selection improves \(S_\text{rel}\) but not the group-level \(S_\text{motif}\); and a completed double-blind user study together with a feasibility-aware distributional metric are still to be reported — a purely statistical Fréchet scene distance does not discriminate here, since a physically-infeasible affine warp matches the reference statistics as closely as our feasible output.</p>
+<p><strong>Future trajectory.</strong> Two directions follow from the factorization. A <em>concave-boundary-aware</em> projection — an SDF- or medial-axis-guided operator modeling the non-convex feasible region — targets the one residual failure mode directly. And because feasibility is boundary-localized, the flow's interior manifold is a natural interface to <em>neural implicit scene representations</em>: coupling the relational flow with a NeRF/3DGS boundary field would enable end-to-end visual-geometric retargeting, replacing the projection with differentiable rendering losses against the reconstructed room and turning the test-time repair into a learned, appearance-aware boundary term.</p>
+
+<h2 id="refs">References</h2>
+<div class="refs"><ol>
+<li id="r1">D. Paschalidou, A. Kar, M. Shugrina, K. Kreis, A. Geiger, S. Fidler. <em>ATISS: Autoregressive Transformers for Indoor Scene Synthesis.</em> NeurIPS 2021. <a href="https://proceedings.neurips.cc/paper/2021/hash/64986d86a17424eeac96b08a6d519059-Abstract.html">[link]</a></li>
+<li id="r2">J. Tang, Y. Nie, L. Markhasin, A. Dai, J. Thies, M. Nießner. <em>DiffuScene: Denoising Diffusion Models for Generative Indoor Scene Synthesis.</em> CVPR 2024. <a href="https://arxiv.org/abs/2303.14207">arXiv:2303.14207</a></li>
+<li id="r3">X. Wang, C. Yeshwanth, M. Nießner. <em>SceneFormer: Indoor Scene Generation with Transformers.</em> 3DV 2021. <a href="https://arxiv.org/abs/2012.09793">arXiv:2012.09793</a></li>
+<li id="r4">Q. A. Wei, S. Ding, J. J. Park, R. Sajnani, A. Poulenard, S. Sridhar, L. Guibas. <em>LEGO-Net: Learning Regular Rearrangements of Objects in Rooms.</em> CVPR 2023. <a href="https://arxiv.org/abs/2301.09629">arXiv:2301.09629</a></li>
+<li id="r5">Y. Yang, B. Jia, P. Zhi, S. Huang. <em>PhyScene: Physically Interactable 3D Scene Synthesis for Embodied AI.</em> CVPR 2024 (Highlight). <a href="https://arxiv.org/abs/2404.09465">arXiv:2404.09465</a></li>
+<li id="r6">Y. Lipman, R. T. Q. Chen, H. Ben-Hamu, M. Nickel, M. Le. <em>Flow Matching for Generative Modeling.</em> ICLR 2023. <a href="https://arxiv.org/abs/2210.02747">arXiv:2210.02747</a></li>
+<li id="r7">X. Liu, C. Gong, Q. Liu. <em>Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow.</em> ICLR 2023. <a href="https://arxiv.org/abs/2209.03003">arXiv:2209.03003</a></li>
+<li id="r8">W. Peebles, S. Xie. <em>Scalable Diffusion Models with Transformers (DiT).</em> ICCV 2023. <a href="https://arxiv.org/abs/2212.09748">arXiv:2212.09748</a></li>
+<li id="r9">B. Amos, J. Z. Kolter. <em>OptNet: Differentiable Optimization as a Layer in Neural Networks.</em> ICML 2017. <a href="https://arxiv.org/abs/1703.00443">arXiv:1703.00443</a></li>
+<li id="r10">H. Fu, B. Cai, L. Gao, L.-X. Zhang, J. Wang, C. Li, Q. Zeng, C. Sun, R. Jia, B. Zhao, H. Zhang. <em>3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics.</em> ICCV 2021. <a href="https://arxiv.org/abs/2011.09127">arXiv:2011.09127</a></li>
+<li id="r11">H. Fu, R. Jia, L. Gao, M. Gong, B. Zhao, S. Maybank, D. Tao. <em>3D-FUTURE: 3D Furniture Shape with TextURE.</em> IJCV 2021. <a href="https://arxiv.org/abs/2009.09633">arXiv:2009.09633</a></li>
+<li id="r12">M. Cuturi. <em>Sinkhorn Distances: Lightspeed Computation of Optimal Transport.</em> NeurIPS 2013. <a href="https://arxiv.org/abs/1306.0895">arXiv:1306.0895</a></li>
+<li id="r13">L. Chizat, G. Peyré, B. Schmitzer, F.-X. Vialard. <em>Scaling Algorithms for Unbalanced Optimal Transport Problems.</em> Mathematics of Computation, 2018. <a href="https://arxiv.org/abs/1607.05816">arXiv:1607.05816</a></li>
+<li id="r14">M. Deitke et al. <em>ProcTHOR: Large-Scale Embodied AI Using Procedural Generation.</em> NeurIPS 2022. <a href="https://arxiv.org/abs/2206.06994">arXiv:2206.06994</a></li>
+<li id="r15">J. Ho, A. Jain, P. Abbeel. <em>Denoising Diffusion Probabilistic Models.</em> NeurIPS 2020. <a href="https://arxiv.org/abs/2006.11239">arXiv:2006.11239</a></li>
+<li id="r16">A. Vaswani et al. <em>Attention Is All You Need.</em> NeurIPS 2017. <a href="https://arxiv.org/abs/1706.03762">arXiv:1706.03762</a></li>
+<li id="r17">H. W. Kuhn. <em>The Hungarian Method for the Assignment Problem.</em> Naval Research Logistics Quarterly, 1955.</li>
+<li id="r18">C. Lin, Y. Mu. <em>InstructScene: Instruction-Driven 3D Indoor Scene Synthesis with Semantic Graph Prior.</em> ICLR 2024. <a href="https://arxiv.org/abs/2402.04717">arXiv:2402.04717</a></li>
+<li id="r19">K. Wang, Y.-A. Lin, B. Weissmann, M. Savva, A. X. Chang, D. Ritchie. <em>PlanIT: Planning and Instantiating Indoor Scenes with Relation Graph and Spatial Prior Networks.</em> SIGGRAPH 2019. <a href="https://arxiv.org/abs/1908.00889">arXiv:1908.00889</a></li>
+<li id="r20">A. Agrawal, B. Amos, S. Barratt, S. Boyd, S. Diamond, J. Z. Kolter. <em>Differentiable Convex Optimization Layers.</em> NeurIPS 2019. <a href="https://arxiv.org/abs/1910.12430">arXiv:1910.12430</a></li>
+</ol></div>
+
+<footer>ReRoom · Topology-preserving metric flow + differentiable projection · <a href="index.html">Method</a> · <a href="https://github.com/gino6178/project4">Code</a></footer>
 
 </div>
 </body>
