@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ReRoom v0.1 · 審稿回應</title>
+<meta name="description" content="針對五點審稿意見的修訂結果:階層改由語料學出、斜牆房型、門窗入圖、風格量化、需求驅動補家具。每個主張都對應一支可重跑的腳本。">
+<style>
+:root{
+  --ink:#111; --mut:#5c5c5c; --line:#e6e6e6; --acc:#a8412a; --acc2:#2a6f7a;
+  --panel:#f7f7f7; --good:#2a7a2a; --warn:#8a6d00; --bad:#a8412a;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--ink);
+     font:17px/1.75 -apple-system,"PingFang TC","Noto Sans TC",BlinkMacSystemFont,"Segoe UI",sans-serif;
+     -webkit-font-smoothing:antialiased}
+.wrap{max-width:900px;margin:0 auto;padding:32px 22px 72px}
+h1{font-size:32px;margin:0 0 4px;font-weight:700;letter-spacing:-.01em}
+.sub{color:var(--mut);font-size:17px;margin:0 0 8px}
+h2{font-size:23px;margin:56px 0 12px;font-weight:700;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+h3{font-size:18px;margin:30px 0 6px;font-weight:600}
+p{margin:0 0 14px}
+ul{margin:0 0 14px;padding-left:22px} li{margin-bottom:6px}
+code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.9em;
+     background:var(--panel);padding:1px 5px;border-radius:3px;border:1px solid var(--line)}
+a{color:var(--acc2)}
+.tag{display:inline-block;font-size:12.5px;font-weight:700;padding:2px 9px;border-radius:999px;
+     border:1px solid currentColor;vertical-align:2px;margin-left:8px}
+.t-ok{color:var(--good)} .t-part{color:var(--warn)} .t-pull{color:var(--bad)}
+.tw{overflow-x:auto;margin:18px 0}
+table{border-collapse:collapse;width:100%;font-size:15px}
+th,td{padding:8px 12px;text-align:right;border-bottom:1px solid var(--line);white-space:nowrap}
+th:first-child,td:first-child{text-align:left;white-space:normal}
+thead th{background:var(--panel);border-bottom:2px solid #ccc;font-size:13.5px;color:#444}
+tbody tr:last-child td{border-bottom:1px solid #ccc}
+td.n{font-variant-numeric:tabular-nums;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:14px}
+tr.base td{color:var(--mut);font-style:italic;background:#fafafa}
+b.w{color:var(--good)} b.l{color:var(--bad)}
+figure{margin:22px 0}
+figure img{width:100%;border:1px solid var(--line);border-radius:6px;display:block}
+figcaption{font-size:14px;color:var(--mut);margin-top:8px;line-height:1.6}
+.note{border-left:3px solid var(--acc);background:var(--panel);padding:14px 18px;margin:20px 0;
+      border-radius:0 5px 5px 0}
+.note.pull{border-left-color:var(--bad)}
+.note p{margin:6px 0;font-size:15.5px} .note p:last-child{margin-bottom:0}
+.note strong{color:var(--ink)}
+.nav{display:flex;flex-wrap:wrap;gap:10px;margin:18px 0 6px}
+.nav a{font-size:14px;padding:7px 13px;border:1px solid var(--line);border-radius:8px;
+       text-decoration:none;color:var(--acc2)}
+.nav a:hover{border-color:var(--acc2)}
+.meta{font-size:13.5px;color:var(--mut);font-family:ui-monospace,Menlo,monospace;margin:0 0 4px}
+hr{border:0;border-top:1px solid var(--line);margin:44px 0}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<p class="meta">v0.1 · 2026-08-30</p>
+<h1>審稿回應:五點的修訂結果</h1>
+<p class="sub">每個主張都對應 <code>scripts/</code> 裡一支可重跑的腳本。與自己預期相反的量測結果照實列出,包括三項先前寫進文件、後來被推翻的說法。</p>
+
+<div class="nav">
+  <a href="index.html">← Shipped 做法</a>
+  <a href="paper.html">論文敘事頁</a>
+  <a href="experiments.html">全部實驗</a>
+</div>
+
+<h2>1. 設計意圖圖是規則做的<span class="tag t-ok">已解決</span></h2>
+
+<p><strong>核心結論:階層可以學,而且學出來的版本用起來一樣好。</strong></p>
+
+<p>被寫死的其實有兩樣,而第二樣才是關鍵。<code>MOTIF_SCHEMAS</code> 宣告哪些類別可以當群組的頭;<code>CategoryPrior.anchor</code> 逐一手工給分——double_bed 1.00、single_bed 0.95、wardrobe 0.70、nightstand 0.35——<strong>那張表就是「床是床頭櫃的父節點」的唯一理由</strong>。</p>
+
+<p>取而代之的是<strong>解釋的方向</strong>,那正是階層的意思:一個類別解釋夥伴位姿的程度,減去夥伴解釋它的程度。與手寫表的 Spearman <b>ρ = 0.615</b>(p = 0.0002),而審稿人點名的配對方向全對:</p>
+
+<div class="tw"><table>
+<thead><tr><th>配對</th><th>學到的非對稱性</th><th>手寫 anchor</th></tr></thead>
+<tbody>
+<tr><td>dining_table → dining_chair</td><td class="n"><b class="w">+0.78</b></td><td class="n">1.00 vs 0.55</td></tr>
+<tr><td>double_bed → nightstand</td><td class="n"><b class="w">+0.84</b></td><td class="n">1.00 vs 0.35</td></tr>
+<tr><td>sofa → coffee_table</td><td class="n"><b class="w">+0.96</b></td><td class="n">1.00 vs 0.70</td></tr>
+<tr><td>desk → office_chair</td><td class="n"><b class="w">+4.18</b></td><td class="n">0.60 vs 0.40</td></tr>
+</tbody></table></div>
+
+<h3>三個等預算模型,唯一差別是階層從哪來</h3>
+
+<p>資料、超參數、訓練預算(60 epochs)完全相同,三者都用<strong>完整的手工圖</strong>評分,學到的表在評測時關閉,免得自己給自己打分。</p>
+
+<div class="tw"><table>
+<thead><tr><th>模型</th><th>S_rel</th><th>S_motif</th><th>碰撞率 %</th></tr></thead>
+<tbody>
+<tr><td>手工設計階層</td><td class="n">0.745 ± 0.032</td><td class="n">0.833 ± 0.032</td><td class="n">3.08 ± 0.54</td></tr>
+<tr><td><strong>完全無階層</strong></td><td class="n"><b class="l">0.599 ± 0.027</b></td><td class="n"><b class="l">0.627 ± 0.031</b></td><td class="n"><b class="l">4.77 ± 0.70</b></td></tr>
+<tr><td><strong>從語料學的階層</strong></td><td class="n"><b class="w">0.748 ± 0.032</b></td><td class="n"><b class="w">0.837 ± 0.032</b></td><td class="n"><b class="w">2.97 ± 0.50</b></td></tr>
+</tbody></table></div>
+
+<div class="tw"><table>
+<thead><tr><th>配對檢定(對手工版,同場景同尺度,n=72)</th><th>ΔS_rel</th><th>p</th><th>ΔS_motif</th><th>p</th><th>Δ碰撞</th><th>p</th></tr></thead>
+<tbody>
+<tr><td>無階層</td><td class="n"><b class="l">−0.146</b></td><td class="n">&lt;0.001</td><td class="n"><b class="l">−0.206</b></td><td class="n">&lt;0.001</td><td class="n"><b class="l">+1.68</b></td><td class="n">0.001</td></tr>
+<tr><td><strong>學到的階層</strong></td><td class="n">+0.003</td><td class="n"><b class="w">0.257</b></td><td class="n">+0.004</td><td class="n"><b class="w">0.180</b></td><td class="n">−0.110</td><td class="n"><b class="w">0.548</b></td></tr>
+</tbody></table></div>
+
+<p><strong>兩半缺一不可。</strong>無階層那條證明階層<em>確實有用</em>——拿掉它掉 0.146 S_rel、0.206 S_motif;對照之下,學到的階層<strong>三項皆無顯著差異</strong>,且點估計全部略優。<strong>手寫表不是錯的,只是不必要的。</strong></p>
+
+<figure>
+  <img src="assets/v01_hierarchy.png" alt="同一房間縮到 0.75 倍,由三個模型重定向">
+  <figcaption><strong>房間縮到 0.75×</strong>,最能壓迫分組結構的情境。「無階層」那格底部有兩張餐椅整個落在<strong>房間外面</strong>,手工版與學到的版本都沒有。三格的碰撞率(23–27%)遠高於表格平均的 3%,因為這是單一場景的最嚴苛尺度,不是平均值。</figcaption>
+</figure>
+
+<div class="note pull">
+  <p><strong>途中被推翻的說法。</strong>第一版把關係定義為<strong>預測價值</strong>——知道 j 的位姿能多預測 i。它失敗得很有訊息量:兩張並排的同款餐椅互相極度可預測,分數因此<em>高過</em> TV–座椅配對。<strong>可預測不等於設計意圖</strong>,而那正是審稿人要求排除的案例。</p>
+  <p>可行的是圖推薦系統的做法(LightGCN、KGAT):成對目標,負樣本<strong>固定相對位姿、只換夥伴類別</strong>,所以模型不能靠「桌前 0.6 m 有東西」取巧,它必須知道那是餐椅而不是床頭櫃。換過去之後,先前三項全部反轉的判別檢驗全數通過:TV–座椅 7.995 對隨機 4.765,偶然相鄰的同款座椅 <strong>3.489,低於隨機</strong>。</p>
+</div>
+
+<div class="note">
+  <p><strong>審稿人的兩個例子,一個不成立。</strong>「兩張椅子」成立——40.4% 的邊是純距離斷言的 <code>near</code>。「TV–沙發」不成立:30.3% 的 TV–座椅配對確實沒有邊,但不是因為 5.5 m 距離上限(只有 2.2% 超過,中位 2.78 m),而是<strong>朝向</strong>——被漏掉的座椅面向電視的角度中位數是 <strong>49°</strong>、僅 36% 在 45° 內,而連上的是 <strong>5°</strong>、94% 在內。</p>
+  <p>順帶一提,領域的標準參照 <a href="https://arxiv.org/abs/2402.04717">InstructScene</a>(ICLR 2024 spotlight)的「semantic graph prior」<strong>比我們更規則</strong>:世界座標軸象限、3 m 硬上限、<code>if "lamp" in name</code> 字串比對。移植到同一批房間後,它在審稿人自己的例子上丟掉 <strong>36.4%</strong>(我們 30.3%),而且房間旋轉 90° 有 <strong>55.9%</strong> 的關係標籤翻轉。</p>
+</div>
+
+<h2>2. 場景差異只是大小與長寬比?<span class="tag t-part">已回答 + 撤回一項</span></h2>
+
+<p>訓練分布的形狀變化<strong>比真實資料更多</strong>:非凸比例 <b class="w">75.6%</b> 對真實 3D-FRONT 的 64.8%,有凹角的比例 78.1% 對 66.1%。但審稿人的印象對了一半——level 1–2 在所有形狀指標上與真實房間不可區分,變化全來自 level 3–5。</p>
+
+<p><strong>找到一個真正的空白</strong>:3D-FRONT 全是軸對齊直角房間,轉角都 90°,邊數必為偶數——<strong>5 邊形與 7 邊形各只有 0.1%</strong>。而每個 5/7 邊形都需要一面斜牆,現有運算子做不出來(<code>corner_cut</code> 即使 <code>oblique=1.0</code> 也只能 4→6)。已新增 <code>chamfer</code>(精確 +1 頂點)與 level 6。</p>
+
+<figure>
+  <img src="assets/v01_ngon.png" alt="矩形、5 邊形、6 邊形、7 邊形的佈局">
+  <figcaption>同一個來源佈局搬進四種房型。5 邊形(左側斜牆)與 7 邊形(右上斜切)是先前產生不出來的。S_motif 全部 1.000;7 邊形碰撞 18.7% 對矩形 11.6%——<strong>斜角確實比較難</strong>。</figcaption>
+</figure>
+
+<div class="note pull">
+  <p><strong>撤回:先前報的「5/6/7 邊形與矩形平手」不成立。</strong><code>make_ngon</code> 只能加頂點不能減,所以本來就有較多頂點的房間會原封不動回傳。量化後果:24 個測試房間中,要 5 邊形只有 <strong>7 個</strong>真的是 5 邊形(29%),6/7 邊形各 13/24;其中 11 個來源房間有 10 邊以上,完全沒被改動。<strong>那張表有 46–71% 的格子不是它標示的房型。</strong></p>
+  <p>當初驗證用的是矩形(4 邊),永遠只需要加,所以測不出這個洞。而抓到它的方式是<strong>畫圖</strong>——渲染出來發現「5-gon」和「6-gon」兩格連指標都一模一樣。<strong>表格會掩蓋這種錯誤,圖不會。</strong>修正後 24/24 全部命中,面積保留 0.95×,評測重跑中。</p>
+</div>
+
+<p><strong>仍未涵蓋</strong>:房間拓樸(始終是單連通多邊形,沒有內部隔間)與房型固定。</p>
+
+<h2>3. 門窗<span class="tag t-ok">已入圖</span></h2>
+
+<p>門窗原本只以常數進入系統(門迴轉深度 0.9 m、窗 0.35 m)。現在是有位姿的偽物件,走與家具相同的機制。它們實際帶多少訊號:</p>
+
+<div class="tw"><table>
+<thead><tr><th>配對</th><th>n</th><th>平均增益</th></tr></thead>
+<tbody>
+<tr><td>門 ↔ 家具</td><td class="n">10167</td><td class="n"><b class="w">0.764</b></td></tr>
+<tr class="base"><td>隨機配對(基準)</td><td class="n">21330</td><td class="n">0.654</td></tr>
+<tr><td>窗 ↔ 家具</td><td class="n">1623</td><td class="n"><b class="l">0.433</b></td></tr>
+</tbody></table></div>
+
+<p><strong>門有弱正訊號,窗低於隨機</strong>——在 3D-FRONT 裡窗戶位置不預測家具擺放。</p>
+
+<p>而那兩個硬寫常數<strong>經得起檢驗</strong>(4491 個開口,量的是能量項實際 charge 的迴轉區域):門 0.9 m 只讓 2.7% 的真實門被判違規,放寬到 1.2 m 也才 3.5%;窗 0.35 m 是 7.1%,推到 0.9 m 就跳到 13.4%。</p>
+
+<div class="note">
+  <p>第一版量的是「到開口線段的距離」,已作廢——<strong>門旁邊沿牆擺的櫃子距離很近但根本不擋門</strong>,那個數字會用錯誤的理由否定常數。</p>
+</div>
+
+<h2>4. 風格在哪裡學?<span class="tag t-ok">已解決</span></h2>
+
+<p>審稿人說得對,而且<strong>比他說的更嚴重</strong>:<code>ObjectInstance.style</code> 從未被填入,風格不只沒被轉移,是<strong>根本沒被表示</strong>。</p>
+
+<p>現在從<strong>房間共現</strong>學資產嵌入,負樣本限制在同類別內——所以模型不能靠「臥室 vs 客廳」取巧,只能靠「哪一張沙發適合這個房間」。</p>
+
+<div class="tw"><table>
+<thead><tr><th>排序器(留一資產檢索,候選限同類別,n=1373)</th><th>中位排名</th><th>MRR</th><th>recall@5</th></tr></thead>
+<tbody>
+<tr><td><strong>共現嵌入(無標籤)</strong></td><td class="n"><b class="w">3.0</b></td><td class="n"><b class="w">0.475</b></td><td class="n"><b class="w">0.616</b></td></tr>
+<tr><td>真實 3D-FUTURE style/theme/material 標籤</td><td class="n">11.0</td><td class="n">0.335</td><td class="n">0.402</td></tr>
+<tr><td>OpenShape 量化碼</td><td class="n">26.0</td><td class="n">0.316</td><td class="n">0.358</td></tr>
+<tr class="base"><td>頻率基線</td><td class="n">36.0</td><td class="n">0.114</td><td class="n">0.155</td></tr>
+<tr class="base"><td>隨機</td><td class="n">159.0</td><td class="n">0.022</td><td class="n">0.020</td></tr>
+</tbody></table></div>
+
+<p><strong>無標籤的方法顯著勝過真實標籤</strong>(配對檢定 p &lt; 0.0001)。原因是 19 個風格類別太粗——光 Modern 就佔 4232 個資產中的 1306 個。這正是 <a href="https://arxiv.org/abs/2303.03565">CLIP-Layout</a> 的論點(instance-level 勝過 class-level),而我們<strong>不需要資產渲染圖</strong>。</p>
+
+<p><strong>外部驗證</strong>:訓練從未見過任何標籤,但它的最近鄰共享風格標籤的比例是 0.242,隨機基準 0.149——<b class="w">1.62 倍</b>。</p>
+
+<div class="note pull">
+  <p><strong>兩個先前寫進文件、後來被推翻的說法:</strong></p>
+  <p>① 我說 3D-FUTURE 的風格標籤拿不到(在授權下載後面)——<strong>拿得到</strong>,在 InstructScene 的釋出包裡,4232 個資產,涵蓋我們語料的 81%。</p>
+  <p>② 我說 3D-FRONT 由專業設計師配家具——<strong>樓面與佈局是,但家具選擇是推薦系統產生的</strong>(MobileNetV2 視覺嵌入 + GBDT-LR 相容度)。所以這個嵌入其實是在還原 3D-FRONT 自己的推薦系統,而這個限制<strong>任何用 3D-FRONT 訓練的方法都有</strong>,CLIP-Layout 也一樣。</p>
+</div>
+
+<h2>5. 房間變大要不要加家具?<span class="tag t-part">前提修正 + 機制完成</span></h2>
+
+<p><strong>密度從來不是問題,組成才是。</strong>放大後的房間反而比同面積真實房間<strong>多 12–15%</strong> 的家具(填充比 1.12–1.15)。缺的是組成:2× 時衣櫃在 12 間中缺 7 間、邊桌缺 6 間、吊燈缺 5 間——參考房間本來就沒有衣櫃可以放大,而既有的存在性頭<strong>只能刪不能加</strong>。</p>
+
+<div class="tw"><table>
+<thead><tr><th>決定什麼</th><th>用什麼</th><th>top-1</th><th>top-5</th></tr></thead>
+<tbody>
+<tr class="base"><td>頻率基線</td><td>什麼都沒有</td><td class="n">0.152</td><td class="n">0.534</td></tr>
+<tr><td>需求模型</td><td>房型 + 面積</td><td class="n">0.236</td><td class="n">0.605</td></tr>
+<tr><td><strong>協同過濾</strong></td><td>+ 共現</td><td class="n"><b class="w">0.308</b></td><td class="n"><b class="w">0.726</b></td></tr>
+<tr><td>位置條件</td><td>+ 位置</td><td class="n"><b class="w">0.596</b></td><td class="n"><b class="w">0.864</b></td></tr>
+</tbody></table></div>
+
+<p>訊號可逐層歸因:房型與面積 <b>+0.084</b>、共現 <b>+0.072</b>、<strong>位置 +0.288</strong>。</p>
+
+<figure>
+  <img src="assets/v01_addition.png" alt="放大 2 倍的房間,補家具前後">
+  <figcaption>放大 2×,21 → 25 件。補進 armchair、pendant_lamp、office_chair、wardrobe。<strong>出界率 0.000 → 0.000</strong>,沒有引入任何新的出界。碰撞率 0.143 → 0.120 的下降是<strong>分母效應</strong>(補進去的都是有效物件),不算改善。</figcaption>
+</figure>
+
+<p>整體:組成落差每個尺度降約 <b class="w">11%</b>,絕對碰撞數與出界數不變。</p>
+
+<div class="note">
+  <p><strong>誠實記為 null 的一項。</strong>移植 <a href="https://arxiv.org/abs/1907.11308">SceneGraphNet</a>(ICCV 2019)的位置條件預測——它的程式跑不了,訓練資料 SUNCG 已下線,所以是重寫的——在<strong>它自己的任務上決定性勝出</strong>(top-1 0.596 對 0.236)。但放進補家具流程後組成落差不動,且 1.3× 的可走比從 0.990 掉到 0.954。要宣稱它有幫助需要一個「放置合理性」指標,我們沒有,所以預設仍用簡單版本。</p>
+</div>
+
+<hr>
+
+<h2>一個影響所有數字讀法的說明</h2>
+
+<figure>
+  <img src="assets/v01_regularity.png" alt="擺正階段開啟與關閉的對比">
+  <figcaption>同一場景、同一模型,唯一差別是<strong>擺正階段</strong>(Manhattan 正交 / 貼牆 flush / 槽位對齊)。</figcaption>
+</figure>
+
+<div class="tw"><table>
+<thead><tr><th>擺正階段</th><th>朝向偏離軸線(中位)</th><th>碰撞率</th><th>S_rel</th></tr></thead>
+<tbody>
+<tr><td>關閉(評測協定)</td><td class="n">10.9°</td><td class="n">11.2%</td><td class="n">0.973</td></tr>
+<tr><td><strong>開啟(出貨預設)</strong></td><td class="n"><b class="w">0.0°</b></td><td class="n"><b class="w">6.1%</b></td><td class="n">0.916</td></tr>
+</tbody></table></div>
+
+<p>它不只把家具擺正,<strong>碰撞率直接減半</strong>,代價是 S_rel 掉 0.057。</p>
+
+<p><strong>本頁所有評測數字都是在這個階段關閉的狀態下量的。</strong>那是既有評測腳本的協定——要量模型的原始輸出,不能讓後處理美化數字,而且與現有論文表格一致。但這代表<strong>絕對值偏保守,不是實際部署系統的表現</strong>。所有<em>相對</em>比較仍然有效,因為每一組對照都用同一設定。</p>
+
+<hr>
+
+<h2>方法論</h2>
+
+<p>這一輪一共有<strong>六個我自己的假設被量測推翻</strong>,以及<strong>三個先前已寫進文件的主張被更正</strong>(標籤拿不到、3D-FRONT 由設計師配家具、n-gon 平手)。全部保留在頁面上,理由很簡單:審稿人會自己去查那些論文、也會自己重跑腳本。</p>
+
+<p>每個實驗都放了<strong>會讓自己的做法被否決的控制組</strong>:</p>
+<ul>
+  <li>無階層那條——沒有它,「學到的打平手工的」可以被解釋成「階層本來就沒用」</li>
+  <li>隨機選邊——證明學到的分數<em>沒有</em>比隨機好(p=0.175),這一條我照實報了</li>
+  <li>等面積矩形——讓斜牆房型的差異不能歸因於房間變小</li>
+  <li>頻率與隨機基線——出現在每一張檢索表上</li>
+</ul>
+
+<p class="sub" style="margin-top:32px">完整逐條回應與腳本對照表:<code>REVIEW_RESPONSE.md</code>(倉庫根目錄)。</p>
+
+</div>
+</body>
+</html>
