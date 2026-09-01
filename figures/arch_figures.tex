@@ -34,6 +34,25 @@
 
 \begin{document}
 
+%% ===================================================================
+%% TWO-COLUMN USAGE (copy into your paper; each tikzpicture below is
+%% self-contained). Fig 2 and Fig 3 are wide flow diagrams -> span both
+%% columns with figure*; Fig 4 is compact -> single column is fine.
+%%
+%%   \begin{figure*}[t]\centering
+%%     \resizebox{\textwidth}{!}{% <-- Fig 2 tikzpicture here >}
+%%     \caption{System overview.}\label{fig:overview}
+%%   \end{figure*}
+%%
+%%   \begin{figure}[t]\centering
+%%     \resizebox{\columnwidth}{!}{% <-- Fig 4 tikzpicture here >}
+%%     \caption{Differentiable projection.}\label{fig:proj}
+%%   \end{figure}
+%%
+%% \resizebox scales the whole picture, so relative font sizes are
+%% preserved; at \textwidth the \footnotesize labels stay legible.
+%% ===================================================================
+
 %============================================================
 % FIGURE 2 -- System overview
 %============================================================
