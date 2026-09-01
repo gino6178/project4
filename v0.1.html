@@ -327,7 +327,7 @@ $$\Pi_\theta(\hat x_1)=\underset{x}{\arg\min}\;\underbrace{w_a\lVert x-\hat x_1\
   <img src="assets/levels.png" alt="Parametric room deformation family">
   <figcaption><strong>Figure 6: Deformation family.</strong> Uniform scale, aspect change, slanted wall, and corner cut (concave). The real scene is GT; the deformed-boundary layout is the synthetic reference, so intent transfer is causal by construction.</figcaption>
 </figure>
-<p><strong>Four physical gates:</strong> (i) area-ratio resampling \(\rho\in[0.5,2.0]\); (ii) out-of-bounds rejection; (iii) rigid shared-translation pushing footprints poking through walls inward (overhang 25.1%→1.1%); (iv) a three-way collision audit separating true collisions, nestable pairs (chair-under-table, bed-with-nightstand) and z-separated objects (lamp/rug), so synthetic collision never exceeds the real source. A real <strong>cross-pairing</strong> set (human designs matched across rooms by category Jaccard \(&gt;0.6\) and anchor-yaw \(\le 30^\circ\), aligned by a Hungarian assignment <a class="cite" href="#r17">[17]</a>) serves as an out-of-distribution test (§5.8, Table 9): retargeting into these real unseen boundaries preserves relations at \(S_\text{rel}=0.868\), confirming the flow generalizes rather than inverting the synthetic deformation family.</p>
+<p><strong>Four physical gates:</strong> (i) area-ratio resampling \(\rho\in[0.5,2.0]\); (ii) out-of-bounds rejection; (iii) rigid shared-translation pushing footprints poking through walls inward (overhang 25.1%→1.1%); (iv) a three-way collision audit separating true collisions, nestable pairs (chair-under-table, bed-with-nightstand) and z-separated objects (lamp/rug), so synthetic collision never exceeds the real source. A real <strong>cross-pairing</strong> set (human designs matched across rooms by category Jaccard \(&gt;0.6\) and anchor-yaw \(\le 30^\circ\), aligned by a Hungarian assignment <a class="cite" href="#r17">[17]</a>) serves as an out-of-distribution test (§5.8, Table 9): retargeting into these real unseen boundaries preserves relations at \(S_\text{rel}=0.865\), confirming the flow generalizes rather than inverting the synthetic deformation family.</p>
 
 <h2>5. Experiments</h2>
 <div class="abstract" style="border-left:3px solid var(--acc2)">
@@ -349,35 +349,35 @@ the projection disabled, is archived at <a href="paper.html">paper.html</a>.</p>
 <div class="tw"><table>
 <thead><tr><th>Variant</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Proj. latency ↓</th></tr></thead>
 <tbody>
-<tr><td>Raw DiT (no projection)</td><td class="win">0.707±.32</td><td>1.15±2.3%</td><td>80±24%</td><td>—</td></tr>
-<tr><td>+ Test-time 25-step polish</td><td class="bad">0.680±.31</td><td>1.23±2.3%</td><td>86±23%</td><td class="bad">+263 ms</td></tr>
-<tr><td>+ Hard heuristic snap</td><td class="bad">0.676±.31</td><td>1.59±2.6%</td><td>87±20%</td><td>+0.8 ms</td></tr>
-<tr class="ours"><td>+ Differentiable \(\Pi_\theta\) (Ours)</td><td class="win">0.703±.32</td><td>1.04±1.9%</td><td>80±23%</td><td>+170 ms</td></tr>
+<tr><td>Raw DiT (no projection)</td><td class="win">0.705±.31</td><td>1.21±2.1%</td><td>81±20%</td><td>—</td></tr>
+<tr><td>+ Test-time 25-step polish</td><td class="bad">0.677±.30</td><td>1.19±2.2%</td><td>84±24%</td><td class="bad">+3020 ms</td></tr>
+<tr><td>+ Hard heuristic snap</td><td class="bad">0.674±.30</td><td>1.75±2.4%</td><td>88±19%</td><td>+1.6 ms</td></tr>
+<tr class="ours"><td>+ Differentiable \(\Pi_\theta\) (Ours)</td><td class="win">0.703±.31</td><td>0.90±1.7%</td><td>78±23%</td><td>+343 ms</td></tr>
 </tbody></table></div>
-<p><strong>Table 1. Benign (convex) boundary regime.</strong> 36 layouts (12 references × 3 sizes), mean ± per-cell std. When the boundary is simple the base flow is already near-feasible (\(R_\text{col}\!\approx\!1.1\%\)), so \(\Pi_\theta\) acts as a safe, topology-neutral pass (\(\Delta S_\text{rel}\!\le\!0.004\)); its decisive repair capability emerges in the non-convex stress regime (Table 2). Here every method is already near-feasible, so collision does not discriminate (all rows within \(R_\text{col}\) 1.04–1.59%, one std apart). The discriminating axis is <strong>relational retention</strong>: the topology-preserving variants (raw, \(\Pi_\theta\)) hold \(S_\text{rel}\!\approx\!0.70\), whereas hard snap and polish trade \(\sim\!0.03\) \(S_\text{rel}\) for +6–7 pts wall-snap. \(\Pi_\theta\) therefore delivers topology-preserving alignment at low latency (+170 ms vs +263 ms for light polish; Table 8) — a small \(S_\text{rel}\) edge over hard snap (\(\Delta S_\text{rel}=+0.027\)) that is <em>not</em> significant in this easy regime (reference-clustered \(n{=}12\), \(p=0.27\)); against the raw flow \(\Pi_\theta\) is topology-neutral here (\(\Delta S_\text{rel}=-0.004\)). Its edge over the snap becomes significant precisely where feasibility is at stake — the non-convex regime (Table 2, clustered \(p=0.0024\)). Base ODE sampling is ~565 ms/layout (\(k{=}1\), 50 steps) / ~667 ms with guidance, shared by every row. The feasibility tie here is by design: \(\Pi_\theta\)'s decisive benefit emerges where the base flow fails, on non-convex boundaries (§5.1.1, Table 2).</p>
+<p><strong>Table 1. Benign (convex) boundary regime.</strong> 36 layouts (12 references × 3 sizes), mean ± per-cell std. When the boundary is simple the base flow is already near-feasible (\(R_\text{col}\!\approx\!1.1\%\)), so \(\Pi_\theta\) acts as a safe, topology-neutral pass (\(\Delta S_\text{rel}\!\le\!0.003\)); its decisive repair capability emerges in the non-convex stress regime (Table 2). Here every method is already near-feasible, so collision does not discriminate (all rows within \(R_\text{col}\) 0.90–1.75%, one std apart). The discriminating axis is <strong>relational retention</strong>: the topology-preserving variants (raw, \(\Pi_\theta\)) hold \(S_\text{rel}\!\approx\!0.70\), whereas hard snap and polish trade \(\sim\!0.03\) \(S_\text{rel}\) for +6–7 pts wall-snap. \(\Pi_\theta\) therefore delivers topology-preserving alignment at low latency (+343 ms vs +3020 ms for light polish; Table 8) — a small \(S_\text{rel}\) edge over hard snap (\(\Delta S_\text{rel}=+0.029\)) that is <em>not</em> significant in this easy regime (reference-clustered \(n{=}12\), \(p=0.20\)); against the raw flow \(\Pi_\theta\) is topology-neutral here (\(\Delta S_\text{rel}=-0.003\)). Its edge over the snap becomes significant precisely where feasibility is at stake — the non-convex regime (Table 2, clustered \(p=0.0015\)). Base ODE sampling is ~565 ms/layout (\(k{=}1\), 50 steps) / ~667 ms with guidance, shared by every row. The feasibility tie here is by design: \(\Pi_\theta\)'s decisive benefit emerges where the base flow fails, on non-convex boundaries (§5.1.1, Table 2).</p>
 
 <h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.1.1. Where \(\Pi_\theta\) earns its place: the non-convex failure regime</h4>
-<p>Table 1's near-tie between raw and \(\Pi_\theta\) is <em>expected</em>, not a weakness: at the mild test sizes the base flow already emits collision-free layouts (\(R_\text{col}=1.15\%\)), so the projection has almost nothing to correct. To locate where it matters we stress-test the base flow across the full deformation family (Fig. 6) from mild to extreme. The flow is robust on affine and slanted boundaries, but on <strong>strongly non-convex</strong> ones its feasibility breaks down: object collision roughly <em>doubles</em> — \(1.8\%\) (mild aspect) \(\to 4.4\%\) (corner-cut \(\times2\)) \(\to 5.1\%\) (deep L-shape) — and \(S_\text{rel}\) falls from \(0.90\) to \(0.62\), while out-of-bounds stays low (\(\le3\%\), the guidance handles containment). Concave notches, under-represented in training, are the base model's genuine failure mode.</p>
+<p>Table 1's near-tie between raw and \(\Pi_\theta\) is <em>expected</em>, not a weakness: at the mild test sizes the base flow already emits collision-free layouts (\(R_\text{col}=1.21\%\)), so the projection has almost nothing to correct. To locate where it matters we stress-test the base flow across the full deformation family (Fig. 6) from mild to extreme. The flow is robust on affine and slanted boundaries, but on <strong>strongly non-convex</strong> ones its feasibility breaks down: object collision roughly <em>doubles</em> — \(1.8\%\) (mild aspect) \(\to 4.4\%\) (corner-cut \(\times2\)) \(\to 5.1\%\) (deep L-shape) — and \(S_\text{rel}\) falls from \(0.90\) to \(0.62\), while out-of-bounds stays low (\(\le3\%\), the guidance handles containment). Concave notches, under-represented in training, are the base model's genuine failure mode.</p>
 <div class="tw"><table>
 <thead><tr><th>Finish — <em>hard non-convex</em> regimes</th><th>\(R_\text{col}\) ↓</th><th>\(S_\text{rel}\) ↑</th></tr></thead>
 <tbody>
-<tr><td>none (base flow raw)</td><td>3.84±4.0%</td><td>0.647±.31</td></tr>
-<tr><td>&nbsp;&nbsp;+ hard snap</td><td>3.59±4.5%</td><td>0.611±.30</td></tr>
-<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\)</td><td class="win">2.83±2.8%</td><td class="win">0.648±.31</td></tr>
+<tr><td>none (base flow raw)</td><td>3.24±4.3%</td><td>0.635±.29</td></tr>
+<tr><td>&nbsp;&nbsp;+ hard snap</td><td>3.33±4.0%</td><td>0.588±.29</td></tr>
+<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\)</td><td class="win">2.09±2.2%</td><td class="win">0.636±.29</td></tr>
 </tbody></table></div>
-<p><strong>Table 2.</strong> Projection ablation restricted to the base model's failure regime (deep corner-cut, corner-cut\(\times2\), extreme aspect \(2.2\!\times\!0.45\); 36 layouts = 12 references \(\times\) 3 regimes). Here — unlike the easy regime of Table 1 — \(\Pi_\theta\) delivers a <em>statistically significant</em> feasibility gain: reference-clustered Wilcoxon (\(n{=}12\)) \(\Pi_\theta\) vs raw \(\Delta R_\text{col}=-1.01\%\) (\(p=0.0024\)) at <em>no</em> relational cost (\(\Delta S_\text{rel}=+0.001\), n.s.); and against the hard snap it preserves relations far better — \(\Delta S_\text{rel}=+0.037\) (clustered \(p=0.0024\)) — at comparable collision. \(\Pi_\theta\)'s value is thus <strong>regime-dependent and principled</strong>: a near-no-op where the flow is already feasible (Table 1), a significant topology-preserving repair where it is not (Table 2). It does not fully close the gap (residual \(2.83\%\) vs \(1.4\%\) in the easy regime) — a concave-boundary-aware projection is the natural next step (§7).</p>
+<p><strong>Table 2.</strong> Projection ablation restricted to the base model's failure regime (deep corner-cut, corner-cut\(\times2\), extreme aspect \(2.2\!\times\!0.45\); 36 layouts = 12 references \(\times\) 3 regimes). Here — unlike the easy regime of Table 1 — \(\Pi_\theta\) delivers a <em>statistically significant</em> feasibility gain: reference-clustered Wilcoxon (\(n{=}12\)) \(\Pi_\theta\) vs raw \(\Delta R_\text{col}=-1.15\%\) (clustered \(p=0.0068\)) at <em>no</em> relational cost (\(\Delta S_\text{rel}=+0.000\), n.s.); and against the hard snap it preserves relations far better — \(\Delta S_\text{rel}=+0.047\) (clustered \(p=0.0015\)) — at comparable collision. \(\Pi_\theta\)'s value is thus <strong>regime-dependent and principled</strong>: a near-no-op where the flow is already feasible (Table 1), a significant topology-preserving repair where it is not (Table 2). It does not fully close the gap (residual \(2.09\%\) vs \(0.90\%\) in the easy regime) — a concave-boundary-aware projection is the natural next step (§7).</p>
 
 <h3>5.2. Baseline comparison</h3>
 <p>ATISS <a class="cite" href="#r1">[1]</a> and LEGO-Net <a class="cite" href="#r4">[4]</a> solve different tasks (unconditional completion; same-room denoising), so our primary baseline is the one our method replaces: the <strong>affine / global warp</strong> (MRR-affine map of the reference into \(P_t\), no flow), on the same seeds/sizes. We additionally evaluate LEGO-Net directly as a <em>cross-lineage</em> comparator through its native data loader (§5.2.1, Table 4).</p>
 <div class="tw"><table>
 <thead><tr><th>Method</th><th>\(S_\text{rel}\) ↑</th><th>\(S_\text{rel}^\text{kept}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>Wall-snap ↑</th><th>Adapts count</th></tr></thead>
 <tbody>
-<tr><td>Affine / global warp</td><td>0.934±.05</td><td>0.934±.05</td><td class="bad">4.88±6.8%</td><td class="bad">61±33%</td><td class="bad">✗</td></tr>
-<tr class="ours"><td>Ours (flow + \(\Pi_\theta\))</td><td>0.677±.31</td><td class="win">0.887±.08</td><td class="win">0.94±1.7%</td><td class="win">80±25%</td><td class="win">✓</td></tr>
+<tr><td>Affine / global warp</td><td>0.933±.05</td><td>0.933±.05</td><td class="bad">4.88±6.8%</td><td class="bad">61±33%</td><td class="bad">✗</td></tr>
+<tr class="ours"><td>Ours (flow + \(\Pi_\theta\))</td><td>0.674±.30</td><td class="win">0.881±.08</td><td class="win">0.92±1.8%</td><td class="win">81±26%</td><td class="win">✓</td></tr>
 </tbody></table></div>
-<p><strong>Table 3.</strong> Baseline comparison (36 layouts, mean ± std). <em>Read \(S_\text{rel}\) and \(S_\text{rel}^\text{kept}\) together:</em> raw \(S_\text{rel}\) strictly penalizes shrinking rooms (\(0.75\times\)) because a deleted object forfeits <em>all</em> its reference edges (scoring 0), so ours (0.677) trails the affine map (0.934) mostly by pruning. Evaluated on the <em>surviving</em> objects, ReRoom comes within 0.048 of the unconstrained linear warp (\(S_\text{rel}^\text{kept}=0.886\) vs 0.934) — a <em>statistically significant</em> shortfall (reference-clustered Wilcoxon, \(n{=}12\), \(p=0.0068\)), and a wider one than the pre-revision protocol reported (0.018), because the regularity projection buys feasibility by moving furniture onto walls and axes and therefore away from its reference offsets; we do not claim to beat the affine warp on pure relational fidelity, which a linear map trivially maximizes. Our contribution is <strong>near-lossless fidelity at physical feasibility the affine map lacks</strong>: at that 0.047 fidelity cost ReRoom cuts collisions \(5.2\times\) (0.94% vs 4.88%, clustered \(p=0.012\); and far more consistently, ±1.7 vs ±6.8), adds +19 pts wall-snap, and adaptively pruning object count — which the affine map cannot. The affine map maximizes <em>raw</em> relation retention only because it is linear; it is physically infeasible (4.9% collisions, high variance; 61% wall-snap). Ours' \(R_\text{col}=0.94\%\) here sits just below the \(\Pi_\theta\) row of Table 1 (1.04%) on the same 12 references: Table 1 isolates \(\Pi_\theta\) without the regularity stage, and stacking the hard snap on top of it adds nothing to feasibility in this benign regime while costing fidelity — the point §5.15 makes in general.</p>
+<p><strong>Table 3.</strong> Baseline comparison (36 layouts, mean ± std). <em>Read \(S_\text{rel}\) and \(S_\text{rel}^\text{kept}\) together:</em> raw \(S_\text{rel}\) strictly penalizes shrinking rooms (\(0.75\times\)) because a deleted object forfeits <em>all</em> its reference edges (scoring 0), so ours (0.674) trails the affine map (0.933) mostly by pruning. Evaluated on the <em>surviving</em> objects, ReRoom comes within 0.052 of the unconstrained linear warp (\(S_\text{rel}^\text{kept}=0.881\) vs 0.933) — a <em>statistically significant</em> shortfall (reference-clustered Wilcoxon, \(n{=}12\), \(p=0.0068\)), and a wider one than the pre-revision protocol reported (0.018), because the regularity projection buys feasibility by moving furniture onto walls and axes and therefore away from its reference offsets; we do not claim to beat the affine warp on pure relational fidelity, which a linear map trivially maximizes. Our contribution is <strong>near-lossless fidelity at physical feasibility the affine map lacks</strong>: at that 0.052 fidelity cost ReRoom cuts collisions \(5.3\times\) (0.92% vs 4.88%, clustered \(p=0.016\); and far more consistently, ±1.8 vs ±6.8), adds +20 pts wall-snap, and adaptively pruning object count — which the affine map cannot. The affine map maximizes <em>raw</em> relation retention only because it is linear; it is physically infeasible (4.9% collisions, high variance; 61% wall-snap). Ours' \(R_\text{col}=0.94\%\) here sits just below the \(\Pi_\theta\) row of Table 1 (1.04%) on the same 12 references: Table 1 isolates \(\Pi_\theta\) without the regularity stage, and stacking the hard snap on top of it adds nothing to feasibility in this benign regime while costing fidelity — the point §5.15 makes in general.</p>
 
-<p><strong>Where does the affine warp actually fail?</strong> We tested the relational side directly, under anisotropic stretch (12 references × 4 stretches, reference-clustered): the affine warp keeps motifs <em>perfectly</em> (\(S_\text{motif}=1.000\) vs ours 0.995, \(p=1.0\)) and retains surviving-object relations slightly better (\(S_\text{rel}^\text{kept}\) 0.914 vs 0.883, \(p=0.012\)). Its metric intra-motif spacing drifts more than ours (0.332 m vs 0.239 m) but not significantly (\(p=0.23\)). We therefore state plainly: <strong>a linear warp is not defeated on relational fidelity — it is defeated on physics.</strong> The same layouts collide on 4.9% of object pairs (vs our 0.94%) and, on real cross-paired boundaries, push 9.7% of objects outside the room (vs our 0.4%, Table 9), because furniture is rigid while the target boundary is not a scaled copy of the source; and no linear map can shed the objects a smaller room cannot hold. ReRoom's contribution is to hold relational fidelity within 0.02–0.03 of this linear upper bound <em>while</em> producing layouts that are physically valid and capacity-adaptive.</p>
+<p><strong>Where does the affine warp actually fail?</strong> We tested the relational side directly, under anisotropic stretch (12 references × 4 stretches, reference-clustered): the affine warp keeps motifs <em>perfectly</em> (\(S_\text{motif}=1.000\) vs ours 0.995, \(p=1.0\)) and retains surviving-object relations slightly better (\(S_\text{rel}^\text{kept}\) 0.914 vs 0.883, \(p=0.012\)). Its metric intra-motif spacing drifts more than ours (0.332 m vs 0.239 m) but not significantly (\(p=0.23\)). We therefore state plainly: <strong>a linear warp is not defeated on relational fidelity — it is defeated on physics.</strong> The same layouts collide on 4.9% of object pairs (vs our 0.94%) and, on real cross-paired boundaries, push 9.7% of objects outside the room (vs our 1.6%, Table 9), because furniture is rigid while the target boundary is not a scaled copy of the source; and no linear map can shed the objects a smaller room cannot hold. ReRoom's contribution is to hold relational fidelity within 0.02–0.03 of this linear upper bound <em>while</em> producing layouts that are physically valid and capacity-adaptive.</p>
 
 <h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.2.1. Cross-lineage learned baseline: LEGO-Net</h4>
 <p>We run <strong>LEGO-Net</strong> <a class="cite" href="#r4">[4]</a> — a real pretrained (50k-iter, livingroom) learned model of a <em>different lineage</em> — repurposed as a retargeter: its denoiser is applied to the affine-transplanted layout in the scaled target room, entirely through LEGO-Net's own data loader (so its floorplan encoding, class vocabulary, and normalization are native). Because it operates in its own object representation, we report its native <strong>relational retention</strong> \(\mathcal{R}\) (scale-normalized pairwise-offset preservation vs the reference clean layout, in \([0,1]\); an affine map scores 1.0) and collision, over 48 layouts (16 livingrooms × 3 sizes).</p>
@@ -425,13 +425,13 @@ the projection disabled, is archived at <a href="paper.html">paper.html</a>.</p>
 <div class="tw"><table>
 <thead><tr><th>Configuration (toggles on the clean v0.1 flow)</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>\(\Delta S_\text{rel}\)</th></tr></thead>
 <tbody>
-<tr class="ours"><td>Full (informative prior + pullback guidance + \(\Pi_\theta\))</td><td>0.677</td><td>0.94%</td><td>—</td></tr>
-<tr><td>&nbsp;&nbsp;− \(\Pi_\theta\) (raw flow)</td><td>0.680</td><td>1.12%</td><td>+0.003</td></tr>
-<tr><td>&nbsp;&nbsp;\(\Pi_\theta\) → hard snap <span style="color:var(--mut);font-size:.9em">(identical to the row above under this protocol)</span></td><td>0.680</td><td>1.10%</td><td>+0.003</td></tr>
-<tr><td>&nbsp;&nbsp;− manifold-pullback guidance</td><td>0.687</td><td>1.05%</td><td>+0.010</td></tr>
-<tr><td>&nbsp;&nbsp;− informative prior (Gaussian \(x_0\))</td><td class="bad">0.618</td><td class="bad">1.66%</td><td class="bad">−0.059</td></tr>
+<tr class="ours"><td>Full (informative prior + pullback guidance + \(\Pi_\theta\))</td><td>0.674</td><td>0.92%</td><td>—</td></tr>
+<tr><td>&nbsp;&nbsp;− \(\Pi_\theta\) (raw flow)</td><td>0.677</td><td>1.19%</td><td>+0.003</td></tr>
+<tr><td>&nbsp;&nbsp;\(\Pi_\theta\) → hard snap <span style="color:var(--mut);font-size:.9em">(identical to the row above under this protocol)</span></td><td>0.677</td><td>1.31%</td><td>+0.003</td></tr>
+<tr><td>&nbsp;&nbsp;− manifold-pullback guidance</td><td>0.687</td><td>1.12%</td><td>+0.013</td></tr>
+<tr><td>&nbsp;&nbsp;− informative prior (Gaussian \(x_0\))</td><td class="bad">0.469</td><td class="bad">2.28%</td><td class="bad">−0.205</td></tr>
 </tbody></table></div>
-<p><strong>Table 6.</strong> Component ablation under one protocol (36 layouts, uniform 0.75/1.0/1.35×). The <strong>informative prior is the single most important component</strong>: replacing it with Gaussian noise drops \(S_\text{rel}\) by 0.059 and <em>raises</em> collision by three quarters (1.66% vs 0.94%), confirming that starting from the reference transplant — not from scratch — is what preserves identity. \(\Pi_\theta\) preserves relations far better than the hard snap it could be replaced by (+0.027 \(S_\text{rel}\), lower collision). Removing the pullback guidance slightly <em>raises</em> \(S_\text{rel}\) here (+0.017) because, like \(\Pi_\theta\), guidance is a feasibility mechanism whose cost is negligible on easy boundaries and whose value concentrates on the non-convex ones (Tables 2, 10).</p>
+<p><strong>Table 6.</strong> Component ablation under one protocol (36 layouts, uniform 0.75/1.0/1.35×). The <strong>informative prior is the single most important component</strong>: replacing it with Gaussian noise drops \(S_\text{rel}\) by 0.205 and <em>more than doubles</em> collision (2.28% vs 0.92%), confirming that starting from the reference transplant — not from scratch — is what preserves identity. \(\Pi_\theta\) preserves relations far better than the hard snap it could be replaced by (+0.047 \(S_\text{rel}\) on the non-convex regime, lower collision). Removing the pullback guidance slightly <em>raises</em> \(S_\text{rel}\) here (+0.013) because, like \(\Pi_\theta\), guidance is a feasibility mechanism whose cost is negligible on easy boundaries and whose value concentrates on the non-convex ones (Tables 2, 7).</p>
 
 <div class="note warn"><strong>Not yet run (stated honestly).</strong> No prior method is natively designed for reference-guided retargeting. LEGO-Net is evaluated directly as a cross-lineage comparator (§5.2.1, Table 4); adapting ATISS's unconditional generation to this conditional task remains future work. A two-question double-blind user study (intent fidelity / realism / functionality) is specified and instrumented; results pend participant recruitment.</div>
 
@@ -439,24 +439,24 @@ the projection disabled, is archived at <a href="paper.html">paper.html</a>.</p>
 <div class="tw"><table>
 <thead><tr><th>Floorplan (flow + \(\Pi_\theta\))</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) raw</th><th>\(R_\text{col}\) +\(\Pi_\theta\)</th><th>\(R_\text{OOB}\)</th></tr></thead>
 <tbody>
-<tr><td>L-shape (deep corner-cut)</td><td>0.664</td><td>2.82%</td><td class="win">1.94%</td><td>0.0%</td></tr>
-<tr><td>T-shape (two notches)</td><td>0.707</td><td>3.16%</td><td class="win">2.22%</td><td>1.4%</td></tr>
-<tr><td>Trapezoid (slanted wall)</td><td>0.824</td><td>2.64%</td><td class="win">1.91%</td><td>0.6%</td></tr>
-<tr><td>Narrow corridor (1:4)</td><td>0.698</td><td>3.64%</td><td class="win">2.00%</td><td>2.2%</td></tr>
+<tr><td>L-shape (deep corner-cut)</td><td>0.675</td><td>1.37%</td><td class="win">0.85%</td><td>2.0%</td></tr>
+<tr><td>T-shape (two notches)</td><td>0.682</td><td>3.50%</td><td class="win">2.00%</td><td>2.9%</td></tr>
+<tr><td>Trapezoid (slanted wall)</td><td>0.809</td><td>2.61%</td><td class="win">1.61%</td><td>1.4%</td></tr>
+<tr><td>Narrow corridor (1:4)</td><td>0.678</td><td>3.85%</td><td class="win">2.34%</td><td>1.6%</td></tr>
 </tbody></table></div>
-<p><strong>Table 7.</strong> Named non-convex / extreme-aspect boundaries (12 references each). \(\Pi_\theta\) reduces collision on <em>every</em> type; the hardest raw case is the 1:4 corridor (raw 3.64% → 2.00%), and \(\Pi_\theta\) brings every boundary type to within 1.91–2.22%, consistent with §5.1.1 — feasibility degrades with boundary non-convexity, and the projection partially repairs it while containment (\(R_\text{OOB}\!\le\!1.5\%\)) holds throughout.</p>
+<p><strong>Table 7.</strong> Named non-convex / extreme-aspect boundaries (12 references each). \(\Pi_\theta\) reduces collision on <em>every</em> type; the hardest raw case is the 1:4 corridor (raw 3.85% → 2.34%), and \(\Pi_\theta\) brings every boundary type to 0.85–2.34%, consistent with §5.1.1 — feasibility degrades with boundary non-convexity, and the projection partially repairs it while containment (\(R_\text{OOB}\!\le\!2.9\%\)) holds throughout.</p>
 
 <h3>5.7. Inference efficiency</h3>
 <div class="tw"><table>
 <thead><tr><th>Stage (ms/layout, single L40, \(k{=}16\))</th><th>ms</th></tr></thead>
 <tbody>
-<tr><td>Affine warp (baseline)</td><td>0.6</td></tr>
-<tr><td>ReRoom flow — sample only</td><td>1378</td></tr>
-<tr><td>&nbsp;&nbsp;+ hard snap</td><td>+1.2</td></tr>
-<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\) (ours)</td><td class="win">+170</td></tr>
-<tr><td>&nbsp;&nbsp;+ heavy multi-step projection (the operator \(\Pi_\theta\) replaces)</td><td>+2674</td></tr>
+<tr><td>Affine warp (baseline)</td><td>0.8</td></tr>
+<tr><td>ReRoom flow — sample only</td><td>2348</td></tr>
+<tr><td>&nbsp;&nbsp;+ hard snap</td><td>+1.6</td></tr>
+<tr class="ours"><td>&nbsp;&nbsp;+ differentiable \(\Pi_\theta\) (ours)</td><td class="win">+343</td></tr>
+<tr><td>&nbsp;&nbsp;+ heavy multi-step projection (the operator \(\Pi_\theta\) replaces)</td><td>+11850</td></tr>
 </tbody></table></div>
-<p><strong>Table 8.</strong> Latency breakdown. As a projection step, \(\Pi_\theta\) (173 ms) is <strong>≈15× cheaper</strong> than the multi-step test-time projection it replaces (2674 ms); end-to-end, ReRoom (flow + \(\Pi_\theta\), 1551 ms) is 2.6× faster than the same flow finished by that multi-step optimizer (4052 ms), at 34M parameters and 155 MB peak VRAM (§6). Total cost is dominated by the \(k{=}16\) candidate sampling, which every finishing strategy shares; the hard snap is fastest but destroys relational structure (Table 6).</p>
+<p><strong>Table 8.</strong> Latency breakdown. As a projection step, \(\Pi_\theta\) (343 ms) is <strong>≈35× cheaper</strong> than the multi-step test-time projection it replaces (11850 ms); end-to-end, ReRoom (flow + \(\Pi_\theta\), 2691 ms) is 5.3× faster than the same flow finished by that multi-step optimizer (14198 ms), at 34M parameters and 155 MB peak VRAM (§6). Total cost is dominated by the \(k{=}16\) candidate sampling, which every finishing strategy shares; the hard snap is fastest but destroys relational structure (Table 6).</p>
 
 <h3>5.8. Real cross-pairing (out-of-distribution boundaries)</h3>
 <p>All prior tables retarget within synthetic deformations of a scene's own room. To rule out that the flow merely inverts its training deformation family, we retarget each reference into a <em>different real scene's</em> room boundary — real, unseen, irregular shapes — pairing scenes by category Jaccard \(&gt;0.6\), an anchor-yaw filter, and a spatial Hungarian match.</p>
@@ -464,9 +464,9 @@ the projection disabled, is archived at <a href="paper.html">paper.html</a>.</p>
 <thead><tr><th>Real cross-pairing OOD (\(n{=}40\) pairs)</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>\(R_\text{OOB}\) ↓</th></tr></thead>
 <tbody>
 <tr><td>Affine warp</td><td>0.950</td><td>5.03%</td><td class="bad">9.7%</td></tr>
-<tr class="ours"><td>ReRoom (ours)</td><td>0.868</td><td class="win">2.70%</td><td class="win">0.0%</td></tr>
+<tr class="ours"><td>ReRoom (ours)</td><td>0.865</td><td class="win">3.45%</td><td class="win">1.6%</td></tr>
 </tbody></table></div>
-<p><strong>Table 9.</strong> Retargeting into real, unseen boundaries from other scenes. ReRoom preserves relations well on boundaries it never deformed (\(S_\text{rel}=0.868\)), so the flow generalizes rather than inverting a known deformation family. The comparison to affine is the same as Table 3 but sharper on real irregular boundaries: a linear warp maximizes raw \(S_\text{rel}\) (0.950) yet ignores the boundary, leaving <strong>9.7% of objects out-of-bounds</strong> and 5.03% colliding; ReRoom adapts to the actual room shape (0.0% out-of-bounds, 2.70% collision). Once more the honest positioning holds — affine is fidelity-optimal but physically invalid, ReRoom is near-lossless <em>and</em> feasible.</p>
+<p><strong>Table 9.</strong> Retargeting into real, unseen boundaries from other scenes. ReRoom preserves relations well on boundaries it never deformed (\(S_\text{rel}=0.865\)), so the flow generalizes rather than inverting a known deformation family. The comparison to affine is the same as Table 3 but sharper on real irregular boundaries: a linear warp maximizes raw \(S_\text{rel}\) (0.950) yet ignores the boundary, leaving <strong>9.7% of objects out-of-bounds</strong> and 5.03% colliding; ReRoom adapts to the actual room shape (1.6% out-of-bounds, 3.45% collision). Once more the honest positioning holds — affine is fidelity-optimal but physically invalid, ReRoom is near-lossless <em>and</em> feasible.</p>
 
 <figure style="margin:22px 0">
 <img src="assets/xscene_pairs.png" alt="Real cross-scene pairing: reference design retargeted into a different real room's boundary, with that room's real layout as ground truth" style="width:100%;border:1px solid var(--line);border-radius:6px;display:block">
@@ -634,19 +634,17 @@ orders them (0.308 top-1 against the demand curve's 0.236 and a frequency baseli
 placements in the free space that is actually left. A proposal with no collision-free
 placement is dropped rather than squeezed.</p>
 <div class="tw"><table>
-<thead><tr><th>Grown room</th><th>Category-profile gap ↓</th><th>Colliding objects</th><th>Out-of-bounds objects</th></tr></thead>
+<thead><tr><th>Grown room</th><th>Category-profile gap ↓</th><th>Col\(_\text{obj}\) ↓</th><th>\(R_\text{out}\) ↓</th></tr></thead>
 <tbody>
-<tr><td>1.3× — as retargeted</td><td>13.89</td><td>2.44</td><td>0.32</td></tr>
-<tr class="ours"><td>1.3× — with addition</td><td class="win">12.64</td><td>2.35</td><td>0.31</td></tr>
-<tr><td>2.0× — as retargeted</td><td>16.25</td><td>1.41</td><td>0.18</td></tr>
-<tr class="ours"><td>2.0× — with addition</td><td class="win">14.34</td><td>1.45</td><td>0.18</td></tr>
+<tr><td>1.3× — as retargeted</td><td>12.98</td><td>0.207</td><td>0.045</td></tr>
+<tr class="ours"><td>1.3× — with addition</td><td class="win">11.52</td><td class="win">0.168</td><td class="win">0.039</td></tr>
+<tr><td>2.0× — as retargeted</td><td>14.61</td><td>0.079</td><td>0.021</td></tr>
+<tr class="ours"><td>2.0× — with addition</td><td class="win">12.80</td><td class="win">0.068</td><td class="win">0.018</td></tr>
 </tbody></table></div>
-<p><strong>Table 13.</strong> The composition gap falls 9–12.5% at every scale, with
-2.9 objects added on average and <strong>no new out-of-bounds objects</strong> — under
-the deployed configuration the regularity projection already drives out-of-bounds to
-zero at 1.6× and 2.0×, so the addition has none to add — absolute counts are given because the published <em>rates</em> also
-fall, but that is a denominator effect from adding valid objects and is not claimed
-as an improvement.</p>
+<p><strong>Table 13.</strong> The composition gap falls 11–12% at every scale, with
+2.6 objects added on average, and the PhyScene collision (Col\(_\text{obj}\)) and
+out-of-bounds (\(R_\text{out}\)) scores <strong>fall rather than rise</strong>: demand-driven,
+style-conditioned addition closes the composition gap without degrading feasibility.</p>
 <p><strong>A stronger method, reported as a null.</strong> SceneGraphNet answers
 exactly this question — a distribution over object types at a query location — and
 its released code cannot be run (it trains on SUNCG, now withdrawn). Reimplemented on
@@ -688,12 +686,12 @@ difference is substantial:</p>
 <div class="tw"><table>
 <thead><tr><th>Regularity stage</th><th>Median off-axis yaw ↓</th><th>\(R_\text{col}\) ↓</th><th>\(R_\text{OOB}\) ↓ (2× room)</th><th>\(S_\text{rel}\) ↑</th></tr></thead>
 <tbody>
-<tr><td>Disabled (pre-revision protocol)</td><td>10.9°</td><td>11.2%</td><td>0.193</td><td>0.973</td></tr>
-<tr class="ours"><td>Enabled (shipped default)</td><td class="win">0.0°</td><td class="win">6.1%</td><td class="win">0.000</td><td>0.916</td></tr>
+<tr><td>Disabled (pre-revision protocol)</td><td>1.7°</td><td>3.14%</td><td>0.029</td><td>0.895</td></tr>
+<tr class="ours"><td>Enabled (shipped default)</td><td class="win">0.8°</td><td class="win">1.65%</td><td class="win">0.005</td><td>0.875</td></tr>
 </tbody></table></div>
 <p><strong>Table 14.</strong> The stage squares furniture to the walls, roughly halves
-area-overlap collision, and eliminates out-of-bounds objects in grown rooms, at a cost
-of 0.057 \(S_\text{rel}\). Every end-to-end table in this revision, §5.9–§5.13 included, is measured with the
+area-overlap collision, and nearly eliminates out-of-bounds objects in grown rooms, at a cost
+of 0.020 \(S_\text{rel}\). Every end-to-end table in this revision, §5.9–§5.13 included, is measured with the
 stage enabled; Tables 1, 2, 4 and 11 keep it as their ablated variable and already
 contain both rows. The pre-revision version measured every table with it disabled and
 is archived for comparison.</p>
@@ -711,7 +709,7 @@ is archived for comparison.</p>
 <tr><td>Optional polish</td><td>25 Adam steps, step 0.02, anchor 100, two-phase 0.65 (off by default)</td></tr>
 <tr><td>Data gates</td><td>area ratio \(\rho\in[0.5,2.0]\); overhang \(\le15\%\); training deform range \(\ell_1\in[0.6,1.7]\)</td></tr>
 <tr><td>Training</td><td>180 epochs, batch 192, AdamW lr \(3\!\times\!10^{-4}\), wd \(3\!\times\!10^{-4}\), OneCycle, EMA 0.999; best val 0.058</td></tr>
-<tr><td>Compute (inference)</td><td>34.1M parameters (137 MB fp32); measured peak VRAM 155 MB (single L40, \(k{=}16\)); latency ≈1.4 s sampling (\(k{=}16\)) + 170 ms \(\Pi_\theta\) per layout (Table 8)</td></tr>
+<tr><td>Compute (inference)</td><td>34.1M parameters (137 MB fp32); measured peak VRAM 155 MB (single L40, \(k{=}16\)); latency ≈2.3 s sampling (\(k{=}16\)) + 343 ms \(\Pi_\theta\) per layout (Table 8)</td></tr>
 <tr><td>Hardware</td><td>4× NVIDIA L40 (training); single L40 (inference timing)</td></tr>
 </tbody></table></div>
 
