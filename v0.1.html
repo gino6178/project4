@@ -602,6 +602,10 @@ against a chance rate of 0.149 — a \(1.62\times\) lift, from a model that neve
 label. Style now enters asset selection as two terms: <em>fidelity</em> to the
 reference room's style centre and <em>coherence</em> among the chosen assets, since
 per-object fidelity does not imply that the set reads as one room.</p>
+<figure style="margin:22px 0">
+<img src="assets/v01_style_render.png" alt="Same layout retargeted under two style contexts: the style embedding retrieves different but size-compatible assets" style="width:100%;border:1px solid var(--line);border-radius:6px;display:block">
+<figcaption style="font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.6">Figure 11: style in the 3D output (real 3D-FUTURE meshes). The same reference is retargeted into the same room with the <em>identical</em> layout — every position and footprint fixed — under two style contexts. Only the style term changes, and the co-occurrence embedding retrieves different but size-compatible assets: the dining chairs, coffee table and sideboard swap to match each context's style centre while the layout is untouched. The style weight is <strong>amplified to \(\lambda_\text{st}=0.4\) here for visibility</strong>; the deployed value is 0.12 — a deliberate tie-breaker (§5.14) that makes the same kind of swap on fewer objects, since a heavier weight trades legality for style (2.66→3.59% collision at 0.5).</figcaption>
+</figure>
 <div class="note" style="background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;margin:16px 0">
 <p style="margin:0"><strong>Two corrections.</strong> We previously stated that
 3D-FUTURE's style labels were unavailable behind the dataset licence; they are
