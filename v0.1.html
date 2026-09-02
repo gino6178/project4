@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ReRoom v0.1 · Revised for review</title>
+<title>ReRoom: Reference-Guided 3D Scene Retargeting</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
       integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
 <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
@@ -63,7 +63,7 @@
 <h1>ReRoom: Reference-Guided 3D Scene Retargeting via a Topology-Preserving Relation-Conditioned Flow and a Differentiable Geometric Projection</h1>
 <p class="authors">Anonymous submission · ReRoom Project</p>
 <p class="venue">Preprint · 2026</p>
-<p class="links"><a href="index.html">Shipped method (walkthrough)</a><a href="experiments.html">Experiments</a><a href="https://github.com/gino6178/project4">Code</a><a href="#refs">References</a></p>
+<p class="links"><a href="index.html">Method walkthrough</a><a href="experiments.html">Experiments</a><a href="https://github.com/gino6178/project4">Code</a><a href="#refs">References</a></p>
 
 <figure>
   <img src="assets/flow_traj_tex.gif" alt="Real flow trajectory rendered with 3D-FUTURE textures" style="max-width:560px;margin:0 auto">
@@ -147,7 +147,7 @@
   <text x="150" y="262" font-size="10.5" fill="#333">shrink → existence head drops + smaller-asset substitution (−footprint)</text>
   <text x="150" y="276" font-size="10.5" fill="#333">grow → density-budgeted upsize + learned population (demand + PlacementNet)</text>
 </svg>
-<figcaption><strong>Figure 2: System overview (clean v0.1).</strong> A single learned network retargets the reference in one forward pass. The intent graph is <em>folded into</em> the flow as a <strong>RelHead</strong> — a pose-free per-pair relatedness \(s_{ij}\) (position + orientation), supervised by the corpus and used as an additive attention bias — so there is no separate graph stage. The rectified-flow DiT emits per-object <strong>pose</strong>, <strong>wall-ness</strong>, <strong>ortho-ness</strong> and <strong>existence</strong> from learned heads (the last replaces the hand pruning stage). A single differentiable projection \(\Pi_\theta\) — the <em>only</em> non-learned step — reads the wall/ortho heads to snap feasibility. Capacity is handled by the existence head (drop under shrink) and learned population (add under grow), with asset substitution resizing furniture to the room.</figcaption>
+<figcaption><strong>Figure 2: System overview.</strong> A single learned network retargets the reference in one forward pass. The intent graph is <em>folded into</em> the flow as a <strong>RelHead</strong> — a pose-free per-pair relatedness \(s_{ij}\) (position + orientation), supervised by the corpus and used as an additive attention bias — so there is no separate graph stage. The rectified-flow DiT emits per-object <strong>pose</strong>, <strong>wall-ness</strong>, <strong>ortho-ness</strong> and <strong>existence</strong> from learned heads (the last replaces the hand pruning stage). A single differentiable projection \(\Pi_\theta\) — the <em>only</em> non-learned step — reads the wall/ortho heads to snap feasibility. Capacity is handled by the existence head (drop under shrink) and learned population (add under grow), with asset substitution resizing furniture to the room.</figcaption>
 </div>
 
 <h3>3.1. Problem formulation</h3>
@@ -224,7 +224,7 @@ $$x_0=\mathcal{T}(S_\text{ref},P_t)+\sigma\epsilon,\qquad \mathcal{L}_\text{FM}=
   <path d="M755 178 C755 210 586 210 586 216" fill="none" stroke="#a8412a" stroke-width="1.1" stroke-dasharray="4 3"/>
   <text x="670" y="230" text-anchor="middle" font-size="9.5" fill="#a8412a">iterate τ: 0→1</text>
 </svg>
-<figcaption><strong>Figure 3: Relation-conditioned DiT (clean v0.1).</strong> Lean object tokens (state + log-size/ref-pose/motif-head + learned category embedding) are linearly embedded; the network is flat (no motif-hierarchy z-space). \(L{=}12\) DiT blocks apply adaLN-modulated self-attention with a dense state-dependent geometric bias and the <strong>RelHead</strong> relatedness bias \(s_{ij}\) (position + orientation) that folds the design graph in, plus a per-object wall feature; the \((\tau,g(P_t),\text{room},z_\text{style})\) code drives the modulation \(c\). Four per-object heads emit pose velocity, wall-ness, ortho-ness and existence. Integration is a 50-step guided Euler ODE started from the informative prior \(x_0\).</figcaption>
+<figcaption><strong>Figure 3: Relation-conditioned DiT.</strong> Lean object tokens (state + log-size/ref-pose/motif-head + learned category embedding) are linearly embedded; the network is flat (no motif-hierarchy z-space). \(L{=}12\) DiT blocks apply adaLN-modulated self-attention with a dense state-dependent geometric bias and the <strong>RelHead</strong> relatedness bias \(s_{ij}\) (position + orientation) that folds the design graph in, plus a per-object wall feature; the \((\tau,g(P_t),\text{room},z_\text{style})\) code drives the modulation \(c\). Four per-object heads emit pose velocity, wall-ness, ortho-ness and existence. Integration is a 50-step guided Euler ODE started from the informative prior \(x_0\).</figcaption>
 </div>
 
 <h3>3.4. Manifold-pullback feasibility guidance</h3>
@@ -325,8 +325,8 @@ own configurations.</p>
 
 <h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.1.2. Qualitative results</h4>
 <figure>
-  <img src="assets/v01_clean_results.png" alt="Clean v0.1 retargeting across room types, sizes and a non-convex boundary">
-  <figcaption><strong>Figure 6.</strong> Reference-guided retargeting by the clean v0.1 pipeline (top-down schematic; arrows = facing). Each row is one reference; columns are the reference and three targets — a 0.75× shrink, a 1.35× grow, and a hard non-convex L-shape. The whole layout comes from a single forward pass: the folded-in RelHead carries the relational structure, the learned existence head drops furniture a shrunk room cannot hold and the learned population adds it back on grow, and the differentiable projection \(\Pi_\theta\) — the only non-learned step — squares the survivors flush to the walls. Motifs (dining set, bed + nightstands, sofa + coffee table) stay coupled across all three targets.</figcaption>
+  <img src="assets/v01_clean_results.png" alt="Reference-guided retargeting across room types, sizes and a non-convex boundary">
+  <figcaption><strong>Figure 6.</strong> Reference-guided retargeting by our pipeline (top-down schematic; arrows = facing). Each row is one reference; columns are the reference and three targets — a 0.75× shrink, a 1.35× grow, and a hard non-convex L-shape. The whole layout comes from a single forward pass: the folded-in RelHead carries the relational structure, the learned existence head drops furniture a shrunk room cannot hold and the learned population adds it back on grow, and the differentiable projection \(\Pi_\theta\) — the only non-learned step — squares the survivors flush to the walls. Motifs (dining set, bed + nightstands, sofa + coffee table) stay coupled across all three targets.</figcaption>
 </figure>
 <figure>
   <img src="assets/textured_sheet.png" alt="Real 3D-FUTURE textured render across scales">
@@ -414,7 +414,7 @@ the re-measurement.</p>
 
 <figure style="margin:22px 0">
 <img src="assets/v01_ngon.png" alt="" style="width:100%;border:1px solid var(--line);border-radius:6px;display:block">
-<figcaption style="font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.6">Figure 9: one source layout retargeted into four rooms of equal area. The 5-gon (oblique left wall) and 7-gon (bevelled top-right) could not be generated at all before this revision.</figcaption>
+<figcaption style="font-size:13.5px;color:var(--mut);margin-top:8px;line-height:1.6">Figure 9: one source layout retargeted into four rooms of equal area. The 5-gon (oblique left wall) and 7-gon (bevelled top-right) could not be generated at all by the vertex-addition operator.</figcaption>
 </figure>
 
 <h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.2.4. Real cross-pairing (out-of-distribution boundaries)</h4>
@@ -440,7 +440,7 @@ the re-measurement.</p>
 </ul>
 
 <div class="tw"><table>
-<thead><tr><th>Configuration (toggles on the clean v0.1 flow)</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>\(\Delta S_\text{rel}\)</th></tr></thead>
+<thead><tr><th>Configuration (toggles on the deployed flow)</th><th>\(S_\text{rel}\) ↑</th><th>\(R_\text{col}\) ↓</th><th>\(\Delta S_\text{rel}\)</th></tr></thead>
 <tbody>
 <tr class="ours"><td>Full (informative prior + pullback guidance + \(\Pi_\theta\))</td><td>0.674</td><td>0.92%</td><td>—</td></tr>
 <tr><td>&nbsp;&nbsp;− \(\Pi_\theta\) (raw flow)</td><td>0.677</td><td>1.19%</td><td>+0.003</td></tr>
@@ -457,7 +457,7 @@ the re-measurement.</p>
 <code>MOTIF_SCHEMAS</code> named which categories may head a functional group and
 <code>CategoryPrior.anchor</code> scored every category by hand — double_bed 1.00,
 single_bed 0.95, wardrobe 0.70, nightstand 0.35 — and that table was the only reason a
-bed parented a nightstand. v0.1 does not redesign the table; it <strong>removes the
+bed parented a nightstand. We do not redesign the table; we <strong>removes the
 hierarchy</strong>. There is no motif layer and no anchor. The RelHead (§3.3) learns a
 pose-free per-pair relatedness directly from the corpus and folds it into the flow as
 an attention bias, so the parent/child structure a hand table used to assert is never
@@ -585,13 +585,11 @@ is worth stating precisely: door-to-furniture pairs score 0.764 mean information
 against 0.654 for random same-room pairs, while <strong>window-to-furniture pairs
 score 0.433 — below random</strong>. In 3D-FRONT, window position does not predict
 where furniture goes.</p>
-<p>The shipped constants also survive scrutiny. Measuring what the energy actually
+<p>The deployed constants also survive scrutiny. Measuring what the energy actually
 charges — the swing region clipped to the room, over 4491 openings — real designer
 layouts leave 2.0% of door swings more than a quarter blocked at 0.9 m and 3.5% at
 1.2 m, so the constant is safe; for windows the figure is 7.1% at 0.35 m but 13.4% at
-0.9 m, so 0.35 m is the correct conservative choice. <em>(A first version of this
-measurement used plain distance to the opening and was discarded: a cabinet standing
-beside a door is 0.3 m away and blocks nothing.)</em></p>
+0.9 m, so 0.35 m is the correct conservative choice. <em>(Clearance is measured along the inward wall normal rather than as plain distance to the opening: a cabinet standing 0.3 m beside a door is close but blocks nothing.)</em></p>
 
 <h4 class="sub" style="font-weight:600;font-size:18px;margin:26px 0 6px">5.3.6. Regularity projection ablation</h4>
 <p>The regularity projection ships enabled, and every end-to-end table in this
