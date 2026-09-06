@@ -50,8 +50,8 @@
 \node[lbl,below] at (12.85,-0.75) {output $S_\text{tgt}$};
 % arrows
 \draw[main] (1.55,0.65) -- (net.west|-{(0,0.65)});
-\draw[main] (net.east) -- (pi.west) node[pos=0.5,above,slbl,align=center]{pose,\\wall/ortho};
-\draw[main] (pi.east) -- (12.2,0.0);
+\draw[main] (net.east|-pi.west) -- (pi.west) node[pos=0.5,above,slbl,align=center]{pose,\\wall/ortho};
+\draw[main] (pi.east) -- (12.2,0.05);
 % capacity
 \node[draw=mut!40,fill=mut!6,rounded corners=3pt,align=center,font=\scriptsize,inner sep=5pt,text=ink,minimum width=134mm] (cap) at (6.6,-2.55) {\textbf{\textcolor{mut}{Capacity adaptation}}\quad shrink $\to$ existence head drops $+$ smaller-asset substitution \quad$\vert$\quad grow $\to$ density-budgeted upsize $+$ learned population};
 \end{tikzpicture}
