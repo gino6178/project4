@@ -99,54 +99,7 @@
 <p class="lead">A single learned network retargets the reference in one forward pass — lean tokens, a relation head (RelHead) that folds the design graph into the flow, and per-object pose / wall-ness / ortho-ness / existence heads — followed by one differentiable projection \(\Pi_\theta\), the only non-learned step (Fig. 2). Capacity is handled by the learned existence head (drop) and learned population (grow), not a hand pruning stage.</p>
 
 <div class="fig">
-<svg viewBox="0 0 860 288" font-family="-apple-system,Segoe UI,sans-serif">
-  <defs><marker id="ah" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#555"/></marker>
-        <marker id="ag" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#2a6f7a"/></marker></defs>
-  <!-- input -->
-  <rect x="8" y="96" width="92" height="64" rx="6" fill="#fff" stroke="#111" stroke-width="1.5"/>
-  <text x="54" y="122" text-anchor="middle" font-size="12" font-weight="600">Reference</text>
-  <text x="54" y="138" text-anchor="middle" font-size="12" font-weight="600">S_ref, P_t</text>
-  <line x1="100" y1="128" x2="126" y2="128" stroke="#555" stroke-width="1.6" marker-end="url(#ah)"/>
-  <!-- learned network container -->
-  <rect x="128" y="34" width="486" height="200" rx="8" fill="#fbfbfa" stroke="#2a6f7a" stroke-width="1.8"/>
-  <text x="371" y="52" text-anchor="middle" font-size="11" font-weight="700" fill="#2a6f7a">SINGLE LEARNED NETWORK · one forward pass · no hand graph, no priors, no pruning stage</text>
-  <rect x="142" y="66" width="150" height="44" rx="5" fill="#fff" stroke="#111" stroke-width="1.3"/>
-  <text x="217" y="84" text-anchor="middle" font-size="11.5" font-weight="600">Lean tokens +</text>
-  <text x="217" y="99" text-anchor="middle" font-size="11.5" font-weight="600">category embedding</text>
-  <rect x="142" y="120" width="150" height="66" rx="5" fill="#eef3f4" stroke="#2a6f7a" stroke-width="1.5"/>
-  <text x="217" y="140" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a6f7a">RelHead</text>
-  <text x="217" y="156" text-anchor="middle" font-size="10.5" fill="#2a6f7a">folded-in graph</text>
-  <text x="217" y="170" text-anchor="middle" font-size="10.5" fill="#2a6f7a">sᵢⱼ attention bias</text>
-  <text x="217" y="182" text-anchor="middle" font-size="9" fill="#2a6f7a">(pos + orient)</text>
-  <line x1="292" y1="88" x2="316" y2="98" stroke="#555" stroke-width="1.4" marker-end="url(#ah)"/>
-  <line x1="292" y1="150" x2="316" y2="120" stroke="#2a6f7a" stroke-width="1.4" marker-end="url(#ag)"/>
-  <!-- DiT -->
-  <rect x="318" y="72" width="146" height="60" rx="5" fill="#f2efe9" stroke="#a8412a" stroke-width="1.5"/>
-  <text x="391" y="92" text-anchor="middle" font-size="11.5" font-weight="700" fill="#a8412a">Rectified-flow DiT</text>
-  <text x="391" y="107" text-anchor="middle" font-size="11.5" font-weight="700" fill="#a8412a">v_θ  (informative prior)</text>
-  <text x="391" y="123" text-anchor="middle" font-size="9.5" fill="#a8412a">flat tokens · geo-bias</text>
-  <!-- heads -->
-  <line x1="391" y1="132" x2="391" y2="152" stroke="#555" stroke-width="1.4" marker-end="url(#ah)"/>
-  <rect x="300" y="154" width="298" height="46" rx="5" fill="#fff" stroke="#2a6f7a" stroke-width="1.4"/>
-  <text x="449" y="172" text-anchor="middle" font-size="11" font-weight="700" fill="#2a6f7a">learned per-object heads</text>
-  <text x="449" y="189" text-anchor="middle" font-size="10.5" fill="#333">pose · wall-ness · ortho-ness · existence (keep)</text>
-  <!-- Pi_theta (only non-learned) -->
-  <line x1="464" y1="102" x2="632" y2="102" stroke="#555" stroke-width="1.6" marker-end="url(#ah)"/>
-  <text x="548" y="94" text-anchor="middle" font-size="9" fill="#777">pose + wall/ortho scores</text>
-  <rect x="634" y="70" width="120" height="64" rx="5" fill="#eaf4ee" stroke="#2a7a2a" stroke-width="1.8" stroke-dasharray="5 3"/>
-  <text x="694" y="90" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a7a2a">Differentiable</text>
-  <text x="694" y="105" text-anchor="middle" font-size="11.5" font-weight="700" fill="#2a7a2a">projection Π_θ</text>
-  <text x="694" y="122" text-anchor="middle" font-size="9.5" fill="#2a7a2a">ONLY non-learned step</text>
-  <line x1="754" y1="102" x2="784" y2="102" stroke="#555" stroke-width="1.6" marker-end="url(#ah)"/>
-  <rect x="786" y="72" width="66" height="62" rx="6" fill="#fff" stroke="#2a7a2a" stroke-width="1.5"/>
-  <text x="819" y="100" text-anchor="middle" font-size="11.5" font-weight="600" fill="#2a7a2a">S_tgt</text>
-  <text x="819" y="116" text-anchor="middle" font-size="9.5" fill="#2a7a2a">output</text>
-  <!-- capacity adaptation band -->
-  <rect x="8" y="248" width="844" height="34" rx="6" fill="#f7f7f7" stroke="#e6e6e6" stroke-width="1"/>
-  <text x="16" y="262" font-size="10.5" font-weight="700" fill="#5c5c5c">CAPACITY (asset bank):</text>
-  <text x="150" y="262" font-size="10.5" fill="#333">shrink → existence head drops + smaller-asset substitution (−footprint)</text>
-  <text x="150" y="276" font-size="10.5" fill="#333">grow → density-budgeted upsize + learned population (demand + PlacementNet)</text>
-</svg>
+<img src="assets/fig_overview.png" alt="ReRoom method overview: reference and target boundary enter a single learned network (lean tokens, RelHead attention bias, rectified-flow DiT, learned heads), then the differentiable projection Pi_theta, with a capacity-adaptation band" style="width:100%;max-width:860px;display:block;margin:0 auto">
 <figcaption><strong>Figure 2: System overview.</strong> A single learned network retargets the reference in one forward pass. The intent graph is <em>folded into</em> the flow as a <strong>RelHead</strong> — a pose-free per-pair relatedness \(s_{ij}\) (position + orientation), supervised by the corpus and used as an additive attention bias — so there is no separate graph stage. The rectified-flow DiT emits per-object <strong>pose</strong>, <strong>wall-ness</strong>, <strong>ortho-ness</strong> and <strong>existence</strong> from learned heads (the last replaces the hand pruning stage). A single differentiable projection \(\Pi_\theta\) — the <em>only</em> non-learned step — reads the wall/ortho heads to snap feasibility. Capacity is handled by the existence head (drop under shrink) and learned population (add under grow), with asset substitution resizing furniture to the room.</figcaption>
 </div>
 
