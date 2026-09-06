@@ -44,8 +44,8 @@
   \node[netbox,fit=(s1)(s2)(s3)(s4)(hm),inner sep=6pt,label={[net,font=\scriptsize\bfseries]above:SINGLE LEARNED NETWORK, one forward pass, no hand graph}] (net) {};
 \end{scope}
 % 3. Pi_theta
-\node[prjbox,minimum width=18mm] (pi) at (9.9,0.05) {\textbf{\textcolor{prj}{$\Pi_\theta$}}\\ differentiable\\ projection\\ {\tiny\color{mut} the \emph{only}}\\ {\tiny\color{mut} non-learned step}};
-\begin{scope}[shift={(9.35,1.5)},scale=0.55]
+\node[prjbox,minimum width=18mm] (pi) at (10.6,0.05) {\textbf{\textcolor{prj}{$\Pi_\theta$}}\\ differentiable\\ projection\\ {\tiny\color{mut} the \emph{only}}\\ {\tiny\color{mut} non-learned step}};
+\begin{scope}[shift={(10.05,1.5)},scale=0.55]
   \draw[wall,line width=.5pt] (0,0) rectangle (0.7,0.7);
   \furn{0.30}{0.15}{0.28}{0.2}{mut}\node[slbl] at (0.35,-0.18){raw};
   \draw[wall,line width=.5pt] (1.05,0) rectangle (1.75,0.7);
@@ -53,14 +53,14 @@
   \draw[prj,-{Stealth[length=2.5pt]},line width=.5pt] (0.78,0.35)--(1.02,0.35);
 \end{scope}
 % 4. OUTPUT
-\draw[wall] (11.55,-0.65)--(12.75,-0.65)--(12.75,0.3)--(12.15,0.6)--(11.55,0.3)--cycle;
-\furn{11.7}{-0.5}{0.35}{0.55}{net!55}\furn{12.2}{-0.45}{0.4}{0.3}{prj!55}
-\node[lbl,below] at (12.15,-0.75) {output $S_\text{tgt}$};
+\draw[wall] (12.25,-0.65)--(13.45,-0.65)--(13.45,0.3)--(12.85,0.6)--(12.25,0.3)--cycle;
+\furn{12.4}{-0.5}{0.35}{0.55}{net!55}\furn{12.9}{-0.45}{0.4}{0.3}{prj!55}
+\node[lbl,below] at (12.85,-0.75) {output $S_\text{tgt}$};
 % arrows
 \draw[main] (1.55,0.65) -- (net.west|-{(0,0.65)});
-\draw[main] (net.east) -- (pi.west) node[pos=0.32,above,slbl]{pose, wall/ortho};
-\draw[main] (pi.east) -- (11.5,0.0);
+\draw[main] (net.east) -- (pi.west) node[pos=0.4,above,slbl]{pose, wall/ortho};
+\draw[main] (pi.east) -- (12.2,0.0);
 % capacity
-\node[draw=mut!40,fill=mut!6,rounded corners=3pt,align=center,font=\scriptsize,inner sep=5pt,text=ink,minimum width=124mm] (cap) at (6.0,-2.55) {\textbf{\textcolor{mut}{Capacity adaptation}}\quad shrink $\to$ existence head drops $+$ smaller-asset substitution \quad$\vert$\quad grow $\to$ density-budgeted upsize $+$ learned population};
+\node[draw=mut!40,fill=mut!6,rounded corners=3pt,align=center,font=\scriptsize,inner sep=5pt,text=ink,minimum width=134mm] (cap) at (6.6,-2.55) {\textbf{\textcolor{mut}{Capacity adaptation}}\quad shrink $\to$ existence head drops $+$ smaller-asset substitution \quad$\vert$\quad grow $\to$ density-budgeted upsize $+$ learned population};
 \end{tikzpicture}
 \end{document}
