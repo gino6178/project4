@@ -218,13 +218,6 @@ own configurations.</p>
   <img src="assets/textured_sheet.png" alt="Real 3D-FUTURE textured render across scales">
   <figcaption><strong>Figure 7.</strong> Real 3D-FUTURE <a class="cite" href="#r11">[11]</a> textured renders (pyrender/EGL; each object's mesh loaded by <span class="mono">jid</span>, reposed to the flow output). One reference (L-shaped, 22 m², 14 objects) retargeted to 0.75× / 1.0× / 1.35×: the dining set stays coupled, sofa and sideboard seat flush, orientations are correct; at 0.75× the layout is pruned yet livable.</figcaption>
 </figure>
-<figure style="margin:22px 0">
-  <div style="display:flex;gap:14px;flex-wrap:wrap;justify-content:center">
-    <img src="assets/v01_grow.gif?v=1" alt="Grow sweep: the same living-room reference re-solved as its boundary scales from 1.0x up to 1.35x; walls expand and the furniture spreads to stay flush, motifs stay coupled" style="width:48%;min-width:280px;max-width:460px;border:1px solid var(--line);border-radius:6px">
-    <img src="assets/v01_shrink.gif?v=1" alt="Shrink sweep: the same living-room reference re-solved as its boundary scales from 1.0x down to 0.75x; walls close in, the projection re-packs survivors flush and the existence head progressively drops what no longer fits (14 down to 10)" style="width:48%;min-width:280px;max-width:460px;border:1px solid var(--line);border-radius:6px">
-  </div>
-  <figcaption style="max-width:940px;margin:10px auto 0">Animated companion to Figures 6–7 — a continuous-deformation sweep of the same reference, split into <em>grow</em> (left, 1.0×→1.35×) and <em>shrink</em> (right, 1.0×→0.75×) so each direction is monotone. Every frame is a full forward pass of the clean pipeline, not an interpolation. As the room grows the walls open out and the furniture spreads to stay flush; as it shrinks the differentiable projection re-packs the survivors and the learned existence head drops, one at a time, what the room can no longer hold (14→10). Motifs — the dining set, sofa + coffee table — stay coupled throughout; asset substitution is disabled here so nothing swaps mid-sweep.</figcaption>
-</figure>
 <figure>
   <img src="assets/micro_compare.png" alt="Micro-displacement vectors of the projection">
   <figcaption><strong>Figure 8.</strong> Micro-displacement analysis of \(\Pi_\theta\): grey dashed = raw flow, solid = projected, red arrows = per-object displacement (cm). Arrows are short and point at the nearest wall (flush) or table edge (slot) — objects never swap or reorder — proving the projection is a topology-preserving alignment (mean 19 cm), not a re-synthesis.</figcaption>
