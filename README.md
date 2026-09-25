@@ -9,9 +9,9 @@ hierarchy of relations with different physical rigidity — a nightstand beside 
 human body, a sofa facing a television may stretch with the room. Retargeting is therefore joint
 *placement, selection and substitution* under hard geometric constraints, not an affine map.
 
-**Page:** <https://gino6178.github.io/project4/> — `index.html` is the paper, `experiments.html`
-the full tables behind it. Every number was produced by the code here, on one machine, under one
-protocol, and includes the results that did not work.
+**Paper (current, v0.2):** <https://gino6178.github.io/project4/v0.2.html>. Every number on it is
+recomputed from the v0.2 model and inference path; `paper.html` is the superseded v0.1 version, kept
+unchanged for the record, and `index.html` / `experiments.html` document the earlier shipped method.
 
 ```
 index.html experiments.html assets/   the page. Serving it is a git push; there is no build step.
@@ -20,16 +20,14 @@ data/                                 the measured results, small enough to keep
 README.md                             this
 ```
 
-## What the numbers say
+## What the numbers say (v0.2)
 
-On 1 000 held-out retargetings, normalised-coordinate scaling leaves 8.8 % of furniture area outside
-the target room and 5.8 % in collision; this leaves 0.38 % and 0.57 %. Legality rises 0.636 → 0.880.
-When the target is *smaller* — the case the method exists for — the coordinate map collapses to
-0.472 legality while this holds 0.858.
-
-Against PhyScene (CVPR 2024) run here on the same rooms, same object vocabulary and one evaluator:
-3.5× fewer colliding objects, 5× fewer objects outside the floor plan, at the same object count —
-and a loss on free-space connectivity that is diagnosed rather than tuned away.
+On 40 held-out references retargeted into a different real room, against the affine warp of the
+reference: relation retention on surviving objects 0.866 (affine 0.934), collision 4.9 % (8.4 %),
+furniture area outside the room 0.17 % (12.9 %), doorways blocked 7.3 % (37.7 %). On 192 reshapes of
+the references' own rooms: 0.880 (0.943), 6.7 % (9.0 %), 1.1 % (14.2 %), 13.6 % (45.5 %). The losses —
+relations given up to satisfy capacity, walkable area on PhyScene's suite, a 2.7 s projection — are
+reported on the page next to the gains.
 
 ## Running it
 
