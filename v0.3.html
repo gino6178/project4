@@ -71,70 +71,80 @@
 the two planned baselines, have not been run in this pipeline. v0.2 is unpublished and is not a baseline.</div>
 
 <div class="abstract"><p><strong>Abstract.</strong> A person who likes another home's arrangement wants it in their own home, directly:
-the same kind of furniture, arranged the same way, in a room of another size and outline with doors and windows elsewhere. We call this
-reference-to-room arrangement transfer and study it on 3D-FRONT [<a class="cite" href="#ref-front">3</a>]. IntentFlow has three learned parts. (i) A design-intent graph
-(DIG) over furniture, walls, doors and windows is learned from pairs of real rooms furnished by two designers with similar furniture: a graph
-transformer predicts for every relation how much of it a second designer keeps, and for every piece whether it is kept at a given area ratio;
-anchors, drop order and dependencies follow from these outputs, with no relation types or hierarchy defined by hand. On held-out pairs its
-Spearman correlation with measured preservation is 0.421 (category-pair mean 0.355) and its keep AUC 0.879.
-(ii) A flow transformer, the core model, moves the affine transplant of the reference to a layout in the target room, conditioned only on the
-reference; it is trained on real pairs and, for shapes and sizes real pairs lack, on answers of a teacher that minimises a DIG-weighted relation
-energy under the hard constraints and may use rules. (iii) A constrained projection enforces non-penetration, containment and door clearance,
-and a style token re-selects furniture appearance with a degree of change \(\lambda\) without touching the arrangement. In the feasibility runs the
-student trails the teacher on relation distance in scaled rooms (0.068 vs 0.055) and on kept wall contacts in reshaped rooms
-(0.63 vs 0.87); on the same targets the energy placer without rules needs 1.30× the student's wall-clock time. After projection
-no tested layout has a piece out of the room, a colliding pair or a blocked door by the thresholds of §6.1. On 120 held-out real pairs it stays close to the reference's arrangement
-(\(D_A=0.085\)), keeps the pieces a designer kept with F1 0.851, and adds 1.29 pieces per pair where
-the designer added 2.70 (add F1 0.219).</p></div>
+the same kind of furniture, arranged the same way, in a room of another size and outline with doors and windows elsewhere. If an energy that scores
+"the arrangement kept" can be written down and minimised, why train a model? We find two reasons. Minimising such an energy from the affine
+transplant under hard constraints tears furniture groups apart: on reshaped target rooms, our constrained relation-energy solvers leave
+12.7%–16.7% of the reference's touching pairs more than 30 cm apart (without / with a wall-side rule), where our flow transformer leaves 7.7%
+(after the final projection, teacher 18.8%, student 10.3%). And the rules one adds to such an energy trade one quality for another: a
+rule that keeps each piece's wall side raises kept wall contacts from 0.71 to 0.86 but torn pairs from 12.7% to
+16.7%. IntentFlow therefore learns placement with a flow transformer conditioned only on the reference, guided by a design-intent graph
+(DIG) over furniture, walls, doors and windows that is itself learned from pairs of real rooms furnished by two designers — its edge scores rank
+held-out cross-designer preservation with Spearman 0.421 (category-pair mean 0.355) and its keep head separates kept from dropped pieces
+with AUC 0.879, with no relation types or hierarchy written by hand. A relation-energy teacher supplies answers only for room shapes real pairs rarely
+cover, and a projection in an arrangement metric enforces non-penetration, containment and door clearance while moving neighbours together. The teacher
+keeps a lower relation distance \(D\) (0.057 vs 0.068 on scaled rooms), which is close to its own objective, and more wall contacts;
+the student tears fewer groups. On held-out real pairs the student's distance to the reference arrangement is \(D_A=0.081\) (rule-free optimiser 0.070), and a style token
+re-selects furniture appearance without changing the arrangement.</p></div>
 <h2 id="intro">1. Introduction</h2>
-<p>Scene generators sample plausible layouts [<a class="cite" href="#ref-atiss">4</a>, <a class="cite" href="#ref-diffuscene">5</a>, <a class="cite" href="#ref-instructscene">6</a>], rearrangement models tidy a given one
+<p>Scene generators sample plausible layouts [<a class="cite" href="#ref-atiss">3</a>, <a class="cite" href="#ref-diffuscene">4</a>, <a class="cite" href="#ref-instructscene">5</a>], rearrangement models tidy a given one
 [<a class="cite" href="#ref-legonet">2</a>], and physics-aware generators keep layouts interactable [<a class="cite" href="#ref-physcene">1</a>]. None of them takes a layout the user already likes
 and reproduces it in another room. The task we study is that transfer: given a reference scene \(S_\text{ref}\) (furniture with categories, sizes,
 poses and assets) and an empty target room \(P_t\) (outline, doors, windows), return a layout in \(P_t\) that keeps how \(S_\text{ref}\) is arranged —
 which side of a bed touches a wall, which chairs belong to which table, what faces the television — and is physically valid. When \(P_t\) is
 smaller, some pieces must go; when larger, a designer might add some. The appearance of the furniture may stay or move toward another style.</p>
-<p>Three observations shape the method. First, "how a room is arranged" is not a list of rule-based relation types. Two designers furnishing
-similar furniture in different rooms keep some relations and change others; which ones survive is measurable from data, so we learn the
-design-intent graph from such pairs instead of writing it. Second, the arrangement a person wants is the reference's, but a new room forces
-adjustments that real designers make and rules do not capture; a model trained on real pairs can learn them, while the shapes and sizes real
-pairs rarely cover can be supplied by a teacher that is allowed to use rules and expensive optimisation. Third, hard constraints (no overlap,
-inside the room, doors clear) are satisfied only up to a sampler's position error, so they are enforced by a projection after sampling.</p>
+<p><strong>Why a model, if the energy can be minimised?</strong> One can write the arrangement as an energy — every reference relation kept, weighted by
+importance — and minimise it in the target room under the hard constraints (§4.6). We use exactly such an optimiser, and it fails in two ways.
+(a) <em>Tearing.</em> The energy is non-convex. From the affine transplant, a local constrained solver resolves wall and door conflicts piece by piece,
+and in reshaped rooms coherent groups are pulled toward different walls: on outline targets the solver with the wall-side rule leaves 16.7%
+of the reference's touching pairs more than 30 cm apart before any projection, the rule-free solver 12.7%, the flow transformer
+7.7% (§6.3). (b) <em>Priors that do not fit into closed-form terms.</em> Every rule we added to the energy traded one quality for another:
+keeping each piece's wall side raises kept wall contacts and also the torn pairs on outline targets (§6.3); a hand-set window-front rule in the
+projection pushed beds and TV stands off their walls and was switched off during development. Designers themselves change relations — two designers'
+arrangements of the same furniture are a median \(D=0.35\) apart — so what they do is not the minimiser of a geometric energy. A generative model can
+learn how arrangements adapt from examples instead of from weighted terms.</p>
+<p>In IntentFlow the flow transformer is that model. The relation-energy optimiser becomes a teacher that supplies geometric augmentation for room shapes
+and sizes that real pairs rarely cover, and the projection \(\Pi_\theta\) only makes the flow's output feasible after the groups are placed. What the model
+learns from real designer pairs is so far the structural part — which pieces a designer keeps and what they add, through the design-intent graph and the
+addition model; training the placement itself toward the second designer (who never saw the reference) moved outputs away from the reference
+(\(D_A\) 0.085 → 0.118) without bringing them closer to the designer (\(D_B\) 0.338 → 0.340, §6.4). The teacher is better on the relation
+distance \(D\) and on wall contacts; \(D\) is nearly the teacher's own objective, so part of that advantage holds by construction.</p>
 <p>Contributions, with the current evidence:</p>
 <ul>
 <li><strong>A design-intent graph learned from real designer pairs</strong> (§4.3): one graph transformer over furniture, walls, doors and windows
 with a generic edge descriptor, an edge head for cross-designer preservation and a node head for keep probability at an area ratio. Anchors, drop
 order and orientation hosts are derived from its outputs. Evidence: its edge scores rank held-out preservation above the category-pair mean on
 5 of 5 edge groups (Table 5).</li>
-<li><strong>A student–teacher formulation of arrangement transfer</strong> (§4.5–4.6): a flow transformer conditioned only on the reference, trained on
-real pairs plus teacher answers from a DIG-weighted relation energy under the hard constraints. At inference the student needs one structure
-selection, one flow sample and one projection. Evidence so far: the student is faster per target but trails the teacher on the standard tests
-(Table 7); the retrained student with full real pairs is <span class="pend">pending</span>.</li>
-<li><strong>One lexicographic objective for the discrete choices</strong> (§4.4): which pieces stay, smaller assets, the transplant's turn and
-additions are compared by feasibility, usability, departures and relation loss, with the projection as the feasibility oracle. Its ablations are
-pending (§7).</li>
-<li><strong>An appearance style token decoupled from the arrangement</strong> (§4.8): a learned 32-d appearance vector per 3D-FUTURE asset
-[<a class="cite" href="#ref-future">7</a>] and a degree of change \(\lambda\) that swaps a share of the furniture (Table 12).</li>
+<li><strong>A flow transformer that places the reference's groups coherently in a new room</strong> (§4.5), with an analysis of why constrained
+energy minimisation tears groups and why rules conflict (§4.6). Evidence: fewer torn pairs than the teacher on scaled (5.0% vs
+7.7%) and reshaped rooms (10.3% vs 18.8%); the teacher keeps lower \(D\) and more wall contacts
+(Tables 7–8).</li>
+<li><strong>A projection in an arrangement metric</strong> (§4.7): \(\Pi_\theta\) minimises displacement plus the DIG-weighted change of neighbour offsets, so a piece
+pushed out of an overlap takes its group along; it lowers the student's torn pairs from 5.8% / 12.7% to
+5.0% / 10.3% (scale / outline).</li>
+<li><strong>One lexicographic objective for the discrete choices and an appearance style token</strong> (§4.4, §4.8): drops, smaller assets, turns and
+additions are compared by feasibility, usability, departures and relation loss (ablations pending); a learned 32-d appearance vector per
+3D-FUTURE asset [<a class="cite" href="#ref-future">6</a>] and a degree of change \(\lambda\) swap furniture appearance (Table 14).</li>
 </ul>
 <h2 id="related">2. Related work</h2>
 <p><strong>Layout synthesis and rearrangement.</strong> Optimisation-based systems encode interior-design guidelines as energies
-[<a class="cite" href="#ref-makeithome">8</a>, <a class="cite" href="#ref-merrell">9</a>]; PlanIT [<a class="cite" href="#ref-planit">10</a>] plans a relation graph and instantiates it; learned generators are autoregressive
-[<a class="cite" href="#ref-atiss">4</a>], diffusion-based [<a class="cite" href="#ref-diffuscene">5</a>] or graph-conditioned [<a class="cite" href="#ref-instructscene">6</a>]. They generate a new layout for a room and
+[<a class="cite" href="#ref-makeithome">7</a>, <a class="cite" href="#ref-merrell">8</a>]; PlanIT [<a class="cite" href="#ref-planit">9</a>] plans a relation graph and instantiates it; learned generators are autoregressive
+[<a class="cite" href="#ref-atiss">3</a>], diffusion-based [<a class="cite" href="#ref-diffuscene">4</a>] or graph-conditioned [<a class="cite" href="#ref-instructscene">5</a>]. They generate a new layout for a room and
 take no reference arrangement to preserve. LEGO-Net [<a class="cite" href="#ref-legonet">2</a>] learns to move a messy layout toward a regular one; PhyScene
 [<a class="cite" href="#ref-physcene">1</a>] guides a diffusion sampler with collision and reachability terms. Both are our planned baselines. Our relation energy is
 related to guideline energies, but its terms are one generic relation distance weighted by a learned graph, and it serves as a teacher, not as the
 deployed method.</p>
 <p><strong>Relation graphs.</strong> Scene-graph methods use a fixed vocabulary of relation types (support, facing, adjacency)
-[<a class="cite" href="#ref-planit">10</a>, <a class="cite" href="#ref-instructscene">6</a>]. The DIG has no vocabulary: every node pair carries the same geometric descriptor, and the importance of a
+[<a class="cite" href="#ref-planit">9</a>, <a class="cite" href="#ref-instructscene">5</a>]. The DIG has no vocabulary: every node pair carries the same geometric descriptor, and the importance of a
 relation is regressed from how often a second designer keeps it. The graph transformer adds pairwise MLP biases to attention logits, as in
-Graphormer [<a class="cite" href="#ref-graphormer">11</a>].</p>
-<p><strong>Flows and students.</strong> Flow matching [<a class="cite" href="#ref-fm">12</a>] and rectified flow [<a class="cite" href="#ref-rf">13</a>] regress a velocity along straight paths
+Graphormer [<a class="cite" href="#ref-graphormer">10</a>].</p>
+<p><strong>Flows and students.</strong> Flow matching [<a class="cite" href="#ref-fm">11</a>] and rectified flow [<a class="cite" href="#ref-rf">12</a>] regress a velocity along straight paths
 between two distributions; an informative source lets us start from the affine transplant. The student is a permutation-equivariant transformer
-[<a class="cite" href="#ref-attn">14</a>] with adaptive layer-norm conditioning as in DiT [<a class="cite" href="#ref-dit">15</a>, <a class="cite" href="#ref-adaln">16</a>]. Training a fast model on the outputs of a slower, stronger
-procedure is knowledge distillation [<a class="cite" href="#ref-distill">17</a>]; here the teacher is an optimiser with rules, used only where real data are missing.</p>
+[<a class="cite" href="#ref-attn">13</a>] with adaptive layer-norm conditioning as in DiT [<a class="cite" href="#ref-dit">14</a>, <a class="cite" href="#ref-adaln">15</a>]. Training a fast model on the outputs of a slower, stronger
+procedure is knowledge distillation [<a class="cite" href="#ref-distill">16</a>]; here the teacher is an optimiser with rules, used only where real data are missing.</p>
 <p><strong>Constraints and appearance.</strong> The projection and the teacher's energy solve are augmented-Lagrangian methods
-[<a class="cite" href="#ref-bertsekas">18</a>]. The appearance vector combines CLIP image features [<a class="cite" href="#ref-clip">19</a>], 3D-FUTURE annotations [<a class="cite" href="#ref-future">7</a>] and room
-co-membership (a PPMI factorisation, cf. [<a class="cite" href="#ref-glove">20</a>]), trained with an InfoNCE objective [<a class="cite" href="#ref-cpc">21</a>] and a supervised contrastive term
-[<a class="cite" href="#ref-supcon">22</a>].</p>
+[<a class="cite" href="#ref-bertsekas">17</a>]. The appearance vector combines CLIP image features [<a class="cite" href="#ref-clip">18</a>], 3D-FUTURE annotations [<a class="cite" href="#ref-future">6</a>] and room
+co-membership (a PPMI factorisation, cf. [<a class="cite" href="#ref-glove">19</a>]), trained with an InfoNCE objective [<a class="cite" href="#ref-cpc">20</a>] and a supervised contrastive term
+[<a class="cite" href="#ref-supcon">21</a>].</p>
 <h2 id="problem">3. Problem definition</h2>
 <p><strong>Input.</strong> A reference scene \(S_\text{ref}=\{(c_i,s_i,p_i,\theta_i,a_i)\}_{i=1}^N\) with category \(c_i\), 3-D size \(s_i\in\mathbb R^3_{>0}\),
 floor position \(p_i\in\mathbb R^2\), yaw \(\theta_i\in(-\pi,\pi]\) and asset \(a_i\) (a 3D-FUTURE model); a target room \(P_t\), a simple polygon with door and
@@ -181,7 +191,7 @@ $$D(S_\text{ref},S_\text{out})=\frac{1}{|\mathcal E|}\sum_{(i,j)\in\mathcal E}d\
 <text x="568" y="42" font-weight="600">(c) student v_ϑ</text><text x="568" y="64">flow transformer</text><text x="568" y="84">start x₀ = transplant T_q</text>
 <text x="568" y="104">conditions from S_ref only:</text><text x="568" y="122">pair edges, votes,</text><text x="568" y="140">wall/door/window ties ν_i</text>
 <text x="568" y="162">50 Euler steps</text><text x="568" y="182" fill="#5c5c5c">heads: velocity, wall</text><text x="568" y="198" fill="#5c5c5c">contact, wall-parallel</text>
-<text x="738" y="42" font-weight="600">(d) Π_θ</text><text x="738" y="64">augmented Lagrangian</text><text x="738" y="86">pen(i,j) ≤ α_ij</text>
+<text x="738" y="42" font-weight="600">(d) Π_θ</text><text x="738" y="64">AL, arrangement metric</text><text x="738" y="86">pen(i,j) ≤ α_ij</text>
 <text x="738" y="104">corners ⊂ P_t</text><text x="738" y="122">door boxes 𝒟 clear</text><text x="738" y="140">θ_i ∈ Θ_i</text><text x="738" y="158">student's wall</text><text x="738" y="174">contacts 𝒞 held</text>
 <text x="738" y="196" fill="#5c5c5c">residual V → (b)</text>
 <text x="860" y="104" font-weight="600">(e)</text><text x="860" y="122">layout</text><text x="860" y="140">in P_t</text>
@@ -243,7 +253,7 @@ $$\hat w_{uv}=\operatorname{sigmoid}\big(\mathrm{MLP}_w[e_u,e_v,\phi_{uv}]\big)\
 <p>with \(\rho=|P_B|/|P_A|\) the area ratio of the room a piece is carried into.</p>
 <p><strong>Supervision from real pairs only.</strong> A real pair is a room \(A\) and a partner room \(B\) of the same type from another house whose
 category-family sets have Jaccard similarity above 0.6 and whose area ratio lies in [0.5, 2]. Pieces
-are matched within category families by footprint size (identical pieces by a small position term) [<a class="cite" href="#ref-hungarian">23</a>]. For matched pieces
+are matched within category families by footprint size (identical pieces by a small position term) [<a class="cite" href="#ref-hungarian">22</a>]. For matched pieces
 \(i\leftrightarrow k\), \(j\leftrightarrow l\) the edge target is the preservation</p>
 $$y_{ij}=1-d\big(\phi^A_{ij},\phi^B_{kl}\big),\tag{4}$$
 <p>and for a piece and a wall, door or window, the nearest node of that kind in each room stands in (walls and openings do not correspond across rooms).
@@ -341,7 +351,7 @@ The network regresses the rectified-flow velocity from the affine transplant to 
 shapes and sizes real pairs rarely cover, from the teacher (§4.5–4.6).</figcaption></figure>
 <p><strong>State and flow.</strong> A piece's state is \(x_i=(p_i/L,\cos\theta_i,\sin\theta_i)\): its position in the frame of \(P_t\)'s minimum rotated rectangle, in units of
 \(L=3\) m, and its yaw. The flow starts at the affine transplant \(x_0=\mathcal T_q(S_\text{ref},P_t)\): each reference pose carried proportionally into the target frame
-under quarter turn \(q\) (the outline-IoU best turn at inference). Positions move on straight paths and yaws along the shorter arc [<a class="cite" href="#ref-rf">13</a>, <a class="cite" href="#ref-fm">12</a>]:</p>
+under quarter turn \(q\) (the outline-IoU best turn at inference). Positions move on straight paths and yaws along the shorter arc [<a class="cite" href="#ref-rf">12</a>, <a class="cite" href="#ref-fm">11</a>]:</p>
 $$\begin{gathered}x_\tau=\big((1-\tau)p_0+\tau p_1,\ \theta_0+\tau\,\Delta\theta\big),\\ \mathcal L_\text{FM}=\mathbb E_{\tau}\sum_{i}m_i\Big(\big\lVert v^p_{\vartheta,i}-(p_{1,i}-p_{0,i})\big\rVert^2+R_i^2\big\lVert v^\theta_{\vartheta,i}-\Delta\theta_i\,\mathbf e_\perp(\theta_{\tau,i})\big\rVert^2\Big),\end{gathered}\tag{6}$$
 <p>in metres: \(R_i\) is the piece's half diagonal, so the yaw error counts as corner displacement (the metric of \(\Pi_\theta\)); \(\mathbf e_\perp(\theta)=(-\sin\theta,\cos\theta)\) is the unit tangent of the yaw circle; \(m_i\) masks
 supervised free pieces; \(\tau\sim\mathcal U(0,1)\). Auxiliary terms: binary cross-entropy of a wall-contact head and a wall-parallel head (targets: contact within
@@ -353,7 +363,7 @@ piece's reference relation puts it given that piece's current pose, averaged wit
 relations \(\nu_i\): for its reference piece's nearest wall, door and window, the offset to the node's nearest point, relative yaw, gap, the DIG weight
 \(\hat w\) of that edge and a presence flag, plus the offset to the nearest node of that kind in \(P_t\) now minus the reference offset (what is left to undo);
 (iv) the DIG prior \(\mathrm{MLP}(\hat w_{ij},\text{known})\) as an attention bias; (v) a per-piece reference role code and a pooled reference code \(\zeta_\text{ref}\) from a
-4-block encoder that sees categories, sizes and room-free pair relations, entering through adaptive layer norm [<a class="cite" href="#ref-adaln">16</a>] (replaced by a learned null with
+4-block encoder that sees categories, sizes and room-free pair relations, entering through adaptive layer norm [<a class="cite" href="#ref-adaln">15</a>] (replaced by a learned null with
 probability 0.15). Wall segments and openings (with their clearance boxes) are tokens of the same attention. New input modules are zero-initialised
 and loaded into earlier checkpoints.</p>
 <p><strong>Training items.</strong> Each item is one kind: <em>real</em> (a real pair: the matched pieces carried from \(A\) into \(B\)'s room and placed as \(B\)'s designer
@@ -364,10 +374,11 @@ a random part is fixed and the rest placed from relational starts, which teaches
 <p><strong>Inference cost.</strong> One structure selection, one flow sample and one projection in the common case; the teacher's energy solves and rules are
 not run.</p>
 <h3 id="energy">4.6. The teacher: relation energy under the hard constraints</h3>
+<p><strong>Role.</strong> The teacher is geometric augmentation, not the method: it produces answers for the synthetic kinds, whose room shapes and sizes real pairs rarely cover, and it may use rules and many solver iterations because it runs offline. It inherits the two failure modes of §1 — its local solve tears groups in reshaped rooms, and its rules conflict — which the student is meant not to copy wholesale (§6.3).</p>
 <p>For the synthetic kinds, the answer is produced by the full inference path with the student replaced by an energy placer. For kept pieces with poses
 \((p,\theta)\) in \(P_t\):</p>
 $$E(p,\theta)=\sum_{i\in K}\Bigg[\frac{\sum_{j}\tilde w_{ij}\,\tilde d\big(\phi^\text{ref}_{ij},\phi_{ij}\big)}{\sum_{j}\tilde w_{ij}}+(1-\delta_i)\sum_{\omega\in\{\text{wall},\text{door},\text{window}\}}\hat w_{i\,n_\omega(i)}\ \tilde d\big(\phi^\text{ref}_{i\,n_\omega(i)},\phi_{i\,n_\omega(i)}\big)\Bigg],\tag{7}$$
-<p>minimised subject to the constraints of \(\Pi_\theta\) (§4.7) from the transplant by an augmented Lagrangian [<a class="cite" href="#ref-bertsekas">18</a>] (Adam, learning rate 0.02,
+<p>minimised subject to the constraints of \(\Pi_\theta\) (§4.7) from the transplant by an augmented Lagrangian [<a class="cite" href="#ref-bertsekas">17</a>] (Adam, learning rate 0.02,
 20 inner steps per outer iteration, at most 60 outer iterations). The terms:</p>
 <ul>
 <li>\(\tilde d\) is a smooth version of \(d\): offset direction, relative orientation, saturated log distance ratio and a gap term \(\tanh(|g-g^\text{ref}|/0.3\,\text{m})\),
@@ -389,9 +400,9 @@ piece to fix directions measured in its own frame, and \(\Pi_\theta\) turns it b
 <figure id="fig-energy"><img src="assets/v03/energy_answers.png" alt="energy" loading="lazy"><figcaption><strong>Figure 4.</strong> Teacher answers (energy placer, before the wall-side rule was added). Each row: a training reference (left), then its answers in an L-, T- and trapezoid-shaped room, a scaled room, a strongly shrunk room (pieces removed by the learned drop order) and an enlarged room. Titles: pieces kept and floor area. Red edges mark wall-touching sides.</figcaption></figure>
 <h3 id="projection">4.7. Constrained projection \(\Pi_\theta\)</h3>
 <p>\(\Pi_\theta\) returns the feasible layout closest to the placed poses \((\hat p,\hat\theta)\):</p>
-$$\begin{aligned}&\min_{p,\theta}\ \sum_i\lVert p_i-\hat p_i\rVert^2+\big(R_i(\theta_i-\hat\theta_i)\big)^2\\\text{s.t.}\ &\mathrm{pen}(i,j)\le\alpha_{ij}\ \ (i,j\ \text{overlapping in height}),\qquad \text{corners}(p_i,\theta_i)\subset P_t,\\&\mathrm{pen}(i,b)\le0\ \ (b\in\mathcal D,\ i\ \text{below the door top}),\qquad \theta_i\in\Theta_i\ \ (i\ \text{locked}),\qquad \mathrm{gap}(i,\ell_i)\le0.03\,\text{m}\ \ (i\in\mathcal C)\end{aligned}\tag{8}$$
+$$\begin{aligned}&\min_{p,\theta}\ \sum_i\lVert p_i-\hat p_i\rVert^2+\big(R_i(\theta_i-\hat\theta_i)\big)^2+0.5\sum_{i\neq j}\bar w_{ij}\big\lVert(p_i-p_j)-(\hat p_i-\hat p_j)\big\rVert^2\\\text{s.t.}\ &\mathrm{pen}(i,j)\le\alpha_{ij}\ \ (i,j\ \text{overlapping in height}),\qquad \text{corners}(p_i,\theta_i)\subset P_t,\\&\mathrm{pen}(i,b)\le0\ \ (b\in\mathcal D,\ i\ \text{below the door top}),\qquad \theta_i\in\Theta_i\ \ (i\ \text{locked}),\qquad \mathrm{gap}(i,\ell_i)\le0.03\,\text{m}\ \ (i\in\mathcal C)\end{aligned}\tag{8}$$
 <ul>
-<li>The objective is a metric projection (angles as corner arc length) and has no weights.</li>
+<li>The objective measures displacement in an <em>arrangement metric</em>: each piece's move (angles as corner arc length) plus the change of the offsets between neighbours, \(\bar w_{ij}=\tfrac12(\hat w_{ij}+\hat w_{ji})\) for pieces within 0.3 m of each other in the input and 0 otherwise. A piece pushed out of an overlap then takes its local group along instead of leaving it. With the plain Euclidean objective (\(\bar w=0\)) the student's torn pairs are 5.8% / 12.7% (scale / outline) against 5.0% / 10.3% with it (§6.3).</li>
 <li>\(\mathrm{pen}\) is the separating-axis penetration depth of two oriented boxes. The allowance \(\alpha_{ij}=o_{c_ic_j}\min(R_i,R_j)\) is the corpus overlap rate \(o\) of the two categories
 (or families) times the smaller half diagonal \(R\): a chair may slide under a table, a wardrobe may not enter a chest.</li>
 <li>\(\mathcal D\): door clearance boxes, door width (at least 1 m) × 0.9 m inside the room.</li>
@@ -410,11 +421,11 @@ answers lie on the constraint boundary (pieces touch walls and each other), so a
 grows with \(s\). The projection enforces the constraints per sample instead; the corresponding ablation is pending (§7).</p>
 <h3 id="style">4.8. Style token: appearance, not arrangement</h3>
 <p>Style means the furniture's appearance (colour, shape, material). Each asset \(k\) of the catalogue gets \(z_k=f(\text{co}_k,\text{clip}_k,\text{label}_k)\in\mathbb S^{31}\), an MLP (hidden width
-256) of its room co-membership embedding (PPMI factorised by SVD), its CLIP image features [<a class="cite" href="#ref-clip">19</a>] and one-hot 3D-FUTURE style, theme and material labels. Training
+256) of its room co-membership embedding (PPMI factorised by SVD), its CLIP image features [<a class="cite" href="#ref-clip">18</a>] and one-hot 3D-FUTURE style, theme and material labels. Training
 holds out one piece of a room, whose designer's asset is \(k^\ast\), and ranks \(k^\ast\) against same-category assets by the mean \(\bar z\) of the room's other pieces, plus a supervised
 contrastive term on the style label:</p>
 $$\mathcal L_z=-\log\frac{\exp(\langle z_{k^\ast},\bar z_{\text{room}\setminus k^\ast}\rangle/\gamma)}{\sum_{k\in\mathrm{cat}(k^\ast)}\exp(\langle z_k,\bar z_{\text{room}\setminus k^\ast}\rangle/\gamma)}+\mu\,\mathcal L_\text{SupCon}(z;\text{style label}),\tag{9}$$
-<p>with \(\gamma=0.1\), 63 sampled negatives per query and \(\mu>0\) [<a class="cite" href="#ref-cpc">21</a>, <a class="cite" href="#ref-supcon">22</a>].</p>
+<p>with \(\gamma=0.1\), 63 sampled negatives per query and \(\mu>0\) [<a class="cite" href="#ref-cpc">20</a>, <a class="cite" href="#ref-supcon">21</a>].</p>
 <p><strong>Swapping.</strong> The token \(z^\star\) is the mean \(z\) of a style label (or of another room). Pieces are grouped into units of identical assets (four equal chairs change together).
 A unit's candidate is the same-category asset closest to \(z^\star\) within a size tolerance \(\beta\), tried as 12%, 20%, 30% per dimension (\(\Pi_\theta\) absorbs the rest);
 with a style label only assets carrying it qualify, without one the candidate must be closer than the own asset by 0.05. Units without a candidate keep their asset.
@@ -422,7 +433,7 @@ Units are sorted by their gain toward \(z^\star\) and taken while that brings th
 $$\max_U\sum_{u\in U}\mathrm{gain}_u\quad\text{s.t.}\quad\Big|\sum_{u\in U}|u|-\lambda N\Big|\ \text{minimal}.\tag{10}$$
 <p>The swap happens inside the structure search, before placement, so the arrangement passes through the student and \(\Pi_\theta\) unchanged.</p>
 <h2 id="data">5. Data</h2>
-<p><strong>Corpus.</strong> 3D-FRONT [<a class="cite" href="#ref-front">3</a>] rooms with 5–24 pieces after duplicate removal (13,729 rooms), split by house with seed 0 into
+<p><strong>Corpus.</strong> 3D-FRONT [<a class="cite" href="#ref-front">23</a>] rooms with 5–24 pieces after duplicate removal (13,729 rooms), split by house with seed 0 into
 10,988 training, 1,402 validation and 1,339 test rooms (10% / 10% of houses). The test split has not been used. All
 evaluations below use validation rooms, which no model was trained on; they were, however, used to guide development, so the final numbers will come
 from the test split.</p>
@@ -446,16 +457,26 @@ piece more than 10% outside; 10 rooms per test. <em>Scale</em>: the room scaled 
 1.2x1.3; 1.5x1.1+cut; L x1.3; T x1.3; trapezoid x1.2; pentagon x1.2; long 1.6x1.0 (a shape change, not a squeeze; nearly rectangular references). <em>Style</em>: the room itself with the token of Japanese, Light Luxury, New Chinese at
 \(\lambda\in\{0, 0.25, 0.5, 0.75, 1\}\). All tests run the full inference path on CPU, reachability rounds off, additions on for scale and outline.</p>
 <p><strong>Held-out real pairs</strong> (<code>real_eval.py</code>). 120 validation rooms \(A\), each with a partner \(B\) (same criteria as training); the system gets \(A\)
-and \(B\)'s empty room and is compared with \(B\)'s designer.</p>
-<p><strong>Metrics.</strong> \(D\) (eq. 2) between reference and output over kept pieces. <em>Wall / door / window kept</em>: of the reference's wall-contact (same side), near/facing-door
-and near/facing/not-blocking-window relations whose category importance exceeds 0.2, the share the output keeps (hand thresholds of Table 2, used only
-here); undefined in rooms without such a relation. <em>Kept</em>: fraction of reference pieces in the output. <em>Usable</em>: share of targets meeting the usability tier of §4.4.
-<em>Out of room</em>: floor pieces more than 5% outside. <em>Collision</em>: floor pairs overlapping by more than 2% of the smaller footprint, nestable pairs
-excluded. <em>Door blocked</em>: door boxes more than 5% covered. On real pairs, \(D_A\) (\(D\) to the reference \(A\)) is the primary arrangement metric; <em>keep F1</em>: kept pieces of \(A\) against those \(B\)'s designer kept;
-<em>add F1</em>: multiset F1 of added against \(B\)'s added categories (1 when both add nothing); \(D_B\) (\(D\) to \(B\)'s poses) is a reference only, since \(B\) never saw \(A\). The real-pair evaluation counts a collision above
-10% overlap. The weighted relation loss \(L_w\) of §4.4 is not reported: the standard-test script weights it with an earlier pair-weight network instead of \(g_\eta\) (<span class="pend">pending</span> until the script uses \(g_\eta\)). <em>Compute</em>: wall-clock seconds of a whole test divided by its targets, with 56 parallel CPU worker processes (the script default).</p>
+and \(B\)'s empty room and is compared with \(B\)'s designer. Real pairs supervise dropping, adding and how relations adapt; since the user asks for \(A\)'s arrangement,
+\(D_A\) (\(D\) to \(A\) over kept pieces) is the primary arrangement metric and \(D_B\) (\(D\) to \(B\)'s poses) is a reference only: \(B\) never saw \(A\), and two designers'
+arrangements are a median 0.35 apart.</p>
+<p><strong>Metrics.</strong> \(D\) (eq. 2) between reference and output over kept pieces. \(D\) uses the relation distance \(d\) of eq. 1, and the teacher minimises
+an energy built on its smooth version \(\tilde d\) (eq. 7); a lower \(D\) for the teacher is therefore partly by construction. <em>Torn pairs</em> (group cohesion): of the floor
+pairs that touch in the reference (footprint gap ≤ 5 cm) and are both kept, the share whose gap in the output exceeds 30 cm — a chair pulled off
+its table, a nightstand off its bed; measured on the final layout and on the placer's output before \(\Pi_\theta\) (for the student, the flow sample; for the
+teacher and the energy placer, their constrained energy solve). <em>\(\Pi_\theta\) displacement</em>: mean and maximum distance each piece moves in the projection.
+<em>Wall / door / window kept</em>: of the reference's wall-contact (same side), near/facing-door and near/facing/not-blocking-window relations whose category
+importance exceeds 0.2, the share the output keeps (hand thresholds of Table 2, used only here); undefined in rooms without such a relation.
+<em>Kept</em>: fraction of reference pieces in the output. <em>Usable</em>: share of targets meeting the usability tier of §4.4. <em>Out of room</em>: floor pieces more than
+5% outside. <em>Collision</em>: floor pairs overlapping by more than 2% of the smaller footprint, nestable pairs excluded (real pairs:
+10%). <em>Door blocked</em>: door boxes more than 5% covered. <em>Keep F1</em>: kept pieces of \(A\) against those \(B\)'s designer kept;
+<em>add F1</em>: multiset F1 of added against \(B\)'s added categories (1 when both add nothing). Keep and add F1 depend only on the DIG and \(p_\psi\), which all
+placers share. The weighted relation loss \(L_w\) of §4.4 is not reported: the standard-test script weights it with an earlier pair-weight network
+(<span class="pend">pending</span> until it uses \(g_\eta\)). <em>Wall time</em>: seconds per target measured inside a pool of 56 CPU processes (one thread each), so absolute values
+include contention.</p>
 <p><strong>Models.</strong> Student cap9: st1d → st1f → st1g → st1i → st2s → cap7 → cap8 → cap9, the last run 6,000 steps, warm-started from the previous capability run. cap9n is the same run without the
-functional-relation input. The deployed DIG is the view model of Table 5.</p>
+functional-relation input; cap10 continues from cap9 with full real pairs as the main placement target. Runs labelled Euclidean use \(\Pi_\theta\) without the
+neighbour term, runs labelled arrangement-metric use eq. 8. The deployed DIG is the view model of Table 5.</p>
 <h3 id="exp-dig">6.2. The design-intent graph is learned and informative</h3>
 <div class="tw"><table><thead><tr><th>training data (pairs)</th><th>all edges</th><th>piece–piece</th><th>piece–wall</th><th>piece–door</th><th>piece–window</th><th>keep AUC</th><th>keep AUC, \(\rho&lt;0.9\)</th></tr></thead><tbody>
 <tr><td>all real pairs (40,063)</td><td><b>0.432</b><br><span class="small">0.356</span></td><td><b>0.438</b><br><span class="small">0.370</span></td><td><b>0.444</b><br><span class="small">0.305</span></td><td><b>0.139</b><br><span class="small">0.087</span></td><td><b>0.295</b><br><span class="small">0.200</span></td><td>0.902</td><td>0.889</td></tr>
@@ -483,49 +504,82 @@ checkpoint is the view model, and a view model on all real pairs is the next run
 <tr><td>window</td><td>2,661</td><td>0.254</td><td>0.091</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 6.</strong> Spread of targets and predictions on the validation edges (deployed model). The predictions are compressed relative to the targets; the ranking, not the scale, is what the search and the energy use.</p>
-<h3 id="exp-std">6.3. Standard tests: student and teacher</h3>
-<div class="tw"><table><thead><tr><th>method</th><th>scale: \(D\) ↓</th><th>outline: \(D\) ↓</th><th>wall kept, scale ↑</th><th>wall kept, outline ↑</th><th>door kept, scale ↑</th><th>window kept ↑</th><th>kept, scale</th><th>usable, scale ↑</th><th>style: \(D\) ↓</th></tr></thead><tbody>
-<tr><td>teacher</td><td>0.055</td><td>0.057</td><td>0.83</td><td>0.87</td><td>1.00</td><td>0.99</td><td>0.92</td><td>0.89</td><td>not run</td></tr>
-<tr><td>energy placer</td><td>0.065</td><td>0.052</td><td>0.80</td><td>0.75</td><td>1.00</td><td>0.98</td><td>0.92</td><td>0.86</td><td>0.025</td></tr>
-<tr class="ours"><td>student</td><td>0.068</td><td>0.059</td><td>0.81</td><td>0.63</td><td>0.43</td><td>0.98</td><td>0.92</td><td>0.83</td><td>0.032</td></tr>
+<h3 id="exp-std">6.3. Why optimisation is not enough: standard tests</h3>
+<div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (teacher's objective)</th><th>torn pairs before \(\Pi_\theta\) ↓</th><th>torn pairs after \(\Pi_\theta\) ↓</th><th>wall kept ↑</th><th>\(\Pi_\theta\) displacement, mean</th><th>largest move per target (mean)</th><th>out of room or collision (max)</th><th>wall time / target (pool)</th></tr></thead><tbody>
+<tr><td>teacher (arrangement-metric \(\Pi_\theta\))</td><td>0.057</td><td>7.3%</td><td>7.7%</td><td>0.87</td><td>4 cm</td><td>18 cm</td><td>0.0%</td><td>39 s</td></tr>
+<tr><td>energy placer (Euclidean \(\Pi_\theta\))</td><td>0.066</td><td>9.3%</td><td>10.8%</td><td>0.77</td><td>4 cm</td><td>20 cm</td><td>0.6%</td><td>36 s</td></tr>
+<tr class="ours"><td>student cap9 (arrangement-metric \(\Pi_\theta\))</td><td>0.068</td><td>3.6%</td><td>5.0%</td><td>0.77</td><td>11 cm</td><td>32 cm</td><td>0.0%</td><td>31 s</td></tr>
+<tr><td>student cap9 (Euclidean \(\Pi_\theta\))</td><td>0.071</td><td>3.7%</td><td>5.8%</td><td>0.79</td><td>10 cm</td><td>33 cm</td><td>1.7%</td><td>29 s</td></tr>
+<tr><td>student cap10 (Euclidean \(\Pi_\theta\))</td><td>0.077</td><td>1.2%</td><td>6.1%</td><td>0.79</td><td>11 cm</td><td>33 cm</td><td>3.3%</td><td>31 s</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 7.</strong> Standard tests (10 validation rooms per column, one seed). Teacher: energy placer with the wall-side rule (the augmentation answer generator); energy placer: the same without the rule; student: flow transformer cap9 with \(\Pi_\theta\) holding its wall contacts (deployed). Each entry is the mean over the test's columns. The teacher was run on scale and outline only. In all rows additions were still gated to targets over 1.1× the reference's area (the gate has since been removed, §4.4) and are placed by a flow checkpoint.</p>
-<div class="tw"><table><thead><tr><th>method</th><th>out of room (max) ↓</th><th>collision (max) ↓</th><th>door blocked (max) ↓</th><th>\(\Pi_\theta\) residual (mean)</th><th>residual (max)</th><th>\(R_\text{reach}\), scale</th><th>\(R_\text{reach}\), outline</th><th>wall-clock / target</th><th>targets</th></tr></thead><tbody>
-<tr><td>teacher</td><td>0%</td><td>0.0%</td><td>0%</td><td>2.1 mm</td><td>3.2 mm</td><td>0.85</td><td>0.89</td><td>1.24 s</td><td>140</td></tr>
-<tr><td>energy placer</td><td>0%</td><td>0.6%</td><td>0%</td><td>1.7 mm</td><td>3.4 mm</td><td>0.83</td><td>0.87</td><td>0.64 s</td><td>290</td></tr>
-<tr class="ours"><td>student</td><td>0%</td><td>0.0%</td><td>0%</td><td>3.6 mm</td><td>5.3 mm</td><td>0.83</td><td>0.88</td><td>0.49 s</td><td>290</td></tr>
+<p class="lead"><strong>Table 7.</strong> Scale test (10 validation rooms per column, one seed; means over the columns). Torn pairs: reference-touching pairs more than 30 cm apart, before and after \(\Pi_\theta\). \(D\) is close to the teacher's objective. Wall time per target inside a 56-process CPU pool.</p>
+<div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (teacher's objective)</th><th>torn pairs before \(\Pi_\theta\) ↓</th><th>torn pairs after \(\Pi_\theta\) ↓</th><th>wall kept ↑</th><th>\(\Pi_\theta\) displacement, mean</th><th>largest move per target (mean)</th><th>out of room or collision (max)</th><th>wall time / target (pool)</th></tr></thead><tbody>
+<tr><td>teacher (arrangement-metric \(\Pi_\theta\))</td><td>0.054</td><td>16.7%</td><td>18.8%</td><td>0.88</td><td>3 cm</td><td>17 cm</td><td>0.0%</td><td>26 s</td></tr>
+<tr><td>energy placer (Euclidean \(\Pi_\theta\))</td><td>0.052</td><td>12.7%</td><td>13.5%</td><td>0.71</td><td>2 cm</td><td>12 cm</td><td>0.0%</td><td>19 s</td></tr>
+<tr class="ours"><td>student cap9 (arrangement-metric \(\Pi_\theta\))</td><td>0.060</td><td>7.7%</td><td>10.3%</td><td>0.61</td><td>10 cm</td><td>33 cm</td><td>0.0%</td><td>21 s</td></tr>
+<tr><td>student cap9 (Euclidean \(\Pi_\theta\))</td><td>0.060</td><td>7.7%</td><td>12.7%</td><td>0.62</td><td>8 cm</td><td>33 cm</td><td>0.0%</td><td>20 s</td></tr>
+<tr><td>student cap10 (Euclidean \(\Pi_\theta\))</td><td>0.074</td><td>9.8%</td><td>17.7%</td><td>0.75</td><td>11 cm</td><td>38 cm</td><td>0.0%</td><td>25 s</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 8.</strong> Physical validity after \(\Pi_\theta\), residual violation, reachability and compute on the same targets. Wall-clock per target covers scale, outline and (student, energy placer) style targets.</p>
-<p>The student's relation distance is above the teacher's in scaled rooms (0.068 vs 0.055) and above the teacher's in reshaped rooms (0.059 vs 0.057); it keeps 0.81 and 0.63 of the reference's wall contacts against 0.83 and 0.87. Per column (Tables 17–18), the gap is
-largest for wall contacts in T x1.3, L x1.3 (0.33, 0.40), where the student turns whole groups instead of keeping
-their wall sides (<a href="#fig-std_shape">Fig. 6</a> vs <a href="#fig-teacher_shape">Fig. 7</a>). In scaled rooms the student keeps more wall contacts than the teacher at x0.7, x0.8, x0.9, x1.0 and fewer at x1.1, x1.2, x1.3: it holds walls when the room shrinks and loses them when it grows. In scaled rooms the student loses the reference's door relation in the columns x1.0, x1.1, x1.2, x1.3
-where the teacher keeps it; door relations are rare in these rooms (undefined elsewhere), so this rests on few pieces. At scale 1.0 the student keeps 0.99 of
-the pieces (teacher 1.00): a same-size target triggered an extra drop, because its projected layout failed the feasibility or usability tier. Usability is
-lowest at x0.8 for the student (0.40) and at x0.8 for the teacher (0.50). After projection, no tested layout has a piece out of the room, a colliding pair or a blocked door by the thresholds of §6.1 for the student. On the same 290 targets the energy placer needs 1.30× the student's wall-clock time; the teacher, run on the scale and outline targets only, 2.52× per target (different target mixes, so not a controlled comparison).</p>
-<figure id="fig-std_scale"><img src="assets/v03/std_scale_flow_cap9_touch.png" alt="std_scale" loading="lazy"><figcaption><strong>Figure 5.</strong> Student (cap9 + \(\Pi_\theta\) holding its wall contacts), scale test. One reference per row (left), then the room scaled from 0.7 to 1.3. Titles: pieces kept / reference pieces and pieces added. Door boxes red, wall-touching sides red, added pieces green. In the smallest rooms pieces are removed in the learned drop order.</figcaption></figure>
-<figure id="fig-std_shape"><img src="assets/v03/std_shape_flow_cap9_touch.png" alt="std_shape" loading="lazy"><figcaption><strong>Figure 6.</strong> Student, outline test (targets no smaller than the reference). The dining and bedroom references keep their groups; in the living room (bottom row) the sofa group is turned away from its wall in the cut, trapezoid and pentagon rooms, and additions (green) appear in two rooms.</figcaption></figure>
-<figure id="fig-teacher_shape"><img src="assets/v03/std_shape_teacher3.png" alt="teacher_shape" loading="lazy"><figcaption><strong>Figure 7.</strong> Teacher, the same outline targets. It keeps more wall sides, but also fails: the trapezoid dining set is pulled apart and the pentagon living room is scattered. Both the teacher's answers and its errors become training data for the student.</figcaption></figure>
+<p class="lead"><strong>Table 8.</strong> Outline test, same columns as Table 7.</p>
+<p><strong>Tearing (failure mode a).</strong> Before any projection, the teacher's constrained solve leaves 7.3% (scale) and 16.7%
+(outline) of the reference's touching pairs torn; the student's flow sample leaves 3.6% and 7.7%. After \(\Pi_\theta\), the
+student has 5.0% and 10.3%, the teacher 7.7% and 18.8%, the energy placer (Euclidean projection; its arrangement-metric run is <span class="pend">pending</span>)
+10.8% and 13.5%. Per outline (Table 9) the student tears fewer pairs than the teacher in
+1.2x1.3, 1.5x1.1+cut, T x1.3, trapezoid x1.2, pentagon x1.2, long 1.6x1.0 and more in L x1.3; against the rule-free energy placer it is better in
+1.2x1.3, 1.5x1.1+cut, T x1.3, pentagon x1.2, long 1.6x1.0 and worse in L x1.3, trapezoid x1.2. The projection adds torn pairs to the student's flow sample
+(outlines 1.2x1.3, 1.5x1.1+cut, L x1.3, T x1.3, pentagon x1.2): pieces move 11 cm / 10 cm on average in \(\Pi_\theta\) (the largest move per target averages 32 cm / 33 cm), against
+4 cm / 3 cm for the teacher (18 cm / 17 cm), whose energy solve already satisfies the constraints. The flow keeps groups together in its sample; the projection's
+work is not millimetric. Its arrangement metric lowers the student's torn pairs from 5.8% /
+12.7% (Euclidean) to 5.0% / 10.3%.</p>
+<div class="tw"><table><thead><tr><th>outline target</th><th>torn: student cap9 (arrangement-metric \(\Pi_\theta\))</th><th>torn: teacher (arrangement-metric \(\Pi_\theta\))</th><th>torn: energy placer (Euclidean \(\Pi_\theta\))</th><th>wall kept: student cap9</th><th>wall kept: teacher</th><th>wall kept: energy placer</th></tr></thead><tbody>
+<tr><td>1.2x1.3</td><td>4% → <b>6%</b></td><td>11% → <b>11%</b></td><td>22% → <b>22%</b></td><td>0.63</td><td>0.87</td><td>0.78</td></tr>
+<tr><td>1.5x1.1+cut</td><td>7% → <b>9%</b></td><td>26% → <b>26%</b></td><td>24% → <b>24%</b></td><td>0.74</td><td>0.97</td><td>0.89</td></tr>
+<tr><td>L x1.3</td><td>9% → <b>22%</b></td><td>13% → <b>13%</b></td><td>6% → <b>6%</b></td><td>0.33</td><td>0.69</td><td>0.46</td></tr>
+<tr><td>T x1.3</td><td>9% → <b>11%</b></td><td>22% → <b>22%</b></td><td>13% → <b>13%</b></td><td>0.35</td><td>0.81</td><td>0.42</td></tr>
+<tr><td>trapezoid x1.2</td><td>13% → <b>9%</b></td><td>13% → <b>17%</b></td><td>4% → <b>4%</b></td><td>0.81</td><td>0.95</td><td>0.81</td></tr>
+<tr><td>pentagon x1.2</td><td>0% → <b>4%</b></td><td>11% → <b>17%</b></td><td>6% → <b>11%</b></td><td>0.55</td><td>0.98</td><td>0.73</td></tr>
+<tr><td>long 1.6x1.0</td><td>11% → <b>11%</b></td><td>20% → <b>26%</b></td><td>15% → <b>15%</b></td><td>0.84</td><td>0.90</td><td>0.89</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 9.</strong> Torn pairs per outline target, before → after \(\Pi_\theta\), and kept wall contacts.</p>
+<p><strong>Rule conflicts (failure mode b).</strong> Under the same (Euclidean) projection, the wall-side rule turns the energy placer into the teacher: kept wall
+contacts on outline targets rise from 0.71 to 0.86, and torn pairs before projection from 12.7% to 16.7%.
+On outline targets a hard rule wins its term and costs another; on scaled rooms, where walls stay parallel to the reference's, the rule instead lowers torn pairs after projection (10.8% → 8.2%).</p>
+<p><strong>What the teacher does better.</strong> The teacher's \(D\) is 0.057 / 0.054 against the student's 0.068 / 0.060,
+and it keeps 0.87 / 0.88 of the wall contacts against 0.77 / 0.61. \(D\) is nearly the teacher's objective,
+and wall sides are one of its hard rules, so both favour it by construction; the student reaches them only through training on the teacher's answers and, at this
+scale, not fully. After projection neither the student nor the teacher leaves a piece out of the room, a colliding pair or a blocked door above the thresholds. The student's constraint residual after \(\Pi_\theta\) is at most 5.5 mm (a violation, not a displacement).</p>
+<figure id="fig-std_scale"><img src="assets/v03/std_scale_p1_cap9.png" alt="std_scale" loading="lazy"><figcaption><strong>Figure 5.</strong> Student (cap9, arrangement-metric \(\Pi_\theta\)), scale test. One reference per row (left), then the room scaled from 0.7 to 1.3. Titles: pieces kept / reference pieces and pieces added. Door boxes red, wall-touching sides red, added pieces green.</figcaption></figure>
+<figure id="fig-std_shape"><img src="assets/v03/std_shape_p1_cap9.png" alt="std_shape" loading="lazy"><figcaption><strong>Figure 6.</strong> Student, outline test. The dining sets stay together in every outline. Failures: the living-room sofa group (bottom row) is turned in the cut and pentagon rooms, and additions can be implausible (a second double bed in the pentagon bedroom).</figcaption></figure>
+<figure id="fig-teacher_shape"><img src="assets/v03/std_shape_p1_teacher.png" alt="teacher_shape" loading="lazy"><figcaption><strong>Figure 7.</strong> Teacher, the same outline targets. It keeps more wall sides, but its solve pulls the trapezoid dining set apart and scatters the pentagon living room: the tearing of §1(a).</figcaption></figure>
 <h3 id="exp-real">6.4. Held-out real pairs</h3>
-<p>Real pairs supervise three things: which pieces to drop, which to add, and how relations adapt when the room changes. The primary arrangement metric
-is \(D_A\), the distance of the output to the reference's arrangement over the kept pieces, because the user asks for the reference's arrangement.
-\(D_B\), the distance to designer B, who never saw \(A\), is reported only as a reference: two designers' arrangements of matched pieces are a median
-0.35 apart in the full training pairs, so \(D_B\) cannot be small for any method that keeps \(A\)'s arrangement.</p>
+<p>Real pairs supervise three things: which pieces to drop, which to add, and how relations adapt when the room changes. \(D_A\) is the primary
+arrangement metric and \(D_B\) a reference only (§6.1).</p>
+<div class="tw"><table><thead><tr><th>placer</th><th>pairs</th><th>\(D_A\) to reference ↓ (primary)</th><th>torn pairs ↓</th><th>\(\Pi_\theta\) displacement, mean</th><th>out of room ↓</th><th>collision ↓</th><th>wall time / pair (pool)</th><th>\(D_B\) to designer B (reference only)</th></tr></thead><tbody>
+<tr><td>teacher (Euclidean \(\Pi_\theta\))</td><td>120</td><td>0.077</td><td>21.7%</td><td>5 cm</td><td>0.5%</td><td>6.2%</td><td>114 s</td><td>0.338</td></tr>
+<tr><td>energy placer (Euclidean \(\Pi_\theta\))</td><td>120</td><td>0.070</td><td>15.3%</td><td>3 cm</td><td>0.2%</td><td>6.5%</td><td>65 s</td><td>0.337</td></tr>
+<tr class="ours"><td>student cap9 (arrangement-metric \(\Pi_\theta\))</td><td>120</td><td>0.081</td><td>11.8%</td><td>18 cm</td><td>0.4%</td><td>7.0%</td><td>45 s</td><td>0.336</td></tr>
+<tr><td>student cap11 (real pairs for additions) (arrangement-metric \(\Pi_\theta\))</td><td><span class="pend">pending</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>student cap10 (real pairs as placement target) (Euclidean \(\Pi_\theta\))</td><td>120</td><td>0.118</td><td>17.0%</td><td>18 cm</td><td>0.4%</td><td>8.0%</td><td>43 s</td><td>0.340</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 10.</strong> Placers on held-out real pairs. All rows share the DIG and \(p_\psi\), so which pieces are kept and added is the same up to the placement feeding back into the structure search; keep F1 and add F1 are therefore reported once, in Table 11. \(D_A\) is the primary arrangement metric; \(D_B\) is a reference only.</p>
+<p>On real pairs the lowest \(D_A\) is reached by the rule-free energy placer (0.070); the teacher reaches 0.077 and the student 0.081. Torn pairs are 21.7% for the teacher, 15.3% for the rule-free energy placer and 11.8% for the student (with the Euclidean projection of the other two rows, the student's is 15.9%); the student's pieces move 18 cm on average in \(\Pi_\theta\) (teacher 5 cm). On real rooms the student does not yet reach the rule-free optimiser's \(D_A\); it tears fewer groups only with the arrangement-metric projection.</p>
+<p><strong>Real pairs as the placement target (ablation).</strong> cap10 continues cap9 with full real pairs as the main placement signal. Its \(D_A\) rises from 0.085 to 0.118 while \(D_B\) stays at 0.338 → 0.340: training the placement toward designer B, who never saw \(A\), moves the output away from the reference without reaching B. Real pairs are therefore used mainly for what B added and dropped; cap11 draws them mostly as addition items (results <span class="pend">pending</span>).</p>
+<p>Which pieces are kept and added is decided by the shared DIG and \(p_\psi\); Table 11 follows the addition step through four changes of the same student.</p>
 <div class="tw"><table><thead><tr><th>model (cumulative changes)</th><th>pairs</th><th>\(D_A\) to reference A ↓</th><th>keep F1 ↑</th><th>add F1 ↑</th><th>added / pair (model / designer)</th><th>out of room ↓</th><th>collision ↓</th><th>\(D_B\) to designer B (reference only)</th></tr></thead><tbody>
 <tr><td>1 student cap9, old addition rules (walkable area may not fall; area gate)</td><td>120</td><td>0.083</td><td>0.851</td><td>0.138</td><td>0.05 / 2.70</td><td>0.7%</td><td>7.4%</td><td>0.337</td></tr>
 <tr><td>2 + additions accepted above the reference's walkability bar</td><td>120</td><td>0.083</td><td>0.851</td><td>0.143</td><td>0.17 / 2.70</td><td>0.7%</td><td>7.9%</td><td>0.337</td></tr>
 <tr><td>3 + no area gate</td><td>120</td><td>0.083</td><td>0.851</td><td>0.157</td><td>0.31 / 2.70</td><td>0.7%</td><td>7.6%</td><td>0.337</td></tr>
-<tr class="ours"><td>4 + stop-vs-continue decision, \(p_\psi\) given its own encoder's code</td><td>120</td><td>0.085</td><td>0.851</td><td>0.219</td><td>1.29 / 2.70</td><td>0.7%</td><td>7.4%</td><td>0.338</td></tr>
-<tr><td>student cap10 (full real pairs as main signal, teacher answers)</td><td><span class="pend">pending</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>4 + stop-vs-continue decision, \(p_\psi\) given its own encoder's code</td><td>120</td><td>0.085</td><td>0.851</td><td>0.219</td><td>1.29 / 2.70</td><td>0.7%</td><td>7.4%</td><td>0.338</td></tr>
+<tr class="ours"><td>student cap10 (full real pairs as main signal, teacher answers)</td><td>120</td><td>0.118</td><td>0.857</td><td>0.201</td><td>1.29 / 2.70</td><td>0.4%</td><td>8.0%</td><td>0.340</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 9.</strong> Held-out real pairs from validation rooms, rows cumulative: rows 2–4 change only the addition step of the same student. \(D_A\), the primary arrangement metric, is measured over the kept reference pieces; \(D_B\) over pieces both the model and designer B kept. Added / pair: pieces the model added and pieces designer B added, on average.</p>
+<p class="lead"><strong>Table 11.</strong> Held-out real pairs from validation rooms, rows cumulative: rows 2–4 change only the addition step of the same student. \(D_A\), the primary arrangement metric, is measured over the kept reference pieces; \(D_B\) over pieces both the model and designer B kept. Added / pair: pieces the model added and pieces designer B added, on average.</p>
 <p>The student keeps what the designer kept with F1 0.851 and stays close to the reference (\(D_A=0.083\);
 \(D_B=0.337\)). Under the old rules it added 0.05 pieces per pair where designer B added 2.70:
 the addition step refused any piece that reduced walkable area, although every piece takes floor, and additions were gated to targets over
 1.1× the reference's area, while designers add in 87% of the full training pairs,
 whose area ratios lie in [0.5, 2]. Rows 2–4 replace these rules by the usability bar, remove the gate, and make
 \(p_\psi\)'s decision stop-versus-continue with the reference code of the encoder it was trained with (§4.4). Across rows 1–4, pieces added per pair go 0.05 → 0.17 → 0.31 → 1.29 (designer 2.70) and add F1 0.138 → 0.143 → 0.157 → 0.219, while \(D_A\) changes by +0.002, collision by ±0 points and keep F1 by ±0. \(p_\psi\) itself was trained with an earlier encoder and data; retraining it is the next step (§10).
-How the student adapts relations to the new room is not yet tested: cap9 saw only filtered real pairs; cap10, trained on full real pairs, is
-<span class="pend">pending</span>.</p>
+</p>
 <h3 id="exp-abl">6.5. Ablations</h3>
 <div class="tw"><table><thead><tr><th>variable / setting</th><th>scale: \(D\) ↓</th><th>outline: \(D\) ↓</th><th>wall kept, scale ↑</th><th>wall kept, outline ↑</th><th>kept, scale</th><th>usable, scale ↑</th><th>oob or collision (max)</th><th>wall-clock / target</th></tr></thead><tbody>
 <tr class="grp"><td colspan="9"><b>A. reference relations to walls, doors, windows as flow input (§4.5)</b></td></tr>
@@ -533,7 +587,7 @@ How the student adapts relations to the new room is not yet tested: cap9 saw onl
 <tr><td>with (cap9)</td><td>0.072</td><td>0.057</td><td>0.76</td><td>0.63</td><td>0.92</td><td>0.80</td><td>0.0%</td><td>0.36 s</td></tr>
 <tr class="grp"><td colspan="9"><b>B. \(\Pi_\theta\) holds the student's predicted wall contacts (§4.7)</b></td></tr>
 <tr><td>off (cap9)</td><td>0.072</td><td>0.057</td><td>0.76</td><td>0.63</td><td>0.92</td><td>0.80</td><td>0.0%</td><td>0.36 s</td></tr>
-<tr class="ours"><td>on (cap9, deployed)</td><td>0.068</td><td>0.059</td><td>0.81</td><td>0.63</td><td>0.92</td><td>0.83</td><td>0.0%</td><td>0.49 s</td></tr>
+<tr class="ours"><td>on (cap9)</td><td>0.068</td><td>0.059</td><td>0.81</td><td>0.63</td><td>0.92</td><td>0.83</td><td>0.0%</td><td>0.49 s</td></tr>
 <tr class="grp"><td colspan="9"><b>C. teacher's wall-side rule in the energy solve (§4.6)</b></td></tr>
 <tr><td>off (energy placer)</td><td>0.065</td><td>0.052</td><td>0.80</td><td>0.75</td><td>0.92</td><td>0.86</td><td>0.6%</td><td>0.64 s</td></tr>
 <tr><td>on (teacher)</td><td>0.055</td><td>0.057</td><td>0.83</td><td>0.87</td><td>0.92</td><td>0.89</td><td>0.0%</td><td>1.24 s</td></tr>
@@ -541,7 +595,7 @@ How the student adapts relations to the new room is not yet tested: cap9 saw onl
 <tr><td>no hosts</td><td>0.061</td><td>0.059</td><td>0.73</td><td>0.70</td><td>0.85</td><td>0.93</td><td>0.0%</td><td>0.92 s</td></tr>
 <tr><td>hosts for free-standing pieces (default)</td><td>0.061</td><td>0.058</td><td>0.73</td><td>0.69</td><td>0.85</td><td>0.93</td><td>0.0%</td><td>1.13 s</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 10.</strong> Single-variable ablations on the standard tests. Each group changes one setting; everything else, including checkpoints and code, is identical within a group. A and B use the student; C and D the energy placer (D evaluated on scale and outline only).</p>
+<p class="lead"><strong>Table 12.</strong> Single-variable ablations on the standard tests, from earlier runs (Euclidean projection, additions gated by area), so absolute values differ from Table 7. Each group changes one setting; everything else, including checkpoints and code, is identical within a group. A and B use the student; C and D the energy placer (D evaluated on scale and outline only).</p>
 <ul>
 <li><strong>A. Functional-relation input</strong> (same data, warm start and schedule): \(D\) changes by -0.001 (scale) and ±0 (outline), kept wall contacts by
 +0.02 and -0.05. At this scale the input has no consistent effect; the student does not yet use the reference's ties to walls, doors and windows beyond what the
@@ -558,7 +612,7 @@ plain energy placer, generates the answers for cap10.</li>
 <tr><td>dep</td><td>+ dependents \(\delta_i\), ceiling layer, orientations fixed before the solve</td><td>0.068</td><td>0.053</td><td>0.69</td><td>0.75</td><td>0.92</td><td>0.024</td></tr>
 <tr><td>dep2</td><td>same change, committed version (the energy placer of Table 2)</td><td>0.065</td><td>0.052</td><td>0.80</td><td>0.75</td><td>0.92</td><td>0.025</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 11.</strong> Development snapshots of the energy placer (not single-variable: rows differ by the listed change and by concurrent code edits; ordered in time). Shown only to document why each energy term was introduced.</p>
+<p class="lead"><strong>Table 13.</strong> Development snapshots of the energy placer (not single-variable: rows differ by the listed change and by concurrent code edits; ordered in time). Shown only to document why each energy term was introduced.</p>
 <h3 id="exp-style">6.6. Style token</h3>
 <div class="tw"><table><thead><tr><th>\(\lambda\)</th><th>Japanese: changed / labelled / \(D\)</th><th>Light Luxury: changed / labelled / \(D\)</th><th>New Chinese: changed / labelled / \(D\)</th></tr></thead><tbody>
 <tr><td>0.00</td><td>0.08 / 0.06 / 0.032</td><td>0.08 / 0.02 / 0.032</td><td>0.08 / 0.03 / 0.032</td></tr>
@@ -567,7 +621,7 @@ plain energy placer, generates the answers for cap10.</li>
 <tr><td>0.75</td><td>0.72 / 0.75 / 0.040</td><td>0.75 / 0.75 / 0.036</td><td>0.80 / 0.77 / 0.034</td></tr>
 <tr><td>1.00</td><td>0.88 / 0.90 / 0.033</td><td>0.89 / 0.89 / 0.028</td><td>0.84 / 0.79 / 0.034</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 12.</strong> Style test (10 validation rooms per style, the room itself as target). Changed: share of floor pieces whose asset changed; labelled: share carrying the target style label; \(D\): arrangement distance to the reference.</p>
+<p class="lead"><strong>Table 14.</strong> Style test (10 validation rooms per style, the room itself as target; earlier student run with Euclidean projection). Changed: share of floor pieces whose asset changed; labelled: share carrying the target style label; \(D\): arrangement distance to the reference.</p>
 <p>The share of changed pieces increases monotonically with \(\lambda\), averaging
 0.08, 0.29, 0.56, 0.76, 0.87 over the 3 styles; at \(\lambda=1\) between 0.79 and the maximum 0.90 of floor pieces carry
 the target label. \(D\) stays between 0.027 and 0.040 across all styles and degrees. At \(\lambda=0\), 0.08 of pieces still change:
@@ -582,39 +636,48 @@ has not been measured (§7).</p>
 <tr><td>&nbsp;&nbsp;of which functional-relation input (absent in cap9n)</td><td>0.01 M</td><td>linear, zero-initialised</td></tr>
 <tr><td>addition model \(p_\psi\)</td><td>0.61 M</td><td>3 layers, width 128, 4 heads</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 13.</strong> Parameters, counted from the checkpoints. Training: \(g_\eta\) 6,000 steps; each student run 6,000 steps at batch 64 with bf16 autocast, warm-started along st1d → st1f → st1g → st1i → st2s → cap7 → cap8 → cap9. Hardware: AMD EPYC 7551P 32-Core Processor (64 threads) for all tests; one GPU for training.</p>
-<p>Per target, the student path takes 0.49 s of wall-clock time at 56 workers, the energy placer 0.64 s and the teacher
-1.24 s. Training curves on validation items are in Table 19; they flatten after the first evaluation for real and outline items, consistent with a
-short run from a warm start.</p>
+<p class="lead"><strong>Table 15.</strong> Parameters, counted from the checkpoints. Training: \(g_\eta\) 6,000 steps; each student run 6,000 steps at batch 64 with bf16 autocast, warm-started along st1d → st1f → st1g → st1i → st2s → cap7 → cap8 → cap9. Hardware: AMD EPYC 7551P 32-Core Processor (64 threads) for all tests; one GPU for training.</p>
+<p>We make no speed claim. Inside the 56-process pool a standard-test target takes 31 s / 21 s (scale / outline) for the student and
+39 s / 26 s for the teacher; a single-process profile of one L-shaped target (not part of the result files) showed the student path slower
+than the teacher's, dominated by repeated flow sampling and projection in the additions loop. What the model amortises is <em>what</em> is placed, not wall-clock:
+a fixed number of flow steps (50) absorbs the reference, the design-intent graph, the room tokens and the style code in one conditional pass, whereas the
+optimiser's iteration count depends on how strongly its terms and constraints conflict (up to 60 outer iterations of 20 steps). Training curves on
+validation items are in Table 21.</p>
 <h2 id="claims">7. Claims, evidence and missing experiments</h2>
 <div class="tw"><table class="impl"><thead><tr><th>claim</th><th>current evidence</th><th>missing</th></tr></thead><tbody>
 <tr><td>C0 the DIG is learned from data and informative</td><td>Spearman 0.421 vs 0.355 (category pairs), higher on 5/5 edge groups; keep AUC 0.879 (Table 5)</td><td>room-clustered bootstrap intervals; a category keep-rate baseline for \(\kappa\); downstream learned vs uniform weights</td></tr>
-<tr><td>C1 the student keeps the reference arrangement (model is the core)</td><td>real pairs: \(D_A=0.085\) (primary); standard tests: \(D\) 0.068 / 0.059 vs teacher 0.055 / 0.057 (Table 9, Table 7)</td><td>cap10 (full real pairs, teacher answers); affine-transplant baseline; seeds; significance tests</td></tr>
-<tr><td>C2 hard constraints in \(\Pi_\theta\), not in the model</td><td>after \(\Pi_\theta\): max 0.0% out-of-room / collision / blocked doors over all test columns (Table 8)</td><td>raw flow output vs projected; constraints as training losses</td></tr>
-<tr><td>C3 one objective for the discrete choices</td><td>keep F1 0.851 on real pairs; kept fraction per scale (Table 17)</td><td>drop order learned vs random vs footprint-only; each of steps 3–5 on/off; addition starts learned vs random</td></tr>
-<tr><td>C4 appearance and arrangement separable</td><td>changed share rises with \(\lambda\); \(D\in[0.027,0.040]\) (Table 12)</td><td>appearance consistency (CLIP or people); random-swap control</td></tr>
-<tr><td>C5 real pairs teach dropping, adding and adapting relations</td><td>keep F1 0.851; add F1 0.138 → 0.143 → 0.157 → 0.219 as the addition rules were fixed (Table 9); \(D_B\) 0.337 reported as reference only</td><td>adaptation of relations: cap10 trained on full real pairs; additions against designer counts; \(p_\psi\) retrained</td></tr>
-<tr><td>external comparison</td><td>—</td><td>PhyScene and LEGO-Net on real pairs and outline targets: relation keeping, collision, out of room, blocked doors, walkability</td></tr>
+<tr><td>C1 constrained energy minimisation tears groups; the flow keeps them</td><td>torn pairs before \(\Pi_\theta\): teacher 7.3% / 16.7%, student 3.6% / 7.7%; after: 7.7% / 18.8% vs 5.0% / 10.3% (Tables 7–8). Mixed against the rule-free energy placer: worse in L x1.3, trapezoid x1.2; on real pairs 11.8% vs 15.3% (student with arrangement-metric projection; 15.9% with the Euclidean one) (Table 10)</td><td>arrangement-metric run of the energy placer; seeds and significance tests; more rooms per outline</td></tr>
+<tr><td>C2 rules added to the energy conflict</td><td>wall-side rule: wall kept 0.71 → 0.86, torn pairs 12.7% → 16.7% (outline, same projection)</td><td>further rules (window front) measured, not only observed</td></tr>
+<tr><td>C3 the teacher is better on \(D\) and wall sides, partly by construction</td><td>\(D\) 0.057 / 0.054 vs 0.068 / 0.060; wall kept 0.87 / 0.88 vs 0.77 / 0.61</td><td>a relation measure independent of the teacher's energy (e.g. human judgement)</td></tr>
+<tr><td>C4 hard constraints in an arrangement-metric \(\Pi_\theta\)</td><td>no out-of-room or collision above threshold; displacement 11 cm / 10 cm (largest per target 32 cm / 33 cm); torn pairs 12.7% → 10.3% on outlines with the neighbour term</td><td>constraints as training losses; raw flow validity</td></tr>
+<tr><td>C5 real pairs teach dropping and adding</td><td>keep F1 0.851; add F1 0.138 → 0.143 → 0.157 → 0.219 as the addition rules were fixed (Table 11)</td><td>\(p_\psi\) retrained on the current encoder; additions still below designer counts</td></tr>
+<tr><td>C6 real pairs as placement target keep the reference</td><td>not supported: cap10 \(D_A\) 0.085 → 0.118, \(D_B\) 0.338 → 0.340</td><td>cap11 (real pairs mostly as addition items) — pending</td></tr>
+<tr><td>C7 appearance and arrangement separable</td><td>changed share rises with \(\lambda\); \(D\in[0.027,0.040]\) (Table 14)</td><td>appearance consistency (CLIP or people); random-swap control</td></tr>
+<tr><td>C8 one objective for the discrete choices</td><td>kept fraction per scale (Table 19)</td><td>drop order learned vs random vs footprint-only; steps 3–5 on/off</td></tr>
+<tr><td>speed</td><td>no claim (pool wall time comparable; single-process profile slower for the student)</td><td>controlled single-process latency on the test split</td></tr>
+<tr><td>external comparison</td><td>—</td><td>PhyScene and LEGO-Net on real pairs and outline targets</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 14.</strong> Each claim with the measurement that currently supports it and the experiments still needed. Current tests use 10 rooms per cell and one seed, so differences in the third decimal are within noise.</p>
+<p class="lead"><strong>Table 16.</strong> Each claim with the measurement that currently supports it and the experiments still needed. Current tests use 10 rooms per cell and one seed, so differences of a few points are within noise.</p>
 <h2 id="limits">8. Limitations and failure cases</h2>
 <ul>
-<li><strong>Scale of evidence.</strong> Synthetic answers from 463 rooms, filtered real pairs from 1,899 rooms, 6,000 steps from a warm start; 10
-rooms per test column, one seed, no confidence intervals. Validation rooms guided development. All standard-test runs and real-pair rows 1–2 used the earlier addition gate (1.1× area).</li>
-<li><strong>The student trails the teacher</strong> on relation distance in scaled rooms and on wall sides in reshaped rooms (Table 7). It turns whole groups off their walls in some
-outlines (<a href="#fig-std_shape">Fig. 6</a>) and loses door relations in enlarged rooms.</li>
-<li><strong>The teacher is imperfect.</strong> It scatters some living rooms and pulls dining sets apart in trapezoids (<a href="#fig-teacher_shape">Fig. 7</a>); the student learns these errors along with the
-rest.</li>
-<li><strong>Real-pair adaptation is untested.</strong> cap9 saw only filtered real pairs (no additions, small relation changes); it adds fewer pieces than designers even after
-the addition rules were fixed (Table 9).</li>
-<li><strong>Mismatched conditioning in the current checkpoints.</strong> The student's DIG attention prior was trained with the weights of an earlier pair-weight network and receives
-the learned DIG's weights at inference; the addition model \(p_\psi\) was trained on an earlier encoder's reference code (it now receives that encoder's code, not the student's). Both need retraining.</li>
-<li><strong>Constraints not modelled.</strong> Windows constrain nothing in \(\Pi_\theta\) (a hand-set window-front rule is off because it pushed beds and TV stands off their walls);
-human clearances such as room to pull out a chair are not modelled; reachability rounds are off in these tests.</li>
-<li><strong>The DIG supervision depends on a category-family table</strong> for correspondences, and its correlations are moderate, weakest for door edges (Table 5); its predictions are
-compressed (Table 6).</li>
-<li><strong>Metrics.</strong> \(D\) and the kept wall/door/window relations use fixed thresholds and one relation vocabulary; they measure agreement with the reference geometry,
-not perceived similarity. Door relations are undefined in most test rooms.</li>
+<li><strong>Scale of evidence.</strong> Synthetic answers from 463 rooms, filtered real pairs from 1,899 rooms, 6,000 steps from a warm start;
+10 rooms per test column, one seed, no confidence intervals; a torn-pair rate rests on few touching pairs per outline. Validation rooms guided development.</li>
+<li><strong>The teacher is better on \(D\) and wall contacts</strong> (Tables 7–8), partly because \(D\) is its objective and wall sides are its rule.
+The student turns the living-room sofa group in some outlines and adds implausible pieces in some rooms (<a href="#fig-std_shape">Fig. 6</a>).</li>
+<li><strong>Tearing is not solved everywhere.</strong> The rule-free energy placer tears fewer pairs than the student in L x1.3, trapezoid x1.2, and on real pairs its \(D_A\) is lower than the student's
+(0.070 vs 0.081); the student's torn pairs are lower there only with the arrangement-metric projection (Table 10). The energy placer's arrangement-metric run is <span class="pend">pending</span>, so it is compared under the
+Euclidean projection.</li>
+<li><strong>The projection does real work.</strong> The student's pieces move 11 cm–10 cm on average in \(\Pi_\theta\) (largest move per target 32 cm–33 cm on average), and the projection adds
+torn pairs to the flow sample.</li>
+<li><strong>Real-pair adaptation is not learned yet.</strong> Training the placement toward designer B drifted from the reference (cap10); additions remain below designer counts.</li>
+<li><strong>Mismatched conditioning in the current checkpoints.</strong> cap9's DIG attention prior was trained with the weights of an earlier pair-weight network and receives the
+learned DIG's weights at inference (the training script now has the matching cache); \(p_\psi\) was trained on an earlier encoder's reference code and receives that code.</li>
+<li><strong>Constraints not modelled.</strong> Windows constrain nothing in \(\Pi_\theta\); human clearances such as room to pull out a chair are not modelled; reachability rounds are
+off in these tests.</li>
+<li><strong>The DIG supervision depends on a category-family table</strong> for correspondences; its correlations are moderate, weakest for door edges (Table 5), and its
+predictions are compressed (Table 6).</li>
+<li><strong>Metrics.</strong> \(D\), torn pairs and the kept wall/door/window relations use fixed thresholds and measure agreement with the reference geometry, not perceived quality.
+No speed advantage is shown.</li>
 </ul>
 <h2 id="v02">9. Differences from v0.2</h2>
 <div class="tw"><table class="impl"><thead><tr><th>part</th><th>v0.2</th><th>v0.3</th></tr></thead><tbody>
@@ -627,20 +690,20 @@ not perceived similarity. Door relations are undefined in most test rooms.</li>
 <tr><td>style</td><td>none (swapping the condition changed the arrangement)</td><td>appearance vector and token with a degree of change; arrangement untouched</td></tr>
 <tr><td>dropped</td><td>regularity snap, manifold guidance, hierarchical parent-relative code, pooled style code</td><td>—</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 15.</strong> Design differences only; v0.2 numbers are not compared.</p>
+<p class="lead"><strong>Table 17.</strong> Design differences only; v0.2 numbers are not compared.</p>
 <h2 id="open">10. Open decisions</h2>
 <ol>
 <li>Retrain \(p_\psi\) on the current encoder and the full real pairs (it currently runs with the encoder it was trained with, beside the student).</li>
 <li>Timing of full-scale training (all training rooms) and of the final evaluation on the test split: real pairs, outline targets and the external comparison with PhyScene
 and LEGO-Net.</li>
 <li>Whether the DIG is retrained with views on all real pairs (Table 5 suggests it).</li>
+<li>Whether real pairs enter the student mainly as addition items (cap11) after the placement-target run drifted from the reference (cap10).</li>
 <li>Decided: the discrete choices use a lexicographic key, not weights; smaller assets use the mildest feasible shrink.</li>
 </ol>
 <h2 id="refs">References</h2>
 <div class="refs"><ol>
 <li id="ref-physcene">Y. Yang, B. Jia, P. Zhi, S. Huang. <em>PhyScene: Physically Interactable 3D Scene Synthesis for Embodied AI.</em> CVPR 2024. <a href="https://arxiv.org/abs/2404.09465">arXiv:2404.09465</a></li>
 <li id="ref-legonet">Q. A. Wei, S. Ding, J. J. Park, R. Sajnani, A. Poulenard, S. Sridhar, L. Guibas. <em>LEGO-Net: Learning Regular Rearrangements of Objects in Rooms.</em> CVPR 2023. <a href="https://arxiv.org/abs/2301.09629">arXiv:2301.09629</a></li>
-<li id="ref-front">H. Fu, B. Cai, L. Gao, L.-X. Zhang, J. Wang, C. Li, Q. Zeng, C. Sun, R. Jia, B. Zhao, H. Zhang. <em>3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics.</em> ICCV 2021. <a href="https://arxiv.org/abs/2011.09127">arXiv:2011.09127</a></li>
 <li id="ref-atiss">D. Paschalidou, A. Kar, M. Shugrina, K. Kreis, A. Geiger, S. Fidler. <em>ATISS: Autoregressive Transformers for Indoor Scene Synthesis.</em> NeurIPS 2021. <a href="https://arxiv.org/abs/2110.03675">arXiv:2110.03675</a></li>
 <li id="ref-diffuscene">J. Tang, Y. Nie, L. Markhasin, A. Dai, J. Thies, M. Nießner. <em>DiffuScene: Denoising Diffusion Models for Generative Indoor Scene Synthesis.</em> CVPR 2024. <a href="https://arxiv.org/abs/2303.14207">arXiv:2303.14207</a></li>
 <li id="ref-instructscene">C. Lin, Y. Mu. <em>InstructScene: Instruction-Driven 3D Indoor Scene Synthesis with Semantic Graph Prior.</em> ICLR 2024. <a href="https://arxiv.org/abs/2402.04717">arXiv:2402.04717</a></li>
@@ -661,11 +724,12 @@ and LEGO-Net.</li>
 <li id="ref-cpc">A. van den Oord, Y. Li, O. Vinyals. <em>Representation Learning with Contrastive Predictive Coding.</em> arXiv 2018. <a href="https://arxiv.org/abs/1807.03748">arXiv:1807.03748</a></li>
 <li id="ref-supcon">P. Khosla, P. Teterwak, C. Wang, A. Sarna, Y. Tian, P. Isola, A. Maschinot, C. Liu, D. Krishnan. <em>Supervised Contrastive Learning.</em> NeurIPS 2020. <a href="https://arxiv.org/abs/2004.11362">arXiv:2004.11362</a></li>
 <li id="ref-hungarian">H. W. Kuhn. <em>The Hungarian Method for the Assignment Problem.</em> Naval Research Logistics Quarterly, 1955.</li>
+<li id="ref-front">H. Fu, B. Cai, L. Gao, L.-X. Zhang, J. Wang, C. Li, Q. Zeng, C. Sun, R. Jia, B. Zhao, H. Zhang. <em>3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics.</em> ICCV 2021. <a href="https://arxiv.org/abs/2011.09127">arXiv:2011.09127</a></li>
 </ol></div>
 <h2 id="appendix">Appendix</h2>
 <h3>A. Implementation details</h3>
 <div class="tw"><table class="impl"><thead><tr><th>component</th><th>setting</th></tr></thead><tbody>
-<tr><td>corpus</td><td>3D-FRONT [<a class="cite" href="#ref-front">3</a>], 5–24 pieces, house-disjoint split 10%/10% (seed 0); assets 3D-FUTURE [<a class="cite" href="#ref-future">7</a>]</td></tr>
+<tr><td>corpus</td><td>3D-FRONT [<a class="cite" href="#ref-front">23</a>], 5–24 pieces, house-disjoint split 10%/10% (seed 0); assets 3D-FUTURE [<a class="cite" href="#ref-future">6</a>]</td></tr>
 <tr><td>real pairs</td><td>same type, other house, family Jaccard &gt; 0.6, area ratio [0.5, 2], up to 4 partners; full pairs: 3,000 rooms sampled, 3 partners each, footprint outside ≤ 20%</td></tr>
 <tr><td>DIG \(g_\eta\)</td><td>4 layers, width 128, 4 heads; edge MLP \(2d+6\to d\to d\to1\); node MLP \(d+1\to d\to1\); ≤ 24 pieces, 16 walls, 8 openings; AdamW lr 0.0003, weight decay 0.0001, 6,000 steps, batch 32, up to 4 partners per room, 10,000 real pairs (default), 10,000 views; bf16; keep labels on floor pieces (\(z&lt;1\) m)</td></tr>
 <tr><td>student \(v_\vartheta\)</td><td>8 blocks, width 256, 8 heads; reference encoder 4 blocks, width 256; \(\zeta_\text{ref}\in\mathbb R^{32}\), null with p 0.15; Fourier features 6 bands; ≤ 24 pieces, 24 wall and 8 opening tokens; state unit 3 m; start = transplant without noise</td></tr>
@@ -677,28 +741,28 @@ and LEGO-Net.</li>
 <tr><td>\(p_\psi\)</td><td>3 layers, width 128, 4 heads; categories + count in 1…3; relational starts: best of 24 corpus offsets</td></tr>
 <tr><td>environment</td><td>Python 3.11.15, PyTorch 2.6.0+cu124; tests on AMD EPYC 7551P 32-Core Processor (64 threads), 56 worker processes, one thread each</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 16.</strong> Hyper-parameters and environment, read from the code (argparse defaults, module constants) and checkpoints at build time.</p>
+<p class="lead"><strong>Table 18.</strong> Hyper-parameters and environment, read from the code (argparse defaults, module constants) and checkpoints at build time.</p>
 <h3>B. Standard tests per column</h3>
-<div class="tw"><table><thead><tr><th>scale target (student / teacher)</th><th>\(D\) ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>usable ↑</th></tr></thead><tbody>
-<tr><td>x0.7</td><td>0.154 / 0.112</td><td>0.90 / 0.76</td><td>1.00 / 1.00</td><td>0.64 / 0.64</td><td>0.00 / 0.00</td><td>0.80 / 0.90</td></tr>
-<tr><td>x0.8</td><td>0.090 / 0.071</td><td>0.88 / 0.77</td><td>1.00 / 1.00</td><td>0.83 / 0.83</td><td>0.00 / 0.00</td><td>0.40 / 0.50</td></tr>
-<tr><td>x0.9</td><td>0.050 / 0.039</td><td>0.88 / 0.79</td><td>1.00 / 1.00</td><td>0.96 / 0.96</td><td>0.00 / 0.00</td><td>0.60 / 0.80</td></tr>
-<tr><td>x1.0</td><td>0.030 / 0.040</td><td>0.96 / 0.83</td><td>0.00 / 1.00</td><td>0.99 / 1.00</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td></tr>
-<tr><td>x1.1</td><td>0.045 / 0.025</td><td>0.79 / 0.90</td><td>0.00 / 1.00</td><td>1.00 / 1.00</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td></tr>
-<tr><td>x1.2</td><td>0.049 / 0.035</td><td>0.67 / 0.85</td><td>0.00 / 1.00</td><td>1.00 / 1.00</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td></tr>
-<tr><td>x1.3</td><td>0.056 / 0.065</td><td>0.59 / 0.90</td><td>0.00 / 1.00</td><td>1.00 / 1.00</td><td>0.10 / 0.50</td><td>1.00 / 1.00</td></tr>
+<div class="tw"><table><thead><tr><th>scale target (student / teacher)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
+<tr><td>x0.7</td><td>0.146 / 0.112</td><td>0% / 12%</td><td>0.92 / 0.76</td><td>1.00 / 1.00</td><td>0.64 / 0.64</td><td>0.70 / 0.60</td><td>15 cm / 3 cm</td></tr>
+<tr><td>x0.8</td><td>0.083 / 0.080</td><td>3% / 0%</td><td>0.83 / 0.84</td><td>1.00 / 1.00</td><td>0.81 / 0.83</td><td>0.00 / 0.10</td><td>12 cm / 8 cm</td></tr>
+<tr><td>x0.9</td><td>0.053 / 0.040</td><td>10% / 3%</td><td>0.76 / 0.86</td><td>1.00 / 1.00</td><td>0.96 / 0.96</td><td>0.40 / 0.40</td><td>12 cm / 2 cm</td></tr>
+<tr><td>x1.0</td><td>0.034 / 0.032</td><td>3% / 0%</td><td>0.88 / 0.90</td><td>0.00 / 1.00</td><td>1.00 / 1.00</td><td>0.70 / 1.10</td><td>12 cm / 5 cm</td></tr>
+<tr><td>x1.1</td><td>0.052 / 0.032</td><td>8% / 8%</td><td>0.73 / 0.88</td><td>0.00 / 1.00</td><td>1.00 / 1.00</td><td>1.80 / 1.50</td><td>11 cm / 5 cm</td></tr>
+<tr><td>x1.2</td><td>0.052 / 0.035</td><td>5% / 10%</td><td>0.67 / 0.92</td><td>0.00 / 1.00</td><td>1.00 / 1.00</td><td>2.10 / 1.50</td><td>6 cm / 1 cm</td></tr>
+<tr><td>x1.3</td><td>0.058 / 0.066</td><td>5% / 20%</td><td>0.59 / 0.97</td><td>0.00 / 1.00</td><td>1.00 / 1.00</td><td>2.60 / 2.60</td><td>7 cm / 5 cm</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 17.</strong> Scale test per column, student / teacher.</p>
-<div class="tw"><table><thead><tr><th>shape target (student / teacher)</th><th>\(D\) ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>usable ↑</th></tr></thead><tbody>
-<tr><td>1.2x1.3</td><td>0.046 / 0.041</td><td>0.68 / 0.90</td><td>— / —</td><td>1.00 / 1.00</td><td>0.00 / 0.10</td><td>1.00 / 1.00</td></tr>
-<tr><td>1.5x1.1+cut</td><td>0.062 / 0.062</td><td>0.76 / 0.95</td><td>— / —</td><td>1.00 / 1.00</td><td>0.20 / 0.10</td><td>1.00 / 1.00</td></tr>
-<tr><td>L x1.3</td><td>0.089 / 0.071</td><td>0.40 / 0.75</td><td>— / —</td><td>1.00 / 1.00</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td></tr>
-<tr><td>T x1.3</td><td>0.055 / 0.059</td><td>0.33 / 0.81</td><td>— / —</td><td>1.00 / 1.00</td><td>0.00 / 0.50</td><td>1.00 / 1.00</td></tr>
-<tr><td>trapezoid x1.2</td><td>0.048 / 0.055</td><td>0.84 / 0.88</td><td>— / —</td><td>1.00 / 1.00</td><td>0.10 / 0.20</td><td>1.00 / 1.00</td></tr>
-<tr><td>pentagon x1.2</td><td>0.049 / 0.044</td><td>0.55 / 0.88</td><td>— / —</td><td>1.00 / 1.00</td><td>0.10 / 0.20</td><td>1.00 / 1.00</td></tr>
-<tr><td>long 1.6x1.0</td><td>0.062 / 0.065</td><td>0.84 / 0.95</td><td>— / —</td><td>1.00 / 1.00</td><td>0.20 / 0.10</td><td>1.00 / 1.00</td></tr>
+<p class="lead"><strong>Table 19.</strong> Scale test per column, student / teacher (arrangement-metric projection).</p>
+<div class="tw"><table><thead><tr><th>shape target (student / teacher)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
+<tr><td>1.2x1.3</td><td>0.049 / 0.040</td><td>6% / 11%</td><td>0.63 / 0.87</td><td>— / —</td><td>1.00 / 1.00</td><td>2.70 / 3.00</td><td>5 cm / 2 cm</td></tr>
+<tr><td>1.5x1.1+cut</td><td>0.065 / 0.063</td><td>9% / 26%</td><td>0.74 / 0.97</td><td>— / —</td><td>1.00 / 1.00</td><td>2.90 / 2.50</td><td>7 cm / 2 cm</td></tr>
+<tr><td>L x1.3</td><td>0.086 / 0.071</td><td>22% / 13%</td><td>0.33 / 0.69</td><td>— / —</td><td>1.00 / 1.00</td><td>2.10 / 1.90</td><td>24 cm / 5 cm</td></tr>
+<tr><td>T x1.3</td><td>0.058 / 0.052</td><td>11% / 22%</td><td>0.35 / 0.81</td><td>— / —</td><td>1.00 / 1.00</td><td>0.60 / 1.20</td><td>14 cm / 3 cm</td></tr>
+<tr><td>trapezoid x1.2</td><td>0.046 / 0.043</td><td>9% / 17%</td><td>0.81 / 0.95</td><td>— / —</td><td>1.00 / 1.00</td><td>1.80 / 1.90</td><td>5 cm / 6 cm</td></tr>
+<tr><td>pentagon x1.2</td><td>0.053 / 0.044</td><td>4% / 17%</td><td>0.55 / 0.98</td><td>— / —</td><td>1.00 / 1.00</td><td>1.60 / 2.00</td><td>9 cm / 2 cm</td></tr>
+<tr><td>long 1.6x1.0</td><td>0.061 / 0.065</td><td>11% / 26%</td><td>0.84 / 0.90</td><td>— / —</td><td>1.00 / 1.00</td><td>3.10 / 2.50</td><td>5 cm / 2 cm</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 18.</strong> Outline test per column, student / teacher. Door relations are undefined in these references.</p>
+<p class="lead"><strong>Table 20.</strong> Outline test per column, student / teacher. Door relations are undefined in these references.</p>
 <h3>C. Training curves</h3>
 <div class="tw"><table><thead><tr><th>run</th><th>step</th><th>real: pos. err (m) / \(D\)</th><th>shape: pos. err (m) / \(D\)</th><th>size: pos. err (m) / \(D\)</th><th>delete: pos. err (m) / \(D\)</th><th>restyle: pos. err (m) / \(D\)</th></tr></thead><tbody>
 <tr><td>cap9</td><td>2,000</td><td>0.67 / 0.165</td><td>0.40 / 0.051</td><td>0.55 / 0.051</td><td>0.23 / 0.056</td><td>0.45 / 0.133</td></tr>
@@ -707,9 +771,11 @@ and LEGO-Net.</li>
 <tr><td>cap9n</td><td>2,000</td><td>0.67 / 0.166</td><td>0.40 / 0.050</td><td>0.54 / 0.052</td><td>0.23 / 0.059</td><td>0.45 / 0.132</td></tr>
 <tr><td>cap9n</td><td>4,000</td><td>0.68 / 0.168</td><td>0.44 / 0.056</td><td>0.58 / 0.057</td><td>0.27 / 0.072</td><td>0.44 / 0.128</td></tr>
 <tr><td>cap9n</td><td>6,000</td><td>0.69 / 0.169</td><td>0.45 / 0.059</td><td>0.60 / 0.058</td><td>0.28 / 0.078</td><td>0.43 / 0.124</td></tr>
-<tr><td>cap10</td><td><span class="pend">pending</span></td><td>—</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+<tr><td>cap10</td><td>2,000</td><td>0.65 / 0.170</td><td>0.46 / 0.062</td><td>0.62 / 0.060</td><td>0.32 / 0.103</td><td>0.55 / 0.154</td></tr>
+<tr><td>cap10</td><td>4,000</td><td>0.66 / 0.175</td><td>0.47 / 0.067</td><td>0.62 / 0.060</td><td>0.38 / 0.125</td><td>0.57 / 0.159</td></tr>
+<tr><td>cap10</td><td>6,000</td><td>0.67 / 0.181</td><td>0.48 / 0.075</td><td>0.62 / 0.061</td><td>0.42 / 0.148</td><td>0.55 / 0.158</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 19.</strong> Validation items during training (100 per kind, validation rooms). These items are built with the rule generators and v0.2-style known pairs, so position error is measured against rule answers for shape, size and delete; they track learning, not the final quality.</p>
+<p class="lead"><strong>Table 21.</strong> Validation items during training (100 per kind, validation rooms). These items are built with the rule generators and v0.2-style known pairs, so position error is measured against rule answers for shape, size and delete; they track learning, not the final quality.</p>
 <h3>D. Symbols</h3>
 <div class="tw"><table class="impl"><thead><tr><th>symbol</th><th>meaning</th></tr></thead><tbody>
 <tr><td>\(S_\text{ref}\), \(N\)</td><td>reference scene and its number of pieces</td></tr>
@@ -730,8 +796,9 @@ and LEGO-Net.</li>
 <tr><td>\(\Pi_\theta\), \(\mathrm{pen}\), \(\alpha_{ij}\), \(o\), \(R_i\)</td><td>projection, penetration depth, allowance, corpus overlap rate, half diagonal</td></tr>
 <tr><td>\(\mathcal D\), \(\Theta_i\), \(\mathcal C\), \(\ell_i\)</td><td>door boxes, orientation set, held wall contacts, contact wall</td></tr>
 <tr><td>\(z_k\), \(z^\star\), \(\lambda\), \(\beta\), \(\gamma\), \(\mu\)</td><td>appearance vector, style token, degree of change, size tolerance, temperature, label-term weight</td></tr>
+<tr><td>\(\bar w_{ij}\)</td><td>neighbour weight in the projection metric</td></tr>
 <tr><td>\(p_\psi\)</td><td>addition model</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 20.</strong> Symbols used on this page.</p>
+<p class="lead"><strong>Table 22.</strong> Symbols used on this page.</p>
 <footer>IntentFlow v0.3 working draft · generated by <code>scripts/build_v03_page.py</code></footer>
 </div></body></html>
