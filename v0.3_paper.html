@@ -251,10 +251,11 @@ as augmentation for placement, never for the keep, relation or addition heads.</
 0.0003, batch 64, EMA 0.999, bf16); the final stage runs 20,000 steps. Appendix A lists all settings and the training stages.</p>
 <h2 id="experiments">5. Experiments</h2>
 <h3>5.1. Setup</h3>
-<p><strong>Test sets.</strong> The main comparison (§5.2) and the style test (§5.5) use a test set frozen once from the held-out test rooms with fixed selection rules and never used for
-training, model selection or any design decision: 700 standard-test targets (50 rooms with 6–12 pieces including a bed, a sofa
+<p><strong>Test sets.</strong> The main comparison (§5.2), the style test (§5.5) and the augmentation ablation of §5.4 use a test set frozen once from the held-out test rooms with
+fixed selection rules and never used for training or tuning (between the two models trained for 20,000 steps with and without the wall-side constraint in the augmentation, §5.4, the one shown is
+the one with the lower \(D_A\) on the validation real pairs, the primary metric: 0.082 against 0.084): 700 standard-test targets (50 rooms with 6–12 pieces including a bed, a sofa
 with a TV or a dining set; each scaled by 0.7×, 0.8×, 0.9×, 1.0×, 1.1×, 1.2×, 1.3× and reshaped into seven outlines no smaller than the reference) and 300 real pairs \((A,B)\), in which
-a method furnishes \(B\)'s empty room from \(A\). The set is stored with a sha256 manifest; each baseline was run once on it and its layouts are re-scored by the same code. Ablations (§5.4) and qualitative results (§5.3) use the validation split, whose
+a method furnishes \(B\)'s empty room from \(A\). The set is stored with a sha256 manifest; each baseline was run once on it and its layouts are re-scored by the same code. The other ablations (§5.4) and the qualitative results (§5.3) use the validation split, whose
 standard tests have 10 rooms and whose real-pair set has 120 pairs.</p>
 <p><strong>Metrics.</strong> \(D\) and \(D_A\) (eq. 2, over kept pieces) measure how well the reference arrangement is kept; <em>kept</em> is the share of reference pieces in the
 output. <em>Torn pairs</em>: of the floor pairs touching in the reference (gap ≤ 5 cm) and both kept, the share more than 30 cm apart. <em>Wall kept</em>:
@@ -268,7 +269,7 @@ it keeps everything and adds nothing. <em>PhyScene</em> [<a class="cite" href="#
 conditioning — and samples with its collision, room-layout and reachability guidance; its objects are matched to \(A\)'s pieces by category (43% of \(A\)'s pieces matched on
 real pairs), and \(D\) is computed over the matched pieces.</p>
 <p><strong>Statistics.</strong> Differences are mean paired differences over the same targets or pairs, with 95% intervals and two-sided \(p\) from a bootstrap that resamples rooms
-or pairs (10,000 resamples). Appendix Table 10 lists all tests.</p>
+or pairs (10,000 resamples). Appendix Table 11 lists all tests.</p>
 <h3>5.2. Main results</h3>
 <div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (kept pieces)</th><th>kept</th><th>added / room</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>out of room ↓</th><th>collision ↓</th><th>door blocked ↓</th></tr></thead><tbody>
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.056</td><td>1.00</td><td>0.00</td><td>4.3%</td><td>0.81</td><td>16.4%</td><td>2.7%</td><td>32%</td></tr>
@@ -294,16 +295,16 @@ or pairs (10,000 resamples). Appendix Table 10 lists all tests.</p>
 <p>On real pairs IntentFlow keeps the reference arrangement at \(D_A=0.082\), against 0.184 for LEGO-Net (−0.102 [−0.111, −0.093], p&lt;0.001, 300 pairs) and
 0.386 for PhyScene (−0.298 [−0.316, −0.281], p&lt;0.001, 214 pairs), with 0.3% of pieces out of the room and 6.7% colliding pairs
 (LEGO-Net 17.5% / 18.6%, PhyScene 15.9% / 13.2%). It keeps the pieces
-the designer kept as well as LEGO-Net, which keeps everything (p=0.816; IntentFlow's keep F1 differs on 55 of 300 pairs, higher on 29 and
+the designer kept as well as LEGO-Net, which keeps everything (p=0.828; IntentFlow's keep F1 differs on 55 of 300 pairs, higher on 29 and
 lower on 26), and better than PhyScene (p&lt;0.001); its additions reach add F1
 0.247 (precision 0.41, recall 0.15), above LEGO-Net (p&lt;0.001) and PhyScene
-(p=0.010). It tears fewer groups than PhyScene (p=0.035); against LEGO-Net the difference is not significant
-(p=0.875).</p>
+(p=0.010). It tears fewer groups than PhyScene (p=0.039); against LEGO-Net the difference is not significant
+(p=0.868).</p>
 <p>On the standard tests IntentFlow's \(D\) is 0.060 / 0.066 (scale / outline), against 0.158 / 0.141
 for LEGO-Net and 0.379 / 0.371 for PhyScene (p&lt;0.001 in all four comparisons), and it keeps 0.84 /
 0.73 of the reference's wall contacts (LEGO-Net 0.43 / 0.26, PhyScene 0.30 /
 0.34). It tears fewer groups than PhyScene on both tests (p=0.002, p&lt;0.001); against LEGO-Net
-the torn-pair differences are not significant (p=0.312, p=0.115). Its largest out-of-room, collision or door-blocking rate
+the torn-pair differences are not significant (p=0.294, p=0.118). Its largest out-of-room, collision or door-blocking rate
 over all columns is 1.8%. The affine transplant keeps the arrangement best — \(D_A=0.069\) — but leaves 30.7% of pieces outside
 the room: \(D\) measures arrangement, not feasibility, and the gap between the transplant and IntentFlow is what feasibility costs.</p>
 <h3>5.3. Qualitative results</h3>
@@ -335,22 +336,35 @@ additions reach keep AUC 0.879, relation Spearman 0.427 and add F1 0.383, agains
 </tbody></table></div>
 <p class="lead"><strong>Table 5.</strong> Analysis heads on 2,587 held-out validation pairs: keep AUC against the designer's keep label, Spearman correlation of relation weights with the measured preservation of matched piece pairs, add F1 with \(n_c=\mathrm{round}(r_c)\). †The separate models were evaluated before the label fix of §4, on 2,575 pairs, so the comparison is indicative.</p>
 <p><strong>Projection metric.</strong> Moving neighbours together in \(\Pi_\theta\) lowers torn pairs on outline targets (−2.4 pts [−4.2, −0.8], p=0.001, 9 rooms); on scaled rooms the change is not significant
-(p=0.421; Table 6).</p>
+(p=0.445; Table 6).</p>
 <div class="tw"><table><thead><tr><th>setting</th><th>scale: \(D\) ↓</th><th>scale: torn pairs ↓</th><th>scale: wall kept ↑</th><th>scale: \(\Pi_\theta\) move</th><th>outline: \(D\) ↓</th><th>outline: torn pairs ↓</th><th>outline: wall kept ↑</th><th>outline: \(\Pi_\theta\) move</th></tr></thead><tbody>
 <tr><td>Euclidean projection</td><td>0.071</td><td>5.8%</td><td>0.79</td><td>10 cm</td><td>0.060</td><td>12.7%</td><td>0.62</td><td>8 cm</td></tr>
 <tr><td>arrangement-metric projection</td><td>0.068</td><td>5.0%</td><td>0.77</td><td>11 cm</td><td>0.060</td><td>10.3%</td><td>0.61</td><td>10 cm</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 6.</strong> Projection metric on the standard tests (validation): Euclidean projection (\(\bar w=0\) in eq. 8) against the arrangement metric, same flow model and seed. Both rows use an earlier placement checkpoint with separately trained keep and relation networks, evaluated before the label fix.</p>
-<p><strong>Walls against groups.</strong> Forcing every reference wall side in \(\Pi_\theta\) raises wall contacts on outline targets (+0.23 [+0.15, +0.33], p&lt;0.001, 10 rooms) and, with them, torn pairs
-(+7.9 pts [+2.4, +15.1], p=0.002, 9 rooms) and \(D\) (+0.011 [+0.004, +0.020], p=0.002, 10 rooms) (Table 7): in a reshaped room a group's wall sides and its internal contacts cannot all be kept. The same trade-off appears
+<p><strong>Walls against groups.</strong> Forcing every reference wall side in \(\Pi_\theta\) raises wall contacts on outline targets (+0.23 [+0.15, +0.34], p&lt;0.001, 10 rooms) and, with them, torn pairs
+(+7.9 pts [+2.4, +14.8], p=0.002, 9 rooms) and \(D\) (+0.011 [+0.004, +0.020], p=0.003, 10 rooms) (Table 7): in a reshaped room a group's wall sides and its internal contacts cannot all be kept. The same trade-off appears
 in training, because the augmentation keeps the reference's wall sides: on validation outline targets, torn pairs rise from 15.4% to 19.0% over the final
-training stage while wall contacts go from 0.79 to 0.83. Designers face the conflict too: a second designer with similar furniture pulls apart
+training stage while wall contacts go from 0.79 to 0.83; training without the constraint is tested below. Designers face the conflict too: a second designer with similar furniture pulls apart
 23.5% of the first designer's touching pairs and keeps 66% of the wall sides.</p>
 <div class="tw"><table><thead><tr><th>setting</th><th>scale: \(D\) ↓</th><th>scale: torn pairs ↓</th><th>scale: wall kept ↑</th><th>scale: \(\Pi_\theta\) move</th><th>outline: \(D\) ↓</th><th>outline: torn pairs ↓</th><th>outline: wall kept ↑</th><th>outline: \(\Pi_\theta\) move</th></tr></thead><tbody>
 <tr><td>model's own wall contacts</td><td>0.069</td><td>6.4%</td><td>0.76</td><td>10 cm</td><td>0.059</td><td>10.8%</td><td>0.61</td><td>9 cm</td></tr>
 <tr><td>reference wall sides forced</td><td>0.076</td><td>10.0%</td><td>0.93</td><td>16 cm</td><td>0.071</td><td>18.8%</td><td>0.84</td><td>17 cm</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 7.</strong> Forcing every reference wall side as a hard constraint of \(\Pi_\theta\), against the model's own wall contacts (validation; an earlier placement checkpoint with separately trained keep, relation and addition networks, evaluated before the label fix).</p>
+<p><strong>Augmentation with and without the wall-side constraint.</strong> Trained from the same checkpoint with the same settings on augmentation targets produced without the
+reference-wall-side constraint, the model keeps fewer wall contacts on the large test split (scale 0.84 → 0.77,
+p&lt;0.001; outline 0.73 → 0.63, p&lt;0.001) and tears fewer groups only in the expected
+direction, not significantly at 5% (outline 18.6% → 16.1%, p=0.198; real pairs
+17.9% → 14.8%, p=0.059), with \(D_A\) unchanged (p=0.869) and outline \(D\)
+slightly lower (p=0.020; Table 8). The wall-side constraint of the augmentation thus moves the model along the same walls-versus-groups trade-off as
+forcing the constraint at inference: significantly on walls, in the expected direction but not significantly on groups.</p>
+<div class="tw"><table><thead><tr><th>augmentation targets</th><th>scale: wall kept ↑</th><th>scale: torn pairs ↓</th><th>outline: \(D\) ↓</th><th>outline: wall kept ↑</th><th>outline: torn pairs ↓</th><th>real pairs: \(D_A\) ↓</th><th>real pairs: torn pairs ↓</th><th>real pairs: add F1 ↑</th><th>real pairs: add precision ↑</th></tr></thead><tbody>
+<tr class="ours"><td>with the reference's wall sides (IntentFlow)</td><td>0.84</td><td>6.7%</td><td>0.066</td><td>0.73</td><td>18.6%</td><td>0.082</td><td>17.9%</td><td>0.247</td><td>0.41</td></tr>
+<tr><td>without the wall-side constraint</td><td>0.77</td><td>5.6%</td><td>0.063</td><td>0.63</td><td>16.1%</td><td>0.082</td><td>14.8%</td><td>0.252</td><td>0.44</td></tr>
+<tr class="grp"><td>paired bootstrap, without − with</td><td><b>p&lt;0.001</b></td><td>p=0.736</td><td><b>p=0.020</b></td><td><b>p&lt;0.001</b></td><td>p=0.198</td><td>p=0.869</td><td>p=0.059</td><td>p=0.791</td><td>—</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 8.</strong> Augmentation targets with and without the reference-wall-side constraint (large frozen test split). Both models start from the same checkpoint and are trained for the same number of steps with the same settings; only the augmentation targets differ. The last row gives the room- or pair-clustered paired bootstrap \(p\) (bold: \(p&lt;0.05\)).</p>
 <h3>5.5. Style token</h3>
 <div class="tw"><table><thead><tr><th>\(\lambda\)</th><th>Japanese: changed / labelled / \(D\)</th><th>Light Luxury: changed / labelled / \(D\)</th><th>New Chinese: changed / labelled / \(D\)</th></tr></thead><tbody>
 <tr><td>0.00</td><td>0.07 / 0.16 / 0.024</td><td>0.07 / 0.03 / 0.024</td><td>0.07 / 0.03 / 0.024</td></tr>
@@ -359,14 +373,14 @@ training stage while wall contacts go from 0.79 to 0.83. Designers face the conf
 <tr><td>0.75</td><td>0.77 / 0.74 / 0.028</td><td>0.73 / 0.73 / 0.032</td><td>0.70 / 0.58 / 0.030</td></tr>
 <tr><td>1.00</td><td>0.82 / 0.81 / 0.029</td><td>0.78 / 0.76 / 0.032</td><td>0.73 / 0.61 / 0.032</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 8.</strong> Style token on the large test split (50 test rooms, each room itself as target, 3 style labels): share of floor pieces whose asset changed / share carrying the target style label / \(D\) to the reference, per degree of change \(\lambda\).</p>
+<p class="lead"><strong>Table 9.</strong> Style token on the large test split (50 test rooms, each room itself as target, 3 style labels): share of floor pieces whose asset changed / share carrying the target style label / \(D\) to the reference, per degree of change \(\lambda\).</p>
 <p>The share of swapped pieces increases monotonically with \(\lambda\) (on average
 0.07, 0.28, 0.55, 0.73, 0.78); at \(\lambda=1\) between 0.61 and 0.81 of the
 floor pieces carry the target label, while \(D\) stays between 0.024 and 0.032. At \(\lambda=0\), 0.07
 of the pieces change size where the furniture does not fit, not style.</p>
 <h3>5.6. Consistency across evaluation sets</h3>
 <p>A smaller test split frozen earlier from the test rooms (140 targets, 120 pairs) and the validation split give the same ranking
-(Table 9).</p>
+(Table 10).</p>
 <div class="tw"><table><thead><tr><th>method</th><th>real pairs: \(D_A\) ↓</th><th>real pairs: add F1 ↑</th><th>real pairs: out of room ↓</th><th>scale: \(D\) ↓</th><th>outline: \(D\) ↓</th></tr></thead><tbody>
 <tr class="grp"><td colspan="6"><em>large test split (main)</em></td></tr>
 <tr class="ours"><td>IntentFlow</td><td>0.082</td><td>0.247</td><td>0.3%</td><td>0.060</td><td>0.066</td></tr>
@@ -381,12 +395,13 @@ of the pieces change size where the furniture does not fit, not style.</p>
 <tr><td>LEGO-Net</td><td>0.187</td><td>0.125</td><td>17.5%</td><td>0.158</td><td>0.154</td></tr>
 <tr><td>PhyScene</td><td>0.371</td><td>0.115</td><td>14.3%</td><td>0.356</td><td>0.358</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 9.</strong> The large test split, a smaller test split frozen earlier from the same test rooms, and the validation split. ‡The smaller test split was evaluated with an earlier checkpoint of IntentFlow.</p>
+<p class="lead"><strong>Table 10.</strong> The large test split, a smaller test split frozen earlier from the same test rooms, and the validation split. ‡The smaller test split was evaluated with an earlier checkpoint of IntentFlow.</p>
 <h2 id="limits">6. Limitations</h2>
 <p>The keep head saturates for large pieces: when a bed and another large piece both get keep probabilities near 1 and the density budget cannot hold both, relation mass
 decides, and in very small bedrooms the bed can be dropped. IntentFlow adds fewer pieces than designers (1.34 against 3.02 per real
 pair, recall 0.15), and some additions are implausible, such as a second wardrobe beside the first. In reshaped rooms, keeping wall sides and keeping groups
-conflict, and the model inherits the wall-side preference of its augmentation (§5.4). The shared heads remain below separately trained networks. Mixed category labels remain in
+conflict, and the model inherits the wall-side preference of its augmentation; augmentation without the wall-side constraint gives up wall contacts significantly while its
+fewer torn pairs are not significant at 5% (§5.4), so neither choice resolves the conflict. The shared heads remain below separately trained networks. Mixed category labels remain in
 the corpus. The baselines are living-room checkpoints run on all room types, PhyScene cannot receive the reference, and LEGO-Net sees only pieces in its vocabulary. The
 pipeline takes 86 s per real pair on CPU (the structure step can place several candidates and each addition is placed and projected), whereas
 LEGO-Net takes 7 s and PhyScene 120 s under their own settings. Windows constrain nothing in \(\Pi_\theta\), and human
@@ -434,13 +449,13 @@ rooms, remain open.</p>
 <tr><td>real pairs</td><td>same type, other house, family Jaccard &gt; 0.6, area ratio [0.5, 2]; 31,112 full pairs from 9,205 rooms; placement rows: \(D\le0.15\) pairs</td></tr>
 <tr><td>trunk</td><td>8 blocks, width 256, 8 heads; reference encoder 4 blocks, width 256; \(\zeta_\text{ref}\in\mathbb R^{32}\), null with p 0.15; Fourier features 6 bands; ≤ 24 pieces, 24 wall and 8 opening tokens; 14.85 M parameters, of which 0.41 M in the keep, relation and add heads</td></tr>
 <tr><td>analysis heads</td><td>keep MLP \(d\to d\to1\); relation MLP \(2d\to d\to1\); add MLP \(3d\to d\to64\), softplus; loss eq. 4 (count term divided by 3)</td></tr>
-<tr><td>training</td><td>AdamW lr 0.0003, weight decay 0.0001, OneCycle (warm-up 3%), gradient clip 1, EMA 0.999, batch 64, bf16; infill rows p 0.2; final stage 20,000 steps (stages in Table 12)</td></tr>
+<tr><td>training</td><td>AdamW lr 0.0003, weight decay 0.0001, OneCycle (warm-up 3%), gradient clip 1, EMA 0.999, batch 64, bf16; infill rows p 0.2; final stage 20,000 steps (stages in Table 13)</td></tr>
 <tr><td>inference</td><td>50 Euler steps, seed 0; budget slack 0.14; ≤ 3 extra drops (\(\kappa&lt;\tfrac12\)); shrinks 0.9, 0.8, 0.7, 0.6, 0.5, 0.4; turn tolerance 0.05 IoU; walkability tolerance 0.05; ≤ 6 additions</td></tr>
 <tr><td>\(\Pi_\theta\)</td><td>AL: 20 Adam steps (lr 0.03) per outer iteration, ≤ 60 outer, penalty 2 doubled when the violation does not fall below 0.25×, stop at 1 cm; neighbour weight 0.5 within 0.3 m; door box ≥ 1 m × 0.9 m; wall contacts within 3 cm</td></tr>
 <tr><td>appearance \(z\)</td><td>MLP hidden 256, \(z\in\mathbb S^{31}\), temperature 0.1, 63 negatives, batch 128, 6,000 steps, AdamW lr 0.001; size ladder 12%, 20%, 30%</td></tr>
 <tr><td>environment</td><td>Python 3.11.15, PyTorch 2.6.0+cu124; evaluation on AMD EPYC 7551P 32-Core Processor (64 threads), 56 worker processes</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 11.</strong> Hyper-parameters, read from the code and the checkpoint at build time.</p>
+<p class="lead"><strong>Table 12.</strong> Hyper-parameters, read from the code and the checkpoint at build time.</p>
 <div class="tw"><table><thead><tr><th>run</th><th>steps</th><th>initialised from</th><th>rooms per training kind (log)</th></tr></thead><tbody>
 <tr><td>cap18</td><td>20,000</td><td>cap17</td><td>shape 1389, size 793, delete 2127, real 1899, big 2942</td></tr>
 <tr><td>cap17</td><td>6,000</td><td>cap16</td><td>shape 463, size 462, delete 277, real 1899, big 463</td></tr>
@@ -457,35 +472,36 @@ rooms, remain open.</p>
 <tr><td>st1f</td><td>8,000</td><td>st1d/step2000.pt</td><td>—</td></tr>
 <tr><td>st1d</td><td>2,000</td><td>—</td><td>—</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 12.</strong> Training stages of the model shown in this paper (checkpoint cap18), read from the training logs and checkpoints: each stage is initialised from the previous one.</p>
+<p class="lead"><strong>Table 13.</strong> Training stages of the model shown in this paper (checkpoint cap18), read from the training logs and checkpoints: each stage is initialised from the previous one.</p>
 <p><strong>Checkpoints.</strong> All results of IntentFlow in §5.2, §5.3 and §5.5 come from <code>outputs/cap18/last.pt</code>. The smaller test split of §5.6 was evaluated with
 <code>outputs/cap16/last.pt</code>. Table 4: rows 1–4 are <code>cap16</code>, <code>cap17</code> with the stopping rule of row 2, <code>cap17</code> and <code>cap18</code>.
 Table 5: the separate models are those evaluated in <code>dig_eval.json</code> (keep and relations) and <code>addnet_eval.json</code> (additions).
-Table 6 and Table 7 use the placement checkpoint <code>cap9</code>.</p>
+Table 6 and Table 7 use the placement checkpoint <code>cap9</code>. Table 8: <code>cap18</code> (with the wall-side constraint) and <code>cap19</code>
+(without), both initialised from <code>cap17</code> and trained for the same number of steps.</p>
 <h3>B. Statistical tests</h3>
 <div class="tw"><table class="sigt"><thead><tr><th>IntentFlow</th><th>test</th><th>metric</th><th>mean (IntentFlow / baseline)</th><th>difference</th><th>95% interval</th><th>p</th><th>rooms / pairs</th></tr></thead><tbody>
 <tr><td>vs. LEGO-Net</td><td>scale</td><td>\(D\)</td><td>0.060 / 0.158</td><td>−0.098</td><td>[−0.117, −0.082]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
 <tr><td>vs. LEGO-Net</td><td>scale</td><td>wall kept</td><td>0.84 / 0.43</td><td>+0.41</td><td>[+0.34, +0.48]</td><td><b>p&lt;0.001</b></td><td>48</td></tr>
-<tr><td>vs. LEGO-Net</td><td>scale</td><td>torn pairs (pts)</td><td>6.6% / 9.2%</td><td>−2.6</td><td>[−7.9, +2.2]</td><td>p=0.312</td><td>39</td></tr>
-<tr><td>vs. PhyScene</td><td>scale</td><td>\(D\)</td><td>0.059 / 0.374</td><td>−0.315</td><td>[−0.336, −0.296]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
-<tr><td>vs. PhyScene</td><td>scale</td><td>wall kept</td><td>0.85 / 0.31</td><td>+0.54</td><td>[+0.48, +0.60]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
-<tr><td>vs. PhyScene</td><td>scale</td><td>torn pairs (pts)</td><td>9.9% / 28.5%</td><td>−18.6</td><td>[−32.6, −6.6]</td><td><b>p=0.002</b></td><td>24</td></tr>
+<tr><td>vs. LEGO-Net</td><td>scale</td><td>torn pairs (pts)</td><td>6.6% / 9.2%</td><td>−2.6</td><td>[−7.9, +2.4]</td><td>p=0.294</td><td>39</td></tr>
+<tr><td>vs. PhyScene</td><td>scale</td><td>\(D\)</td><td>0.059 / 0.374</td><td>−0.315</td><td>[−0.336, −0.297]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
+<tr><td>vs. PhyScene</td><td>scale</td><td>wall kept</td><td>0.85 / 0.31</td><td>+0.54</td><td>[+0.47, +0.60]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
+<tr><td>vs. PhyScene</td><td>scale</td><td>torn pairs (pts)</td><td>9.9% / 28.5%</td><td>−18.6</td><td>[−32.4, −6.4]</td><td><b>p=0.002</b></td><td>24</td></tr>
 <tr><td>vs. LEGO-Net</td><td>outline</td><td>\(D\)</td><td>0.066 / 0.141</td><td>−0.075</td><td>[−0.090, −0.061]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
 <tr><td>vs. LEGO-Net</td><td>outline</td><td>wall kept</td><td>0.73 / 0.26</td><td>+0.47</td><td>[+0.41, +0.53]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
-<tr><td>vs. LEGO-Net</td><td>outline</td><td>torn pairs (pts)</td><td>18.6% / 26.6%</td><td>−8.0</td><td>[−17.9, +2.0]</td><td>p=0.115</td><td>40</td></tr>
-<tr><td>vs. PhyScene</td><td>outline</td><td>\(D\)</td><td>0.066 / 0.372</td><td>−0.306</td><td>[−0.327, −0.286]</td><td><b>p&lt;0.001</b></td><td>49</td></tr>
+<tr><td>vs. LEGO-Net</td><td>outline</td><td>torn pairs (pts)</td><td>18.6% / 26.6%</td><td>−8.0</td><td>[−17.9, +2.0]</td><td>p=0.118</td><td>40</td></tr>
+<tr><td>vs. PhyScene</td><td>outline</td><td>\(D\)</td><td>0.066 / 0.372</td><td>−0.306</td><td>[−0.326, −0.286]</td><td><b>p&lt;0.001</b></td><td>49</td></tr>
 <tr><td>vs. PhyScene</td><td>outline</td><td>wall kept</td><td>0.73 / 0.34</td><td>+0.38</td><td>[+0.31, +0.46]</td><td><b>p&lt;0.001</b></td><td>44</td></tr>
-<tr><td>vs. PhyScene</td><td>outline</td><td>torn pairs (pts)</td><td>17.3% / 39.9%</td><td>−22.6</td><td>[−35.5, −9.9]</td><td><b>p&lt;0.001</b></td><td>24</td></tr>
+<tr><td>vs. PhyScene</td><td>outline</td><td>torn pairs (pts)</td><td>17.3% / 39.9%</td><td>−22.6</td><td>[−35.6, −9.6]</td><td><b>p&lt;0.001</b></td><td>24</td></tr>
 <tr><td>vs. LEGO-Net</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.184</td><td>−0.102</td><td>[−0.111, −0.093]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
-<tr><td>vs. LEGO-Net</td><td>real</td><td>keep F1</td><td>0.86 / 0.86</td><td>±0.00</td><td>[−0.01, +0.00]</td><td>p=0.816</td><td>300</td></tr>
+<tr><td>vs. LEGO-Net</td><td>real</td><td>keep F1</td><td>0.86 / 0.86</td><td>±0.00</td><td>[−0.01, +0.00]</td><td>p=0.828</td><td>300</td></tr>
 <tr><td>vs. LEGO-Net</td><td>real</td><td>add F1</td><td>0.25 / 0.13</td><td>+0.12</td><td>[+0.08, +0.16]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
-<tr><td>vs. LEGO-Net</td><td>real</td><td>torn pairs (pts)</td><td>17.9% / 18.6%</td><td>−0.4</td><td>[−5.1, +4.3]</td><td>p=0.875</td><td>264</td></tr>
+<tr><td>vs. LEGO-Net</td><td>real</td><td>torn pairs (pts)</td><td>17.9% / 18.6%</td><td>−0.4</td><td>[−4.9, +4.3]</td><td>p=0.868</td><td>264</td></tr>
 <tr><td>vs. PhyScene</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.386</td><td>−0.298</td><td>[−0.316, −0.281]</td><td><b>p&lt;0.001</b></td><td>214</td></tr>
-<tr><td>vs. PhyScene</td><td>real</td><td>keep F1</td><td>0.86 / 0.49</td><td>+0.37</td><td>[+0.34, +0.41]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
+<tr><td>vs. PhyScene</td><td>real</td><td>keep F1</td><td>0.86 / 0.49</td><td>+0.37</td><td>[+0.34, +0.42]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
 <tr><td>vs. PhyScene</td><td>real</td><td>add F1</td><td>0.25 / 0.18</td><td>+0.06</td><td>[+0.02, +0.11]</td><td><b>p=0.010</b></td><td>300</td></tr>
-<tr><td>vs. PhyScene</td><td>real</td><td>torn pairs (pts)</td><td>17.9% / 34.6%</td><td>−9.2</td><td>[−17.9, −0.7]</td><td><b>p=0.035</b></td><td>111</td></tr>
+<tr><td>vs. PhyScene</td><td>real</td><td>torn pairs (pts)</td><td>17.9% / 34.6%</td><td>−9.2</td><td>[−17.8, −0.5]</td><td><b>p=0.039</b></td><td>111</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 10.</strong> All bootstrap tests of §5.2 (large test split; 10,000 resamples, clustered by room or pair). Means are over the rooms or pairs on which both methods define the metric (for example, PhyScene's \(D\) needs matched pieces, torn pairs need touching pairs), so they can differ from the table means. Bold \(p\) marks \(p&lt;0.05\).</p>
+<p class="lead"><strong>Table 11.</strong> All bootstrap tests of §5.2 (large test split; 10,000 resamples, clustered by room or pair). Means are over the rooms or pairs on which both methods define the metric (for example, PhyScene's \(D\) needs matched pieces, torn pairs need touching pairs), so they can differ from the table means. Bold \(p\) marks \(p&lt;0.05\).</p>
 <h3>C. Per-column results</h3>
 <div class="tw"><table><thead><tr><th>scale target (IntentFlow / LEGO-Net)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
 <tr><td>x0.7</td><td>0.121 / 0.192</td><td>10% / 3%</td><td>0.79 / 0.59</td><td>1.00 / 0.80</td><td>0.73 / 1.00</td><td>0.18 / 0.00</td><td>13 cm / —</td></tr>
@@ -496,7 +512,7 @@ Table 6 and Table 7 use the placement checkpoint <code>cap9</code>.</p>
 <tr><td>x1.2</td><td>0.049 / 0.148</td><td>9% / 10%</td><td>0.81 / 0.27</td><td>0.90 / 0.30</td><td>1.00 / 1.00</td><td>2.08 / 0.00</td><td>7 cm / —</td></tr>
 <tr><td>x1.3</td><td>0.059 / 0.141</td><td>9% / 29%</td><td>0.78 / 0.20</td><td>0.70 / 0.30</td><td>1.00 / 1.00</td><td>2.60 / 0.00</td><td>10 cm / —</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 13.</strong> Scale test per column on the large test split, IntentFlow / LEGO-Net. LEGO-Net has no projection step (—).</p>
+<p class="lead"><strong>Table 14.</strong> Scale test per column on the large test split, IntentFlow / LEGO-Net. LEGO-Net has no projection step (—).</p>
 <div class="tw"><table><thead><tr><th>shape target (IntentFlow / LEGO-Net)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
 <tr><td>1.2x1.3</td><td>0.056 / 0.137</td><td>8% / 18%</td><td>0.74 / 0.21</td><td>0.43 / 0.14</td><td>1.00 / 1.00</td><td>2.24 / 0.00</td><td>10 cm / —</td></tr>
 <tr><td>1.5x1.1+cut</td><td>0.077 / 0.138</td><td>25% / 35%</td><td>0.76 / 0.31</td><td>0.14 / 0.00</td><td>1.00 / 1.00</td><td>2.60 / 0.00</td><td>10 cm / —</td></tr>
@@ -506,7 +522,7 @@ Table 6 and Table 7 use the placement checkpoint <code>cap9</code>.</p>
 <tr><td>pentagon x1.2</td><td>0.070 / 0.143</td><td>17% / 15%</td><td>0.77 / 0.25</td><td>0.43 / 0.14</td><td>1.00 / 1.00</td><td>1.54 / 0.00</td><td>9 cm / —</td></tr>
 <tr><td>long 1.6x1.0</td><td>0.063 / 0.137</td><td>20% / 38%</td><td>0.81 / 0.44</td><td>0.43 / 0.14</td><td>1.00 / 1.00</td><td>2.36 / 0.00</td><td>9 cm / —</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 14.</strong> Outline test per column on the large test split, IntentFlow / LEGO-Net.</p>
+<p class="lead"><strong>Table 15.</strong> Outline test per column on the large test split, IntentFlow / LEGO-Net.</p>
 <h3>D. Frozen test sets</h3>
 <p>The test sets were built by <code>scripts/freeze_testset.py</code> from the house-disjoint test split with the validation set's selection rules and stored with the reference and
 target scenes, the targets given to the baselines, the baselines' layouts and scores, and a sha256 manifest. Each baseline was run once per set; all scores are recomputed from the
@@ -516,7 +532,7 @@ not the method.</p>
 <tr><td>large test split (main)</td><td>700</td><td>300</td><td>50</td><td>68</td></tr>
 <tr><td>smaller test split</td><td>140</td><td>120</td><td>10</td><td>37</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 15.</strong> Frozen test sets: targets, real pairs, style rooms and the number of files in each sha256 manifest. Both sets use the validation set's selection rules on the held-out test rooms.</p>
+<p class="lead"><strong>Table 16.</strong> Frozen test sets: targets, real pairs, style rooms and the number of files in each sha256 manifest. Both sets use the validation set's selection rules on the held-out test rooms.</p>
 <h3>E. Additional qualitative results</h3>
 <figure id="fig-std_scale"><img src="assets/v03/std_scale_p4_cap18.png" alt="std_scale" loading="lazy"><figcaption><strong>Figure 4.</strong> Scale test in 2D (validation). One reference per row (left), then the room scaled from 0.7× to 1.3×; titles give pieces kept / reference pieces and pieces added; door boxes red, wall-touching sides red, added pieces green. Additions include a sideboard in the dining room and wardrobes in the bedrooms of the enlarged rooms; at 0.7× dining chairs crowd the table.</figcaption></figure>
 <figure id="fig-std_shape"><img src="assets/v03/std_shape_p4_cap18.png" alt="std_shape" loading="lazy"><figcaption><strong>Figure 5.</strong> Outline test in 2D (validation). Living rooms keep their groups; dining chairs drift to the walls in the trapezoid and partly in the L outline, and the bedroom in the long 1.6x1.0 room receives a second wardrobe and a dining chair.</figcaption></figure>
@@ -535,5 +551,5 @@ not the method.</p>
 <tr><td>\(\mathcal D\), \(\Theta_i\), \(\mathcal C\), \(\ell_i\)</td><td>door boxes, orientation set, wall contacts held, contact wall</td></tr>
 <tr><td>\(z_k\), \(z^\star\), \(\lambda\), \(u_k\), \(\gamma\), \(\mu\)</td><td>appearance vector, style token, degree of change, unit of identical assets, temperature, label-term weight</td></tr>
 </tbody></table></div>
-<p class="lead"><strong>Table 16.</strong> Symbols used in this paper.</p>
+<p class="lead"><strong>Table 17.</strong> Symbols used in this paper.</p>
 </div></body></html>
