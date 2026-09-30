@@ -380,7 +380,7 @@ IntentFlow starts from; it is shown as a reference row, not as a method.</p>
 <p><strong>Frozen test splits.</strong> Two sets were frozen from the test split (<code>rr.scene.split()[2]</code>) by <code>scripts/freeze_testset.py</code> with the
 validation set's selection rules: a large one for the headline numbers — 700 standard-test targets, 300 real pairs and
 50 style rooms, sha256 manifest of 68 files — and a smaller one used earlier — 140 targets, 120
-real pairs, 10 style rooms, 37 files. The training monitor scores the validation split only. They were never used for training or tuning. Between the two runs trained for 20,000 steps with and without the wall-side constraint in the augmentation (§6.6), the shown model is the one with the lower \(D_A\) on the validation real pairs, the primary metric (0.082 for cap18 against 0.084 for cap19). Each baseline was run once on each set and its layouts were stored (on the large set PhyScene ran in
+real pairs, 10 style rooms, 37 files. The training monitor scores the validation split only. They were never used for training or tuning. Between the two runs trained for 20,000 steps with and without the wall-side constraint in the augmentation (§6.6), the shown model is the one with the lower \(D_A\) on the validation real pairs, the primary metric (0.081 for cap18 against 0.084 for cap19). Each baseline was run once on each set and its layouts were stored (on the large set PhyScene ran in
 more shards with a larger batch, which changes the sampling noise, not the method); later scoring re-reads the stored layouts and never reruns a baseline. IntentFlow (cap18) was
 evaluated on the large set, and cap16 on the smaller one, after selection on the validation split. §6.2 reports these final numbers; §6.3–6.8 are development results on the
 validation split.</p>
@@ -393,7 +393,7 @@ zero in cap12; cap16 continued on the label-fixed data; cap17 trained additions 
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.056</td><td>1.00</td><td>0.00</td><td>4.3%</td><td>0.81</td><td>16.4%</td><td>2.7%</td><td>32%</td></tr>
 <tr><td>LEGO-Net</td><td>0.158</td><td>1.00</td><td>0.00</td><td>9.2%</td><td>0.43</td><td>16.5%</td><td>6.9%</td><td>28%</td></tr>
 <tr><td>PhyScene</td><td>0.379</td><td>0.36</td><td>5.84</td><td>26.8%</td><td>0.30</td><td>11.6%</td><td>9.3%</td><td>54%</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.060</td><td>0.94</td><td>1.13</td><td>6.6%</td><td>0.84</td><td>0.1%</td><td>0.1%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.060</td><td>0.94</td><td>1.12</td><td>6.6%</td><td>0.84</td><td>0.1%</td><td>0.1%</td><td>0%</td></tr>
 <tr><td>IntentFlow, earlier run (cap17)</td><td>0.068</td><td>0.94</td><td>1.46</td><td>10.7%</td><td>0.81</td><td>0.2%</td><td>0.0%</td><td>1%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 5.</strong> Large held-out test split, scale test (700 targets over both tests, one seed; means over columns). The affine transplant is the input, not a method.</p>
@@ -401,7 +401,7 @@ zero in cap12; cap16 continued on the label-fixed data; cap17 trained additions 
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.073</td><td>1.00</td><td>0.00</td><td>26.5%</td><td>0.58</td><td>13.0%</td><td>1.1%</td><td>28%</td></tr>
 <tr><td>LEGO-Net</td><td>0.141</td><td>1.00</td><td>0.00</td><td>26.6%</td><td>0.26</td><td>9.4%</td><td>4.6%</td><td>18%</td></tr>
 <tr><td>PhyScene</td><td>0.371</td><td>0.40</td><td>7.25</td><td>39.9%</td><td>0.34</td><td>10.0%</td><td>5.3%</td><td>53%</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.066</td><td>1.00</td><td>1.91</td><td>19.0%</td><td>0.73</td><td>0.0%</td><td>0.1%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.066</td><td>1.00</td><td>1.90</td><td>19.1%</td><td>0.73</td><td>0.0%</td><td>0.1%</td><td>0%</td></tr>
 <tr><td>IntentFlow, earlier run (cap17)</td><td>0.070</td><td>1.00</td><td>2.17</td><td>17.2%</td><td>0.65</td><td>0.0%</td><td>0.0%</td><td>1%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 6.</strong> Large held-out test split, outline test, same columns as Table 5.</p>
@@ -409,18 +409,18 @@ zero in cap12; cap16 continued on the label-fixed data; cap17 trained additions 
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.069</td><td>0.864</td><td>0.127</td><td>— / —</td><td>0.00 / 3.02</td><td>12.6%</td><td>30.7%</td><td>9.8%</td><td>0.341</td></tr>
 <tr><td>LEGO-Net</td><td>0.184</td><td>0.864</td><td>0.127</td><td>— / —</td><td>0.00 / 3.02</td><td>18.6%</td><td>17.5%</td><td>18.6%</td><td>0.379</td></tr>
 <tr><td>PhyScene</td><td>0.386</td><td>0.489</td><td>0.184</td><td>— / —</td><td>5.74 / 3.02</td><td>34.6%</td><td>15.9%</td><td>13.2%</td><td>0.378</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.082</td><td>0.864</td><td>0.254</td><td>0.43 / 0.16</td><td>1.35 / 3.02</td><td>17.7%</td><td>0.3%</td><td>6.7%</td><td>0.340</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.082</td><td>0.864</td><td>0.253</td><td>0.43 / 0.16</td><td>1.35 / 3.02</td><td>17.7%</td><td>0.3%</td><td>6.7%</td><td>0.340</td></tr>
 <tr><td>IntentFlow, earlier run (cap17)</td><td>0.085</td><td>0.865</td><td>0.235</td><td>0.38 / 0.17</td><td>1.65 / 3.02</td><td>16.8%</td><td>0.3%</td><td>6.2%</td><td>0.339</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 7.</strong> Large held-out test split, 300 real pairs. Add precision and recall: share of added categories the designer also added, and of the designer's additions the method made; they are not in the baselines' stored scores (LEGO-Net adds nothing). Baselines are re-scored from layouts stored when each was run once on this set.</p>
 <p>On the large test split IntentFlow's \(D_A\) is 0.082, against 0.184 for LEGO-Net (−0.102 [−0.111, −0.093], p&lt;0.001, 300 pairs) and 0.386
 for PhyScene (−0.298 [−0.316, −0.281], p&lt;0.001, 214 pairs), with 0.3% of pieces out of the room and 6.7% colliding pairs (LEGO-Net
 17.5% / 18.6%, PhyScene 15.9% / 13.2%). Its keep F1 (0.864)
-is higher than PhyScene's (p&lt;0.001) and equal to LEGO-Net's within noise (p=0.796; LEGO-Net keeps everything). Its add F1
-(0.254, precision 0.43, recall 0.16) is higher than LEGO-Net's (p&lt;0.001) and PhyScene's
-(p=0.003). On real pairs it tears fewer groups than PhyScene (p=0.032) and not significantly fewer than LEGO-Net
-(p=0.814). On the standard tests its \(D\) is lower than both baselines' on both tests (p&lt;0.001, p&lt;0.001;
-p&lt;0.001, p&lt;0.001), it keeps more wall contacts, and it tears fewer pairs than PhyScene (p=0.003,
+is higher than PhyScene's (p&lt;0.001) and equal to LEGO-Net's within noise (p=0.814; LEGO-Net keeps everything). Its add F1
+(0.253, precision 0.43, recall 0.16) is higher than LEGO-Net's (p&lt;0.001) and PhyScene's
+(p=0.006). On real pairs it tears fewer groups than PhyScene (p=0.028) and not significantly fewer than LEGO-Net
+(p=0.822). On the standard tests its \(D\) is lower than both baselines' on both tests (p&lt;0.001, p&lt;0.001;
+p&lt;0.001, p&lt;0.001), it keeps more wall contacts, and it tears fewer pairs than PhyScene (p=0.002,
 p&lt;0.001); against LEGO-Net the torn-pair differences are not significant with 39 rooms (scale) and not significant with 40 rooms
 (outline). Its largest out-of-room, collision or door-blocking rate over all columns is 1.8%. The affine transplant has \(D_A\) 0.069 and
 30.7% of pieces outside the room.</p>
@@ -436,33 +436,33 @@ p&lt;0.001); against LEGO-Net the torn-pair differences are not significant with
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.075</td><td>1.00</td><td>0.00</td><td>24.5%</td><td>0.58</td><td>14.3%</td><td>0.0%</td><td>44%</td></tr>
 <tr><td>LEGO-Net</td><td>0.128</td><td>1.00</td><td>0.00</td><td>26.6%</td><td>0.31</td><td>7.8%</td><td>3.9%</td><td>7%</td></tr>
 <tr><td>PhyScene</td><td>0.367</td><td>0.31</td><td>7.03</td><td>33.6%</td><td>0.31</td><td>10.4%</td><td>4.2%</td><td>58%</td></tr>
-<tr class="ours"><td>IntentFlow (cap16)</td><td>0.066</td><td>1.00</td><td>4.11</td><td>14.2%</td><td>0.64</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap16)</td><td>0.066</td><td>1.00</td><td>4.11</td><td>12.6%</td><td>0.63</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 9.</strong> Held-out test split, outline test, same columns as Table 8.</p>
 <div class="tw"><table><thead><tr><th>method</th><th>\(D_A\) ↓ (primary)</th><th>keep F1 ↑</th><th>add F1 ↑</th><th>add precision / recall</th><th>added / pair (method / designer)</th><th>torn pairs ↓</th><th>out of room ↓</th><th>collision ↓</th><th>\(D_B\) (reference only)</th></tr></thead><tbody>
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.070</td><td>0.861</td><td>0.125</td><td>— / —</td><td>0.00 / 2.90</td><td>13.7%</td><td>29.0%</td><td>9.9%</td><td>0.344</td></tr>
 <tr><td>LEGO-Net</td><td>0.184</td><td>0.861</td><td>0.125</td><td>— / —</td><td>0.00 / 2.90</td><td>17.3%</td><td>17.0%</td><td>19.1%</td><td>0.390</td></tr>
 <tr><td>PhyScene</td><td>0.380</td><td>0.509</td><td>0.171</td><td>— / —</td><td>5.73 / 2.90</td><td>35.2%</td><td>14.1%</td><td>13.5%</td><td>0.355</td></tr>
-<tr class="ours"><td>IntentFlow (cap16)</td><td>0.089</td><td>0.864</td><td>0.185</td><td>0.23 / 0.16</td><td>2.48 / 2.90</td><td>19.6%</td><td>0.6%</td><td>7.0%</td><td>0.341</td></tr>
+<tr class="ours"><td>IntentFlow (cap16)</td><td>0.090</td><td>0.864</td><td>0.183</td><td>0.24 / 0.16</td><td>2.51 / 2.90</td><td>19.2%</td><td>0.6%</td><td>7.0%</td><td>0.342</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 10.</strong> Held-out test split, 120 real pairs. Baselines are re-scored from layouts stored when each was run once on this split.</p>
-<p>On the smaller test split the earlier model (cap16) gives the same picture. Its \(D_A\) is 0.089, against 0.184 for LEGO-Net (−0.095 [−0.109, −0.081], p&lt;0.001, 120 pairs) and 0.380 for PhyScene
-(−0.286 [−0.313, −0.259], p&lt;0.001, 85 pairs), with 0.6% of pieces out of the room and 7.0% colliding pairs (LEGO-Net 17.0% /
+<p>On the smaller test split the earlier model (cap16) gives the same picture. Its \(D_A\) is 0.090, against 0.184 for LEGO-Net (−0.094 [−0.109, −0.080], p&lt;0.001, 120 pairs) and 0.380 for PhyScene
+(−0.286 [−0.314, −0.259], p&lt;0.001, 85 pairs), with 0.6% of pieces out of the room and 7.0% colliding pairs (LEGO-Net 17.0% /
 19.1%, PhyScene 14.1% / 13.5%). Its keep F1 (0.864) is higher than PhyScene's
-(p&lt;0.001) and equal to the transplant's within noise (p=0.270 against LEGO-Net, which keeps everything); its add F1 (0.185)
-is higher than LEGO-Net's (p=0.061) and not significantly different from PhyScene's. Torn pairs on real pairs are not significantly different from
-either baseline (p=0.514; p=0.348). On the standard tests its \(D\) is lower than both baselines' on both tests
+(p&lt;0.001) and equal to the transplant's within noise (p=0.286 against LEGO-Net, which keeps everything); its add F1 (0.183)
+is higher than LEGO-Net's (p=0.070) and not significantly different from PhyScene's. Torn pairs on real pairs are not significantly different from
+either baseline (p=0.605; p=0.250). On the standard tests its \(D\) is lower than both baselines' on both tests
 (p&lt;0.001, p&lt;0.001; p&lt;0.001, p&lt;0.001) and it keeps more wall contacts; its largest out-of-room, collision or
-door-blocking rate over all columns is 0.0%. It tears fewer reference-touching pairs than LEGO-Net on outline targets (p=0.174; scale
-not significant with 6 rooms) and than PhyScene on both tests (p=0.008, p=0.117, over the few pairs PhyScene matches).
+door-blocking rate over all columns is 0.0%. It tears fewer reference-touching pairs than LEGO-Net on outline targets (p=0.155; scale
+not significant with 6 rooms) and than PhyScene on both tests (p=0.008, p=0.120, over the few pairs PhyScene matches).
 The affine transplant has \(D_A\) 0.070 and 29.0% of pieces outside the room. The development results below agree in direction; \(D_A\) and \(D\)
-of the shown model on the large test split and on the validation split differ by at most 0.008.</p>
+of the shown model on the large test split and on the validation split differ by at most 0.009.</p>
 <h3 id="exp-comp">6.3. Development: comparison on the validation split</h3>
 <div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (kept pieces)</th><th>kept</th><th>added / room</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>out of room ↓</th><th>collision ↓</th><th>door blocked ↓</th></tr></thead><tbody>
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.060</td><td>1.00</td><td>0.00</td><td>6.4%</td><td>0.72</td><td>17.7%</td><td>4.2%</td><td>23%</td></tr>
 <tr><td>LEGO-Net</td><td>0.158</td><td>1.00</td><td>0.00</td><td>8.8%</td><td>0.51</td><td>22.2%</td><td>12.9%</td><td>27%</td></tr>
 <tr><td>PhyScene</td><td>0.356</td><td>0.38</td><td>4.74</td><td>8.1%</td><td>0.39</td><td>14.7%</td><td>12.0%</td><td>50%</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.069</td><td>0.90</td><td>0.73</td><td>6.0%</td><td>0.75</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.069</td><td>0.90</td><td>0.73</td><td>6.2%</td><td>0.75</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
 <tr><td>IntentFlow, shorter run (cap12)</td><td>0.069</td><td>0.91</td><td>0.46</td><td>5.8%</td><td>0.71</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 11.</strong> Validation split, scale test (10 validation rooms per column, one seed; means over columns). The affine transplant is the input, not a method: it keeps every relation by construction and ignores the room.</p>
@@ -483,11 +483,11 @@ After \(\Pi_\theta\) its largest out-of-room, collision or door-blocking rate ov
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.071</td><td>0.847</td><td>0.125</td><td>— / —</td><td>0.00 / 2.68</td><td>11.2%</td><td>27.8%</td><td>9.5%</td><td>0.337</td></tr>
 <tr><td>LEGO-Net</td><td>0.187</td><td>0.847</td><td>0.125</td><td>— / —</td><td>0.00 / 2.68</td><td>15.9%</td><td>17.5%</td><td>20.1%</td><td>0.369</td></tr>
 <tr><td>PhyScene</td><td>0.371</td><td>0.451</td><td>0.115</td><td>— / —</td><td>5.76 / 2.68</td><td>31.2%</td><td>14.3%</td><td>12.8%</td><td>0.363</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.082</td><td>0.850</td><td>0.226</td><td>0.41 / 0.14</td><td>1.07 / 2.68</td><td>11.9%</td><td>0.9%</td><td>6.4%</td><td>0.334</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.081</td><td>0.850</td><td>0.226</td><td>0.40 / 0.14</td><td>1.10 / 2.68</td><td>11.9%</td><td>0.9%</td><td>6.4%</td><td>0.334</td></tr>
 <tr><td>IntentFlow, shorter run (cap12)</td><td>0.085</td><td>0.856</td><td>0.176</td><td>— / —</td><td>0.49 / 2.70</td><td>16.5%</td><td>0.3%</td><td>6.7%</td><td>0.331</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 13.</strong> Validation split, held-out real pairs. LEGO-Net keeps every piece and adds none, so its keep and add F1 equal the transplant's by construction; PhyScene's \(D_A\) is over the pieces it could match by category.</p>
-<p>On the validation real pairs IntentFlow's \(D_A\) is 0.082, against 0.187 for LEGO-Net and 0.371 for PhyScene, with
+<p>On the validation real pairs IntentFlow's \(D_A\) is 0.081, against 0.187 for LEGO-Net and 0.371 for PhyScene, with
 0.9% of pieces out of the room and 6.4% colliding pairs (LEGO-Net 17.5% / 20.1%,
 PhyScene 14.3% / 12.8%); keep F1 0.850 (PhyScene 0.451), add F1 0.226
 (LEGO-Net 0.125, PhyScene 0.115). The affine transplant has the lowest \(D_A\) (0.071) and 27.8%
@@ -519,74 +519,74 @@ mean 0.369), and its add F1 0.316 against 0.383 for a separate addition network 
 20,000 steps the shared trunk has not caught up with the specialised models on any head. The separate models were evaluated before the label fix, on
 2,575 validation pairs against 2,587 now, so the comparison is indicative, not paired. In the full pipeline on real pairs the
 earlier student with separate models reaches add F1 0.274, \(D_A\) 0.081 and 12.5% torn pairs, against
-0.226, 0.082 and 11.9% for the single model (not tested: the separate-model run predates the label fix). With additions as sequential set completion,
+0.226, 0.081 and 11.9% for the single model (not tested: the separate-model run predates the label fix). With additions as sequential set completion,
 the single model adds 1.42 pieces per pair where designers add 2.67; on the large test split its additions have precision
 0.43 and recall 0.16: what it adds is often right, but it adds too little.</p>
 <h3 id="exp-sig">6.5. Significance</h3>
 <div class="tw"><table><thead><tr><th>comparison (a − b)</th><th>test</th><th>metric</th><th>mean a / b</th><th>difference</th><th>95% interval</th><th>p</th><th>rooms / pairs</th></tr></thead><tbody>
-<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>scale</td><td>\(D\)</td><td>0.060 / 0.158</td><td>−0.098</td><td>[−0.116, −0.081]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
+<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>scale</td><td>\(D\)</td><td>0.060 / 0.158</td><td>−0.098</td><td>[−0.116, −0.082]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
 <tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>scale</td><td>wall kept</td><td>0.84 / 0.43</td><td>+0.41</td><td>[+0.34, +0.48]</td><td><b>p&lt;0.001</b></td><td>48</td></tr>
-<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>6.4% / 9.2%</td><td>−2.8</td><td>[−8.0, +2.0]</td><td>p=0.270</td><td>39</td></tr>
+<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>6.4% / 9.2%</td><td>−2.8</td><td>[−8.1, +2.1]</td><td>p=0.279</td><td>39</td></tr>
 <tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>shape</td><td>\(D\)</td><td>0.066 / 0.141</td><td>−0.075</td><td>[−0.090, −0.061]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
 <tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>shape</td><td>wall kept</td><td>0.73 / 0.26</td><td>+0.47</td><td>[+0.41, +0.53]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
-<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>19.0% / 26.6%</td><td>−7.6</td><td>[−17.6, +2.4]</td><td>p=0.130</td><td>40</td></tr>
-<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>scale</td><td>\(D\)</td><td>0.059 / 0.374</td><td>−0.315</td><td>[−0.336, −0.296]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
+<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>19.1% / 26.6%</td><td>−7.5</td><td>[−17.4, +2.8]</td><td>p=0.149</td><td>40</td></tr>
+<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>scale</td><td>\(D\)</td><td>0.058 / 0.374</td><td>−0.315</td><td>[−0.336, −0.297]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
 <tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>scale</td><td>wall kept</td><td>0.85 / 0.31</td><td>+0.54</td><td>[+0.47, +0.60]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
-<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>9.8% / 28.5%</td><td>−18.8</td><td>[−32.8, −6.1]</td><td><b>p=0.003</b></td><td>24</td></tr>
+<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>9.8% / 28.5%</td><td>−18.8</td><td>[−32.8, −6.0]</td><td><b>p=0.002</b></td><td>24</td></tr>
 <tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>shape</td><td>\(D\)</td><td>0.066 / 0.372</td><td>−0.306</td><td>[−0.326, −0.286]</td><td><b>p&lt;0.001</b></td><td>49</td></tr>
 <tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>shape</td><td>wall kept</td><td>0.73 / 0.34</td><td>+0.39</td><td>[+0.31, +0.46]</td><td><b>p&lt;0.001</b></td><td>44</td></tr>
-<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>17.5% / 39.9%</td><td>−22.4</td><td>[−35.5, −9.6]</td><td><b>p&lt;0.001</b></td><td>24</td></tr>
+<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>17.9% / 39.9%</td><td>−22.1</td><td>[−34.8, −9.4]</td><td><b>p&lt;0.001</b></td><td>24</td></tr>
 <tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.184</td><td>−0.102</td><td>[−0.111, −0.093]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
-<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>real</td><td>keep F1</td><td>0.86 / 0.86</td><td>−0.00</td><td>[−0.01, +0.00]</td><td>p=0.796</td><td>300</td></tr>
+<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>real</td><td>keep F1</td><td>0.86 / 0.86</td><td>−0.00</td><td>[−0.01, +0.00]</td><td>p=0.814</td><td>300</td></tr>
 <tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>real</td><td>add F1</td><td>0.25 / 0.13</td><td>+0.13</td><td>[+0.09, +0.16]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
-<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>real</td><td>torn pairs (pts)</td><td>17.7% / 18.6%</td><td>−0.6</td><td>[−5.3, +4.2]</td><td>p=0.814</td><td>264</td></tr>
+<tr><td>IntentFlow cap18 (large test) − LEGO-Net (large test)</td><td>real</td><td>torn pairs (pts)</td><td>17.7% / 18.6%</td><td>−0.6</td><td>[−5.2, +4.1]</td><td>p=0.822</td><td>264</td></tr>
 <tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.386</td><td>−0.298</td><td>[−0.316, −0.281]</td><td><b>p&lt;0.001</b></td><td>214</td></tr>
-<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>real</td><td>keep F1</td><td>0.86 / 0.49</td><td>+0.37</td><td>[+0.33, +0.42]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
-<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>real</td><td>add F1</td><td>0.25 / 0.18</td><td>+0.07</td><td>[+0.02, +0.12]</td><td><b>p=0.003</b></td><td>300</td></tr>
-<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>real</td><td>torn pairs (pts)</td><td>17.7% / 34.6%</td><td>−9.5</td><td>[−18.0, −0.9]</td><td><b>p=0.032</b></td><td>111</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>scale</td><td>\(D\)</td><td>0.060 / 0.068</td><td>−0.008</td><td>[−0.014, −0.003]</td><td><b>p=0.002</b></td><td>50</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>scale</td><td>wall kept</td><td>0.84 / 0.81</td><td>+0.03</td><td>[−0.01, +0.08]</td><td>p=0.127</td><td>48</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>6.4% / 10.6%</td><td>−4.2</td><td>[−8.2, −0.7]</td><td><b>p=0.014</b></td><td>39</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>shape</td><td>\(D\)</td><td>0.066 / 0.070</td><td>−0.004</td><td>[−0.008, +0.000]</td><td>p=0.060</td><td>50</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>shape</td><td>wall kept</td><td>0.73 / 0.65</td><td>+0.08</td><td>[+0.05, +0.11]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>19.0% / 17.2%</td><td>+1.8</td><td>[−3.6, +6.9]</td><td>p=0.502</td><td>40</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.085</td><td>−0.004</td><td>[−0.009, +0.001]</td><td>p=0.127</td><td>300</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>real</td><td>add F1</td><td>0.25 / 0.23</td><td>+0.02</td><td>[−0.02, +0.05]</td><td>p=0.273</td><td>300</td></tr>
-<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>real</td><td>torn pairs (pts)</td><td>17.7% / 16.8%</td><td>+1.0</td><td>[−2.2, +4.3]</td><td>p=0.552</td><td>262</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>scale</td><td>\(D\)</td><td>0.066 / 0.131</td><td>−0.064</td><td>[−0.105, −0.026]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
+<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>real</td><td>keep F1</td><td>0.86 / 0.49</td><td>+0.37</td><td>[+0.34, +0.41]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
+<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>real</td><td>add F1</td><td>0.25 / 0.18</td><td>+0.07</td><td>[+0.02, +0.12]</td><td><b>p=0.006</b></td><td>300</td></tr>
+<tr><td>IntentFlow cap18 (large test) − PhyScene (large test)</td><td>real</td><td>torn pairs (pts)</td><td>17.7% / 34.6%</td><td>−9.5</td><td>[−18.0, −1.1]</td><td><b>p=0.028</b></td><td>111</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>scale</td><td>\(D\)</td><td>0.060 / 0.068</td><td>−0.008</td><td>[−0.014, −0.003]</td><td><b>p=0.001</b></td><td>50</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>scale</td><td>wall kept</td><td>0.84 / 0.81</td><td>+0.03</td><td>[−0.01, +0.07]</td><td>p=0.131</td><td>48</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>6.4% / 10.6%</td><td>−4.2</td><td>[−8.4, −0.5]</td><td><b>p=0.022</b></td><td>39</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>shape</td><td>\(D\)</td><td>0.066 / 0.070</td><td>−0.004</td><td>[−0.008, +0.000]</td><td>p=0.059</td><td>50</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>shape</td><td>wall kept</td><td>0.73 / 0.65</td><td>+0.08</td><td>[+0.05, +0.12]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>19.1% / 17.2%</td><td>+1.9</td><td>[−3.4, +7.1]</td><td>p=0.469</td><td>40</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.085</td><td>−0.004</td><td>[−0.009, +0.001]</td><td>p=0.155</td><td>300</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>real</td><td>add F1</td><td>0.25 / 0.23</td><td>+0.02</td><td>[−0.02, +0.05]</td><td>p=0.302</td><td>300</td></tr>
+<tr><td>IntentFlow cap18 (large test) − IntentFlow cap17 (large test)</td><td>real</td><td>torn pairs (pts)</td><td>17.7% / 16.8%</td><td>+1.0</td><td>[−2.2, +4.3]</td><td>p=0.548</td><td>262</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>scale</td><td>\(D\)</td><td>0.066 / 0.131</td><td>−0.064</td><td>[−0.105, −0.027]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
 <tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>scale</td><td>wall kept</td><td>0.83 / 0.51</td><td>+0.33</td><td>[+0.18, +0.51]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>scale</td><td>torn pairs (pts)</td><td>9.8% / 12.4%</td><td>−2.6</td><td>[−17.1, +9.1]</td><td>p=0.707</td><td>6</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>shape</td><td>\(D\)</td><td>0.066 / 0.128</td><td>−0.063</td><td>[−0.099, −0.029]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>shape</td><td>wall kept</td><td>0.64 / 0.31</td><td>+0.32</td><td>[+0.22, +0.43]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>shape</td><td>torn pairs (pts)</td><td>14.2% / 26.6%</td><td>−12.4</td><td>[−29.8, +4.6]</td><td>p=0.174</td><td>6</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>scale</td><td>\(D\)</td><td>0.069 / 0.346</td><td>−0.277</td><td>[−0.320, −0.239]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>scale</td><td>wall kept</td><td>0.83 / 0.21</td><td>+0.63</td><td>[+0.51, +0.80]</td><td><b>p&lt;0.001</b></td><td>9</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>scale</td><td>torn pairs (pts)</td><td>9.8% / 12.4%</td><td>−2.6</td><td>[−16.7, +9.1]</td><td>p=0.728</td><td>6</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>shape</td><td>\(D\)</td><td>0.066 / 0.128</td><td>−0.063</td><td>[−0.101, −0.028]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>shape</td><td>wall kept</td><td>0.63 / 0.31</td><td>+0.32</td><td>[+0.22, +0.42]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>shape</td><td>torn pairs (pts)</td><td>12.6% / 26.6%</td><td>−14.0</td><td>[−34.1, +4.6]</td><td>p=0.155</td><td>6</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>scale</td><td>\(D\)</td><td>0.069 / 0.346</td><td>−0.277</td><td>[−0.319, −0.238]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>scale</td><td>wall kept</td><td>0.83 / 0.21</td><td>+0.63</td><td>[+0.51, +0.81]</td><td><b>p&lt;0.001</b></td><td>9</td></tr>
 <tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>scale</td><td>torn pairs (pts)</td><td>16.7% / 54.5%</td><td>−37.9</td><td>[−53.8, −13.9]</td><td><b>p=0.008</b></td><td>4</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>shape</td><td>\(D\)</td><td>0.064 / 0.372</td><td>−0.309</td><td>[−0.369, −0.244]</td><td><b>p&lt;0.001</b></td><td>9</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>shape</td><td>wall kept</td><td>0.62 / 0.30</td><td>+0.32</td><td>[+0.14, +0.47]</td><td><b>p&lt;0.001</b></td><td>9</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>shape</td><td>torn pairs (pts)</td><td>11.7% / 36.9%</td><td>−25.2</td><td>[−55.7, +5.0]</td><td>p=0.117</td><td>4</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>\(D_A\)</td><td>0.089 / 0.184</td><td>−0.095</td><td>[−0.109, −0.081]</td><td><b>p&lt;0.001</b></td><td>120</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>keep F1</td><td>0.86 / 0.86</td><td>+0.00</td><td>[−0.00, +0.01]</td><td>p=0.270</td><td>120</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>add F1</td><td>0.18 / 0.12</td><td>+0.06</td><td>[−0.00, +0.12]</td><td>p=0.061</td><td>120</td></tr>
-<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>torn pairs (pts)</td><td>19.6% / 17.3%</td><td>+2.3</td><td>[−4.6, +9.5]</td><td>p=0.514</td><td>106</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>real</td><td>\(D_A\)</td><td>0.089 / 0.380</td><td>−0.286</td><td>[−0.313, −0.259]</td><td><b>p&lt;0.001</b></td><td>85</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>shape</td><td>\(D\)</td><td>0.063 / 0.372</td><td>−0.309</td><td>[−0.369, −0.246]</td><td><b>p&lt;0.001</b></td><td>9</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>shape</td><td>wall kept</td><td>0.62 / 0.30</td><td>+0.32</td><td>[+0.15, +0.46]</td><td><b>p&lt;0.001</b></td><td>9</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>shape</td><td>torn pairs (pts)</td><td>11.7% / 36.9%</td><td>−25.2</td><td>[−55.7, +5.0]</td><td>p=0.120</td><td>4</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>\(D_A\)</td><td>0.090 / 0.184</td><td>−0.094</td><td>[−0.109, −0.080]</td><td><b>p&lt;0.001</b></td><td>120</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>keep F1</td><td>0.86 / 0.86</td><td>+0.00</td><td>[−0.00, +0.01]</td><td>p=0.286</td><td>120</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>add F1</td><td>0.18 / 0.12</td><td>+0.06</td><td>[−0.01, +0.12]</td><td>p=0.070</td><td>120</td></tr>
+<tr><td>IntentFlow cap16 (test) − LEGO-Net (test)</td><td>real</td><td>torn pairs (pts)</td><td>19.2% / 17.3%</td><td>+1.9</td><td>[−5.0, +8.9]</td><td>p=0.605</td><td>106</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>real</td><td>\(D_A\)</td><td>0.090 / 0.380</td><td>−0.286</td><td>[−0.314, −0.259]</td><td><b>p&lt;0.001</b></td><td>85</td></tr>
 <tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>real</td><td>keep F1</td><td>0.86 / 0.51</td><td>+0.36</td><td>[+0.29, +0.42]</td><td><b>p&lt;0.001</b></td><td>120</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>real</td><td>add F1</td><td>0.18 / 0.17</td><td>+0.01</td><td>[−0.06, +0.09]</td><td>p=0.711</td><td>120</td></tr>
-<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>real</td><td>torn pairs (pts)</td><td>19.6% / 35.2%</td><td>−6.8</td><td>[−20.8, +7.3]</td><td>p=0.348</td><td>49</td></tr>
-<tr><td>cap9, arrangement-metric \(\Pi_\theta\) − cap9, Euclidean \(\Pi_\theta\)</td><td>scale</td><td>torn pairs (pts)</td><td>5.1% / 6.0%</td><td>−0.9</td><td>[−3.1, +1.2]</td><td>p=0.445</td><td>10</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>real</td><td>add F1</td><td>0.18 / 0.17</td><td>+0.01</td><td>[−0.06, +0.09]</td><td>p=0.741</td><td>120</td></tr>
+<tr><td>IntentFlow cap16 (test) − PhyScene (test)</td><td>real</td><td>torn pairs (pts)</td><td>19.2% / 35.2%</td><td>−8.1</td><td>[−22.4, +5.9]</td><td>p=0.250</td><td>49</td></tr>
+<tr><td>cap9, arrangement-metric \(\Pi_\theta\) − cap9, Euclidean \(\Pi_\theta\)</td><td>scale</td><td>torn pairs (pts)</td><td>5.1% / 6.0%</td><td>−0.9</td><td>[−3.1, +1.2]</td><td>p=0.427</td><td>10</td></tr>
 <tr><td>cap9, arrangement-metric \(\Pi_\theta\) − cap9, Euclidean \(\Pi_\theta\)</td><td>shape</td><td>torn pairs (pts)</td><td>10.3% / 12.7%</td><td>−2.4</td><td>[−4.2, −0.8]</td><td><b>p=0.001</b></td><td>9</td></tr>
-<tr><td>cap9, reference wall sides forced − cap9 + separate models</td><td>shape</td><td>wall kept</td><td>0.84 / 0.61</td><td>+0.23</td><td>[+0.15, +0.34]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
-<tr><td>cap9, reference wall sides forced − cap9 + separate models</td><td>shape</td><td>torn pairs (pts)</td><td>18.8% / 10.8%</td><td>+7.9</td><td>[+2.4, +14.8]</td><td><b>p=0.002</b></td><td>9</td></tr>
-<tr><td>cap9, reference wall sides forced − cap9 + separate models</td><td>shape</td><td>\(D\)</td><td>0.071 / 0.059</td><td>+0.011</td><td>[+0.004, +0.020]</td><td><b>p=0.003</b></td><td>10</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>scale</td><td>\(D\)</td><td>0.063 / 0.060</td><td>+0.003</td><td>[−0.001, +0.007]</td><td>p=0.162</td><td>50</td></tr>
+<tr><td>cap9, reference wall sides forced − cap9 + separate models</td><td>shape</td><td>wall kept</td><td>0.84 / 0.61</td><td>+0.23</td><td>[+0.15, +0.33]</td><td><b>p&lt;0.001</b></td><td>10</td></tr>
+<tr><td>cap9, reference wall sides forced − cap9 + separate models</td><td>shape</td><td>torn pairs (pts)</td><td>18.8% / 10.8%</td><td>+7.9</td><td>[+2.4, +14.8]</td><td><b>p=0.001</b></td><td>9</td></tr>
+<tr><td>cap9, reference wall sides forced − cap9 + separate models</td><td>shape</td><td>\(D\)</td><td>0.071 / 0.059</td><td>+0.011</td><td>[+0.003, +0.020]</td><td><b>p=0.003</b></td><td>10</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>scale</td><td>\(D\)</td><td>0.063 / 0.060</td><td>+0.003</td><td>[−0.001, +0.007]</td><td>p=0.106</td><td>50</td></tr>
 <tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>scale</td><td>wall kept</td><td>0.77 / 0.84</td><td>−0.07</td><td>[−0.10, −0.04]</td><td><b>p&lt;0.001</b></td><td>48</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>5.9% / 6.1%</td><td>−0.1</td><td>[−2.5, +2.6]</td><td>p=0.898</td><td>39</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>shape</td><td>\(D\)</td><td>0.063 / 0.066</td><td>−0.003</td><td>[−0.007, −0.000]</td><td><b>p=0.035</b></td><td>50</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>shape</td><td>wall kept</td><td>0.63 / 0.73</td><td>−0.10</td><td>[−0.13, −0.06]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>16.1% / 19.0%</td><td>−2.9</td><td>[−7.0, +1.0]</td><td>p=0.147</td><td>40</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.082</td><td>+0.001</td><td>[−0.003, +0.005]</td><td>p=0.770</td><td>300</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>real</td><td>add F1</td><td>0.26 / 0.25</td><td>+0.00</td><td>[−0.03, +0.03]</td><td>p=0.915</td><td>300</td></tr>
-<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>real</td><td>torn pairs (pts)</td><td>14.9% / 17.7%</td><td>−2.8</td><td>[−5.9, +0.4]</td><td>p=0.083</td><td>263</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>scale</td><td>torn pairs (pts)</td><td>6.2% / 6.1%</td><td>+0.1</td><td>[−2.4, +2.8]</td><td>p=0.946</td><td>39</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>shape</td><td>\(D\)</td><td>0.063 / 0.066</td><td>−0.003</td><td>[−0.007, +0.000]</td><td>p=0.051</td><td>50</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>shape</td><td>wall kept</td><td>0.63 / 0.73</td><td>−0.10</td><td>[−0.14, −0.06]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>shape</td><td>torn pairs (pts)</td><td>16.3% / 19.1%</td><td>−2.8</td><td>[−6.8, +1.1]</td><td>p=0.166</td><td>40</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.082</td><td>+0.000</td><td>[−0.004, +0.004]</td><td>p=0.921</td><td>300</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>real</td><td>add F1</td><td>0.25 / 0.25</td><td>+0.00</td><td>[−0.03, +0.03]</td><td>p=0.882</td><td>300</td></tr>
+<tr><td>IntentFlow cap19, augmentation without wall sides (large test) − IntentFlow cap18 (large test)</td><td>real</td><td>torn pairs (pts)</td><td>15.0% / 17.7%</td><td>−2.7</td><td>[−5.8, +0.5]</td><td>p=0.098</td><td>263</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 16.</strong> Room- or pair-clustered paired bootstrap (10,000 resamples); bold \(p\) marks \(p&lt;0.05\). Torn pairs in percentage points. Rows marked pending have no bootstrap result.</p>
 <h3 id="exp-abl">6.6. Ablations of the model</h3>
@@ -601,16 +601,16 @@ the single model adds 1.42 pieces per pair where designers add 2.67; on the larg
 <tr><td>reference wall sides forced</td><td>0.076</td><td>10.0%</td><td>0.93</td><td>16 cm</td><td>0.071</td><td>18.8%</td><td>0.84</td><td>17 cm</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 18.</strong> Forcing the reference's wall sides as a hard constraint of \(\Pi_\theta\) (earlier student cap9). The same flow output is projected with the model's own wall contacts or with every reference wall side forced.</p>
-<p><strong>Walls against groups.</strong> Forcing every reference wall side raises kept wall contacts on outline targets (+0.23 [+0.15, +0.34], p&lt;0.001, 10 rooms), and with them the torn pairs
-(+7.9 pts [+2.4, +14.8], p=0.002, 9 rooms) and \(D\) (+0.011 [+0.004, +0.020], p=0.003, 10 rooms). In a reshaped room a group's wall sides and its internal contacts cannot all be kept; a hard constraint that chooses
+<p><strong>Walls against groups.</strong> Forcing every reference wall side raises kept wall contacts on outline targets (+0.23 [+0.15, +0.33], p&lt;0.001, 10 rooms), and with them the torn pairs
+(+7.9 pts [+2.4, +14.8], p=0.001, 9 rooms) and \(D\) (+0.011 [+0.003, +0.020], p=0.003, 10 rooms). In a reshaped room a group's wall sides and its internal contacts cannot all be kept; a hard constraint that chooses
 the walls tears groups, while the learned placement keeps them and gives up wall sides. Designers face the same conflict: across the full real pairs a second designer pulls
 apart 23.5% of the first designer's touching pairs and keeps 66% of wall sides. B never intended to preserve A, so this
 is context, not a target.</p>
 <p><strong>The trade-off in training.</strong> The augmentation targets of cap18 impose the reference's wall sides as a hard constraint (§5). On the validation monitor
 (Table 19) the outline torn pairs rise from 15.4% at step 2,500 to 19.0% at step 20,000 while outline wall contacts
 go from 0.79 to 0.83: the model inherits the constraint's trade-off. On the large test split, cap18 against the earlier run (cap17) lowers
-\(D\) on scaled rooms (−0.008 [−0.014, −0.003], p=0.002, 50 rooms) and torn pairs on scaled rooms (−4.2 pts [−8.2, −0.7], p=0.014, 39 rooms), keeps more wall contacts on outlines
-(+0.08 [+0.05, +0.11], p&lt;0.001, 46 rooms), and changes outline torn pairs (+1.8 pts [−3.6, +6.9], p=0.502, 40 rooms), not significantly.</p>
+\(D\) on scaled rooms (−0.008 [−0.014, −0.003], p=0.001, 50 rooms) and torn pairs on scaled rooms (−4.2 pts [−8.4, −0.5], p=0.022, 39 rooms), keeps more wall contacts on outlines
+(+0.08 [+0.05, +0.12], p&lt;0.001, 46 rooms), and changes outline torn pairs (+1.9 pts [−3.4, +7.1], p=0.469, 40 rooms), not significantly.</p>
 <div class="tw"><table><thead><tr><th>step</th><th>scale: \(D\)</th><th>scale: torn pairs</th><th>outline: \(D\)</th><th>outline: torn pairs</th><th>outline: wall kept</th><th>real \(D_A\)</th><th>add F1</th></tr></thead><tbody>
 <tr><td>2,500</td><td>0.061</td><td>3.9%</td><td>0.066</td><td>15.4%</td><td>0.79</td><td>0.082</td><td>0.249</td></tr>
 <tr><td>5,000</td><td>0.066</td><td>4.4%</td><td>0.070</td><td>16.8%</td><td>0.82</td><td>0.082</td><td>0.268</td></tr>
@@ -624,17 +624,17 @@ go from 0.79 to 0.83: the model inherits the constraint's trade-off. On the larg
 <p class="lead"><strong>Table 19.</strong> Validation monitor of cap18 during training (frozen validation set; standard tests and real pairs).</p>
 <p><strong>Augmentation without the wall-side constraint.</strong> cap19 continues cap17 for 20,000 steps exactly like cap18, on augmentation targets produced by the same
 layout optimisation without the reference-wall-side constraint (2,999 rooms). On the large test split (Table 20) it keeps fewer wall contacts, on scaled rooms
-(−0.07 [−0.10, −0.04], p&lt;0.001, 48 rooms) and on outlines (−0.10 [−0.13, −0.06], p&lt;0.001, 46 rooms), and tears fewer groups, in the expected direction but not significantly at 5%: outline torn
-pairs (−2.9 pts [−7.0, +1.0], p=0.147, 40 rooms), real-pair torn pairs (−2.8 pts [−5.9, +0.4], p=0.083, 263 pairs). \(D_A\) is unchanged (+0.001 [−0.003, +0.005], p=0.770, 300 pairs), outline \(D\) is
-slightly lower (−0.003 [−0.007, −0.000], p=0.035, 50 rooms), and add F1 is similar (+0.00 [−0.03, +0.03], p=0.915, 300 pairs). On the validation monitor (10 rooms) its outline torn pairs fluctuate between
+(−0.07 [−0.10, −0.04], p&lt;0.001, 48 rooms) and on outlines (−0.10 [−0.14, −0.06], p&lt;0.001, 46 rooms), and tears fewer groups, in the expected direction but not significantly at 5%: outline torn
+pairs (−2.8 pts [−6.8, +1.1], p=0.166, 40 rooms), real-pair torn pairs (−2.7 pts [−5.8, +0.5], p=0.098, 263 pairs). \(D_A\) is unchanged (+0.000 [−0.004, +0.004], p=0.921, 300 pairs), outline \(D\) is
+slightly lower (−0.003 [−0.007, +0.000], p=0.051, 50 rooms), and add F1 is similar (+0.00 [−0.03, +0.03], p=0.882, 300 pairs). On the validation monitor (10 rooms) its outline torn pairs fluctuate between
 12.4% and 19.6% and end at 15.6% (cap18: 15.4% rising to 19.0%), and its outline wall contacts stay between 0.61 and
 0.67 (cap18: 0.79–0.83). The augmentation's wall-side constraint thus moves the model along the same walls-versus-groups
 trade-off as forcing the constraint at inference (Table 18): significantly on walls, in the expected direction but not significantly on groups. cap18 remains the model
-shown by the selection rule: its \(D_A\) on the validation real pairs, the primary metric, is lower (0.082 against 0.084).</p>
+shown by the selection rule: its \(D_A\) on the validation real pairs, the primary metric, is lower (0.081 against 0.084).</p>
 <div class="tw"><table><thead><tr><th>augmentation targets</th><th>scale: wall kept ↑</th><th>scale: torn pairs ↓</th><th>outline: \(D\) ↓</th><th>outline: wall kept ↑</th><th>outline: torn pairs ↓</th><th>real pairs: \(D_A\) ↓</th><th>real pairs: torn pairs ↓</th><th>real pairs: add F1 ↑</th><th>real pairs: add precision ↑</th></tr></thead><tbody>
-<tr class="ours"><td>with the reference's wall sides (cap18, shown)</td><td>0.84</td><td>6.6%</td><td>0.066</td><td>0.73</td><td>19.0%</td><td>0.082</td><td>17.7%</td><td>0.254</td><td>0.43</td></tr>
-<tr><td>without the wall-side constraint (cap19)</td><td>0.77</td><td>5.6%</td><td>0.063</td><td>0.63</td><td>16.1%</td><td>0.082</td><td>14.9%</td><td>0.255</td><td>0.44</td></tr>
-<tr class="grp"><td>paired bootstrap, without − with</td><td><b>p&lt;0.001</b></td><td>p=0.898</td><td><b>p=0.035</b></td><td><b>p&lt;0.001</b></td><td>p=0.147</td><td>p=0.770</td><td>p=0.083</td><td>p=0.915</td><td>—</td></tr>
+<tr class="ours"><td>with the reference's wall sides (cap18, shown)</td><td>0.84</td><td>6.6%</td><td>0.066</td><td>0.73</td><td>19.1%</td><td>0.082</td><td>17.7%</td><td>0.253</td><td>0.43</td></tr>
+<tr><td>without the wall-side constraint (cap19)</td><td>0.77</td><td>5.9%</td><td>0.063</td><td>0.63</td><td>16.3%</td><td>0.082</td><td>15.0%</td><td>0.255</td><td>0.44</td></tr>
+<tr class="grp"><td>paired bootstrap, without − with</td><td><b>p&lt;0.001</b></td><td>p=0.946</td><td>p=0.051</td><td><b>p&lt;0.001</b></td><td>p=0.166</td><td>p=0.921</td><td>p=0.098</td><td>p=0.882</td><td>—</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 20.</strong> Augmentation targets with and without the reference-wall-side constraint: both runs start from cap17 and train 20,000 steps with the same settings; large frozen test split. The last row gives the room- or pair-clustered paired bootstrap p (bold: p&lt;0.05).</p>
 <div class="tw"><table><thead><tr><th>variable / setting</th><th>scale: \(D\) ↓</th><th>outline: \(D\) ↓</th><th>wall kept, scale ↑</th><th>wall kept, outline ↑</th><th>kept, scale</th><th>usable, scale ↑</th><th>oob or collision (max)</th><th>wall-clock / target</th></tr></thead><tbody>
@@ -667,7 +667,7 @@ size swaps where the furniture does not fit, not style swaps. Appearance consist
 <tr><td>&nbsp;&nbsp;of which keep, relation and add heads</td><td>0.41 M</td><td>MLPs on the shared trunk</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 23.</strong> Parameters, counted from the checkpoint. Standard tests run on AMD EPYC 7551P 32-Core Processor (64 threads) in a 56-process pool; the baselines ran on one GPU under their own scripts.</p>
-<p>Per standard-test target, IntentFlow takes 28 s / 20 s (scale / outline) of wall time inside the CPU pool, LEGO-Net
+<p>Per standard-test target, IntentFlow takes 27 s / 20 s (scale / outline) of wall time inside the CPU pool, LEGO-Net
 2.2 s and PhyScene 93 s per target under their own GPU pipelines; the conditions differ, and we make no speed claim.</p>
 <h2 id="claims">7. Claims, evidence and missing experiments</h2>
 <div class="tw"><table class="impl"><thead><tr><th>claim</th><th>current evidence</th><th>missing</th></tr></thead><tbody>
@@ -675,8 +675,8 @@ size swaps where the furniture does not fit, not style swaps. Appearance consist
 <tr><td>C2 reference-conditioned placement keeps the arrangement better than the baselines</td><td>large test split: \(D_A\) 0.082 vs LEGO-Net 0.184 (−0.102 [−0.111, −0.093], p&lt;0.001, 300 pairs) and PhyScene 0.386 (−0.298 [−0.316, −0.281], p&lt;0.001, 214 pairs); standard-test \(D\) lower than both on both tests; the smaller test split and validation agree (Table 16)</td><td>baselines trained on all room types; more rooms per cell; seeds</td></tr>
 <tr><td>C3 the output is physically valid</td><td>large test split: standard tests at most 1.8% out of room / collision / door blocked; real pairs 0.3% out of room, 6.7% collision (baselines 17.5% / 15.9% out of room)</td><td>constraints as training losses (ablation)</td></tr>
 <tr><td>C4 the arrangement-metric projection keeps groups</td><td>outline torn pairs (−2.4 pts [−4.2, −0.8], p=0.001, 9 rooms); scale not significant with 10 rooms</td><td>the same ablation on the single model</td></tr>
-<tr><td>C8 additions are right but too few</td><td>large test split: add F1 0.254, precision 0.43, recall 0.16; 1.35 added per pair vs 3.02 by designers</td><td>higher recall without losing precision</td></tr>
-<tr><td>C5 hard wall-side constraints trade walls for groups</td><td>forcing reference wall sides: wall kept (+0.23 [+0.15, +0.34], p&lt;0.001, 10 rooms), torn pairs (+7.9 pts [+2.4, +14.8], p=0.002, 9 rooms), \(D\) (+0.011 [+0.004, +0.020], p=0.003, 10 rooms) (outlines)</td><td>—</td></tr>
+<tr><td>C8 additions are right but too few</td><td>large test split: add F1 0.253, precision 0.43, recall 0.16; 1.35 added per pair vs 3.02 by designers</td><td>higher recall without losing precision</td></tr>
+<tr><td>C5 hard wall-side constraints trade walls for groups</td><td>forcing reference wall sides: wall kept (+0.23 [+0.15, +0.33], p&lt;0.001, 10 rooms), torn pairs (+7.9 pts [+2.4, +14.8], p=0.001, 9 rooms), \(D\) (+0.011 [+0.003, +0.020], p=0.003, 10 rooms) (outlines)</td><td>—</td></tr>
 <tr><td>C6 appearance and arrangement separable</td><td>changed share rises with \(\lambda\); \(D\in[0.024,0.048]\) (Table 22)</td><td>appearance consistency (CLIP or people); random-swap control</td></tr>
 <tr><td>C7 one objective for the discrete choices</td><td>kept fraction per scale (Table 27)</td><td>drop order learned vs random vs footprint-only; steps 3–5 on/off</td></tr>
 <tr><td>speed</td><td>no claim</td><td>controlled latency on one device</td></tr>
@@ -782,12 +782,12 @@ on most rooms; standard-test cells have 50 rooms on the large test split and 10 
 <tr><td>x1.0</td><td>0.035 / 0.146</td><td>5% / 5%</td><td>0.65 / 0.61</td><td>1.00 / 0.00</td><td>1.00 / 1.00</td><td>0.30 / 0.00</td><td>11 cm / —</td></tr>
 <tr><td>x1.1</td><td>0.035 / 0.148</td><td>3% / 5%</td><td>0.79 / 0.46</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>0.90 / 0.00</td><td>6 cm / —</td></tr>
 <tr><td>x1.2</td><td>0.050 / 0.142</td><td>7% / 5%</td><td>0.72 / 0.29</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>1.50 / 0.00</td><td>7 cm / —</td></tr>
-<tr><td>x1.3</td><td>0.074 / 0.136</td><td>18% / 35%</td><td>0.84 / 0.25</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>2.00 / 0.00</td><td>15 cm / —</td></tr>
+<tr><td>x1.3</td><td>0.076 / 0.136</td><td>20% / 35%</td><td>0.87 / 0.25</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>2.00 / 0.00</td><td>17 cm / —</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 27.</strong> Scale test per column, IntentFlow / LEGO-Net.</p>
 <div class="tw"><table><thead><tr><th>shape target (IntentFlow / LEGO-Net)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
 <tr><td>1.2x1.3</td><td>0.060 / 0.152</td><td>11% / 11%</td><td>0.79 / 0.37</td><td>— / —</td><td>1.00 / 1.00</td><td>1.80 / 0.00</td><td>7 cm / —</td></tr>
-<tr><td>1.5x1.1+cut</td><td>0.079 / 0.147</td><td>20% / 41%</td><td>0.89 / 0.43</td><td>— / —</td><td>1.00 / 1.00</td><td>1.90 / 0.00</td><td>6 cm / —</td></tr>
+<tr><td>1.5x1.1+cut</td><td>0.077 / 0.147</td><td>20% / 41%</td><td>0.89 / 0.43</td><td>— / —</td><td>1.00 / 1.00</td><td>1.90 / 0.00</td><td>4 cm / —</td></tr>
 <tr><td>L x1.3</td><td>0.089 / 0.161</td><td>33% / 22%</td><td>0.74 / 0.20</td><td>— / —</td><td>1.00 / 1.00</td><td>1.10 / 0.00</td><td>24 cm / —</td></tr>
 <tr><td>T x1.3</td><td>0.085 / 0.161</td><td>31% / 22%</td><td>0.71 / 0.20</td><td>— / —</td><td>1.00 / 1.00</td><td>1.30 / 0.00</td><td>13 cm / —</td></tr>
 <tr><td>trapezoid x1.2</td><td>0.062 / 0.158</td><td>9% / 11%</td><td>0.90 / 0.47</td><td>— / —</td><td>1.00 / 1.00</td><td>1.20 / 0.00</td><td>20 cm / —</td></tr>
