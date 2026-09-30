@@ -393,7 +393,7 @@ zero in cap12; cap16 continued on the label-fixed data; cap17 trained additions 
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.056</td><td>1.00</td><td>0.00</td><td>4.3%</td><td>0.81</td><td>16.4%</td><td>2.7%</td><td>32%</td></tr>
 <tr><td>LEGO-Net</td><td>0.158</td><td>1.00</td><td>0.00</td><td>9.2%</td><td>0.43</td><td>16.5%</td><td>6.9%</td><td>28%</td></tr>
 <tr><td>PhyScene</td><td>0.379</td><td>0.36</td><td>5.84</td><td>26.8%</td><td>0.30</td><td>11.6%</td><td>9.3%</td><td>54%</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.060</td><td>0.94</td><td>1.13</td><td>6.7%</td><td>0.84</td><td>0.1%</td><td>0.1%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.060</td><td>0.94</td><td>1.13</td><td>6.6%</td><td>0.84</td><td>0.1%</td><td>0.1%</td><td>0%</td></tr>
 <tr><td>IntentFlow, earlier run (cap17)</td><td>0.068</td><td>0.94</td><td>1.46</td><td>10.7%</td><td>0.81</td><td>0.2%</td><td>0.0%</td><td>1%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 5.</strong> Large held-out test split, scale test (700 targets over both tests, one seed; means over columns). The affine transplant is the input, not a method.</p>
@@ -401,7 +401,7 @@ zero in cap12; cap16 continued on the label-fixed data; cap17 trained additions 
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.073</td><td>1.00</td><td>0.00</td><td>26.5%</td><td>0.58</td><td>13.0%</td><td>1.1%</td><td>28%</td></tr>
 <tr><td>LEGO-Net</td><td>0.141</td><td>1.00</td><td>0.00</td><td>26.6%</td><td>0.26</td><td>9.4%</td><td>4.6%</td><td>18%</td></tr>
 <tr><td>PhyScene</td><td>0.371</td><td>0.40</td><td>7.25</td><td>39.9%</td><td>0.34</td><td>10.0%</td><td>5.3%</td><td>53%</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.066</td><td>1.00</td><td>1.91</td><td>18.6%</td><td>0.73</td><td>0.0%</td><td>0.1%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.066</td><td>1.00</td><td>1.91</td><td>19.0%</td><td>0.73</td><td>0.0%</td><td>0.1%</td><td>0%</td></tr>
 <tr><td>IntentFlow, earlier run (cap17)</td><td>0.070</td><td>1.00</td><td>2.17</td><td>17.2%</td><td>0.65</td><td>0.0%</td><td>0.0%</td><td>1%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 6.</strong> Large held-out test split, outline test, same columns as Table 5.</p>
@@ -456,13 +456,13 @@ either baseline (p=0.670; p=0.254). On the standard tests its \(D\) is lower tha
 door-blocking rate over all columns is 0.0%. It tears fewer reference-touching pairs than LEGO-Net on outline targets (p=0.029; scale
 not significant with 6 rooms) and than PhyScene on both tests (p=0.010, p=0.007, over the few pairs PhyScene matches).
 The affine transplant has \(D_A\) 0.070 and 29.0% of pieces outside the room. The development results below agree in direction; \(D_A\) and \(D\)
-of the shown model on the large test split and on the validation split differ by at most 0.009.</p>
+of the shown model on the large test split and on the validation split differ by at most 0.008.</p>
 <h3 id="exp-comp">6.3. Development: comparison on the validation split</h3>
 <div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (kept pieces)</th><th>kept</th><th>added / room</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>out of room ↓</th><th>collision ↓</th><th>door blocked ↓</th></tr></thead><tbody>
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.060</td><td>1.00</td><td>0.00</td><td>6.4%</td><td>0.72</td><td>17.7%</td><td>4.2%</td><td>23%</td></tr>
 <tr><td>LEGO-Net</td><td>0.158</td><td>1.00</td><td>0.00</td><td>8.8%</td><td>0.51</td><td>22.2%</td><td>12.9%</td><td>27%</td></tr>
 <tr><td>PhyScene</td><td>0.356</td><td>0.38</td><td>4.74</td><td>8.1%</td><td>0.39</td><td>14.7%</td><td>12.0%</td><td>50%</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.069</td><td>0.90</td><td>0.74</td><td>6.4%</td><td>0.75</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.069</td><td>0.90</td><td>0.73</td><td>6.0%</td><td>0.75</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
 <tr><td>IntentFlow, shorter run (cap12)</td><td>0.069</td><td>0.91</td><td>0.46</td><td>5.8%</td><td>0.71</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 11.</strong> Validation split, scale test (10 validation rooms per column, one seed; means over columns). The affine transplant is the input, not a method: it keeps every relation by construction and ignores the room.</p>
@@ -470,7 +470,7 @@ of the shown model on the large test split and on the validation split differ by
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.080</td><td>1.00</td><td>0.00</td><td>28.7%</td><td>0.48</td><td>14.4%</td><td>0.5%</td><td>14%</td></tr>
 <tr><td>LEGO-Net</td><td>0.154</td><td>1.00</td><td>0.00</td><td>22.8%</td><td>0.36</td><td>14.4%</td><td>7.9%</td><td>0%</td></tr>
 <tr><td>PhyScene</td><td>0.358</td><td>0.46</td><td>5.50</td><td>20.7%</td><td>0.36</td><td>12.1%</td><td>6.2%</td><td>71%</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.071</td><td>1.00</td><td>1.44</td><td>18.0%</td><td>0.81</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.071</td><td>1.00</td><td>1.51</td><td>18.3%</td><td>0.83</td><td>0.0%</td><td>0.0%</td><td>0%</td></tr>
 <tr><td>IntentFlow, shorter run (cap12)</td><td>0.068</td><td>1.00</td><td>0.74</td><td>13.8%</td><td>0.63</td><td>0.3%</td><td>0.0%</td><td>0%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 12.</strong> Validation split, outline test, same columns as Table 11.</p>
@@ -483,12 +483,12 @@ After \(\Pi_\theta\) its largest out-of-room, collision or door-blocking rate ov
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.071</td><td>0.847</td><td>0.125</td><td>— / —</td><td>0.00 / 2.68</td><td>11.2%</td><td>27.8%</td><td>9.5%</td><td>0.337</td></tr>
 <tr><td>LEGO-Net</td><td>0.187</td><td>0.847</td><td>0.125</td><td>— / —</td><td>0.00 / 2.68</td><td>15.9%</td><td>17.5%</td><td>20.1%</td><td>0.369</td></tr>
 <tr><td>PhyScene</td><td>0.371</td><td>0.451</td><td>0.115</td><td>— / —</td><td>5.76 / 2.68</td><td>31.2%</td><td>14.3%</td><td>12.8%</td><td>0.363</td></tr>
-<tr class="ours"><td>IntentFlow (cap18)</td><td>0.082</td><td>0.850</td><td>0.226</td><td>0.41 / 0.14</td><td>1.04 / 2.68</td><td>11.9%</td><td>0.9%</td><td>6.6%</td><td>0.334</td></tr>
+<tr class="ours"><td>IntentFlow (cap18)</td><td>0.082</td><td>0.850</td><td>0.226</td><td>0.41 / 0.14</td><td>1.07 / 2.68</td><td>11.9%</td><td>0.9%</td><td>6.4%</td><td>0.334</td></tr>
 <tr><td>IntentFlow, shorter run (cap12)</td><td>0.085</td><td>0.856</td><td>0.176</td><td>— / —</td><td>0.49 / 2.70</td><td>16.5%</td><td>0.3%</td><td>6.7%</td><td>0.331</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 13.</strong> Validation split, held-out real pairs. LEGO-Net keeps every piece and adds none, so its keep and add F1 equal the transplant's by construction; PhyScene's \(D_A\) is over the pieces it could match by category.</p>
 <p>On the validation real pairs IntentFlow's \(D_A\) is 0.082, against 0.187 for LEGO-Net and 0.371 for PhyScene, with
-0.9% of pieces out of the room and 6.6% colliding pairs (LEGO-Net 17.5% / 20.1%,
+0.9% of pieces out of the room and 6.4% colliding pairs (LEGO-Net 17.5% / 20.1%,
 PhyScene 14.3% / 12.8%); keep F1 0.850 (PhyScene 0.451), add F1 0.226
 (LEGO-Net 0.125, PhyScene 0.115). The affine transplant has the lowest \(D_A\) (0.071) and 27.8%
 of pieces outside the room; it is what IntentFlow starts from, and the difference to it is what feasibility costs in arrangement. \(D_B\) differs little between methods; it is
@@ -632,7 +632,7 @@ slightly lower (−0.004 [−0.007, −0.001], p=0.020, 50 rooms), and add F1 is
 trade-off as forcing the constraint at inference (Table 18): significantly on walls, in the expected direction but not significantly on groups. cap18 remains the model
 shown by the selection rule: its \(D_A\) on the validation real pairs, the primary metric, is lower (0.082 against 0.084).</p>
 <div class="tw"><table><thead><tr><th>augmentation targets</th><th>scale: wall kept ↑</th><th>scale: torn pairs ↓</th><th>outline: \(D\) ↓</th><th>outline: wall kept ↑</th><th>outline: torn pairs ↓</th><th>real pairs: \(D_A\) ↓</th><th>real pairs: torn pairs ↓</th><th>real pairs: add F1 ↑</th><th>real pairs: add precision ↑</th></tr></thead><tbody>
-<tr class="ours"><td>with the reference's wall sides (cap18, shown)</td><td>0.84</td><td>6.7%</td><td>0.066</td><td>0.73</td><td>18.6%</td><td>0.082</td><td>17.9%</td><td>0.247</td><td>0.41</td></tr>
+<tr class="ours"><td>with the reference's wall sides (cap18, shown)</td><td>0.84</td><td>6.6%</td><td>0.066</td><td>0.73</td><td>19.0%</td><td>0.082</td><td>17.9%</td><td>0.247</td><td>0.41</td></tr>
 <tr><td>without the wall-side constraint (cap19)</td><td>0.77</td><td>5.6%</td><td>0.063</td><td>0.63</td><td>16.1%</td><td>0.082</td><td>14.8%</td><td>0.252</td><td>0.44</td></tr>
 <tr class="grp"><td>paired bootstrap, without − with</td><td><b>p&lt;0.001</b></td><td>p=0.736</td><td><b>p=0.020</b></td><td><b>p&lt;0.001</b></td><td>p=0.198</td><td>p=0.869</td><td>p=0.059</td><td>p=0.791</td><td>—</td></tr>
 </tbody></table></div>
@@ -649,17 +649,17 @@ shown by the selection rule: its \(D_A\) on the validation real pairs, the prima
 <h3 id="exp-style">6.7. Style token</h3>
 <div class="tw"><table><thead><tr><th>\(\lambda\)</th><th>Japanese: changed / labelled / \(D\)</th><th>Light Luxury: changed / labelled / \(D\)</th><th>New Chinese: changed / labelled / \(D\)</th></tr></thead><tbody>
 <tr><td>0.00</td><td>0.10 / 0.06 / 0.031</td><td>0.10 / 0.02 / 0.031</td><td>0.10 / 0.03 / 0.031</td></tr>
-<tr><td>0.25</td><td>0.21 / 0.25 / 0.028</td><td>0.24 / 0.16 / 0.029</td><td>0.27 / 0.21 / 0.025</td></tr>
-<tr><td>0.50</td><td>0.54 / 0.58 / 0.029</td><td>0.57 / 0.47 / 0.024</td><td>0.62 / 0.55 / 0.031</td></tr>
-<tr><td>0.75</td><td>0.72 / 0.75 / 0.032</td><td>0.80 / 0.70 / 0.026</td><td>0.76 / 0.80 / 0.046</td></tr>
-<tr><td>1.00</td><td>0.85 / 0.88 / 0.033</td><td>0.92 / 0.82 / 0.025</td><td>0.79 / 0.81 / 0.046</td></tr>
+<tr><td>0.25</td><td>0.21 / 0.25 / 0.028</td><td>0.24 / 0.19 / 0.028</td><td>0.27 / 0.24 / 0.023</td></tr>
+<tr><td>0.50</td><td>0.54 / 0.58 / 0.029</td><td>0.57 / 0.52 / 0.023</td><td>0.62 / 0.58 / 0.030</td></tr>
+<tr><td>0.75</td><td>0.72 / 0.75 / 0.032</td><td>0.80 / 0.75 / 0.025</td><td>0.76 / 0.80 / 0.046</td></tr>
+<tr><td>1.00</td><td>0.85 / 0.88 / 0.033</td><td>0.92 / 0.87 / 0.024</td><td>0.79 / 0.81 / 0.046</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 22.</strong> Style test (10 validation rooms per style, the room itself as target). Changed: share of floor pieces whose asset changed; labelled: share carrying the target style label; \(D\): arrangement distance to the reference.</p>
 <p>The share of changed pieces increases monotonically with \(\lambda\) (on average
 0.10, 0.24, 0.58, 0.76, 0.85); at the largest degree between 0.81 and 0.88 of floor pieces carry the
-target label, and \(D\) stays between 0.024 and 0.046. At \(\lambda=0\), 0.10 of pieces still change:
+target label, and \(D\) stays between 0.023 and 0.046. At \(\lambda=0\), 0.10 of pieces still change:
 size swaps where the furniture does not fit, not style swaps. Appearance consistency has not been measured.</p>
-<figure id="fig-style"><img src="assets/v03/std_style_p4_cap18.png" alt="style" loading="lazy"><figcaption><strong>Figure 7.</strong> Style test (validation), first room: each row is one style and degree of change \(\lambda\); left, the layout; right, the product image of each floor piece (asterisk: the asset carries the target style label). The arrangement stays unchanged (\(D\) between 0.024 and 0.046 across styles and degrees) while the swapped share grows with \(\lambda\); at \(\lambda=0\) about 10% of the pieces change size in a room whose furniture does not fit, not style.</figcaption></figure>
+<figure id="fig-style"><img src="assets/v03/std_style_p4_cap18.png" alt="style" loading="lazy"><figcaption><strong>Figure 7.</strong> Style test (validation), first room: each row is one style and degree of change \(\lambda\); left, the layout; right, the product image of each floor piece (asterisk: the asset carries the target style label). The arrangement stays unchanged (\(D\) between 0.023 and 0.046 across styles and degrees) while the swapped share grows with \(\lambda\); at \(\lambda=0\) about 10% of the pieces change size in a room whose furniture does not fit, not style.</figcaption></figure>
 <h3 id="exp-compute">6.8. Compute</h3>
 <div class="tw"><table><thead><tr><th>component</th><th>parameters</th><th>architecture</th></tr></thead><tbody>
 <tr><td>IntentFlow (cap18), total</td><td>14.85 M</td><td>8 blocks, width 256, 8 heads</td></tr>
@@ -667,7 +667,7 @@ size swaps where the furniture does not fit, not style swaps. Appearance consist
 <tr><td>&nbsp;&nbsp;of which keep, relation and add heads</td><td>0.41 M</td><td>MLPs on the shared trunk</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 23.</strong> Parameters, counted from the checkpoint. Standard tests run on AMD EPYC 7551P 32-Core Processor (64 threads) in a 56-process pool; the baselines ran on one GPU under their own scripts.</p>
-<p>Per standard-test target, IntentFlow takes 69 s / 40 s (scale / outline) of wall time inside the CPU pool, LEGO-Net
+<p>Per standard-test target, IntentFlow takes 27 s / 20 s (scale / outline) of wall time inside the CPU pool, LEGO-Net
 2.2 s and PhyScene 93 s per target under their own GPU pipelines; the conditions differ, and we make no speed claim.</p>
 <h2 id="claims">7. Claims, evidence and missing experiments</h2>
 <div class="tw"><table class="impl"><thead><tr><th>claim</th><th>current evidence</th><th>missing</th></tr></thead><tbody>
@@ -677,7 +677,7 @@ size swaps where the furniture does not fit, not style swaps. Appearance consist
 <tr><td>C4 the arrangement-metric projection keeps groups</td><td>outline torn pairs (−2.4 pts [−4.2, −0.8], p=0.001, 9 rooms); scale not significant with 10 rooms</td><td>the same ablation on the single model</td></tr>
 <tr><td>C8 additions are right but too few</td><td>large test split: add F1 0.247, precision 0.41, recall 0.15; 1.34 added per pair vs 3.02 by designers</td><td>higher recall without losing precision</td></tr>
 <tr><td>C5 hard wall-side constraints trade walls for groups</td><td>forcing reference wall sides: wall kept (+0.23 [+0.15, +0.34], p&lt;0.001, 10 rooms), torn pairs (+7.9 pts [+2.4, +14.8], p=0.002, 9 rooms), \(D\) (+0.011 [+0.004, +0.020], p=0.003, 10 rooms) (outlines)</td><td>—</td></tr>
-<tr><td>C6 appearance and arrangement separable</td><td>changed share rises with \(\lambda\); \(D\in[0.024,0.046]\) (Table 22)</td><td>appearance consistency (CLIP or people); random-swap control</td></tr>
+<tr><td>C6 appearance and arrangement separable</td><td>changed share rises with \(\lambda\); \(D\in[0.023,0.046]\) (Table 22)</td><td>appearance consistency (CLIP or people); random-swap control</td></tr>
 <tr><td>C7 one objective for the discrete choices</td><td>kept fraction per scale (Table 27)</td><td>drop order learned vs random vs footprint-only; steps 3–5 on/off</td></tr>
 <tr><td>speed</td><td>no claim</td><td>controlled latency on one device</td></tr>
 </tbody></table></div>
@@ -780,19 +780,19 @@ on most rooms; standard-test cells have 50 rooms on the large test split and 10 
 <tr><td>x0.8</td><td>0.079 / 0.184</td><td>0% / 2%</td><td>0.78 / 0.69</td><td>1.00 / 1.00</td><td>0.77 / 1.00</td><td>0.10 / 0.00</td><td>12 cm / —</td></tr>
 <tr><td>x0.9</td><td>0.058 / 0.159</td><td>8% / 5%</td><td>0.81 / 0.61</td><td>1.00 / 1.00</td><td>0.93 / 1.00</td><td>0.00 / 0.00</td><td>9 cm / —</td></tr>
 <tr><td>x1.0</td><td>0.035 / 0.146</td><td>5% / 5%</td><td>0.65 / 0.61</td><td>1.00 / 0.00</td><td>1.00 / 1.00</td><td>0.30 / 0.00</td><td>11 cm / —</td></tr>
-<tr><td>x1.1</td><td>0.036 / 0.148</td><td>3% / 5%</td><td>0.79 / 0.46</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>0.90 / 0.00</td><td>6 cm / —</td></tr>
+<tr><td>x1.1</td><td>0.035 / 0.148</td><td>3% / 5%</td><td>0.79 / 0.46</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>0.90 / 0.00</td><td>6 cm / —</td></tr>
 <tr><td>x1.2</td><td>0.050 / 0.142</td><td>7% / 5%</td><td>0.72 / 0.29</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>1.50 / 0.00</td><td>7 cm / —</td></tr>
-<tr><td>x1.3</td><td>0.074 / 0.136</td><td>22% / 35%</td><td>0.84 / 0.25</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>2.10 / 0.00</td><td>15 cm / —</td></tr>
+<tr><td>x1.3</td><td>0.074 / 0.136</td><td>18% / 35%</td><td>0.84 / 0.25</td><td>0.00 / 0.00</td><td>1.00 / 1.00</td><td>2.00 / 0.00</td><td>15 cm / —</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 27.</strong> Scale test per column, IntentFlow / LEGO-Net.</p>
 <div class="tw"><table><thead><tr><th>shape target (IntentFlow / LEGO-Net)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
-<tr><td>1.2x1.3</td><td>0.059 / 0.152</td><td>9% / 11%</td><td>0.76 / 0.37</td><td>— / —</td><td>1.00 / 1.00</td><td>1.80 / 0.00</td><td>8 cm / —</td></tr>
-<tr><td>1.5x1.1+cut</td><td>0.080 / 0.147</td><td>20% / 41%</td><td>0.89 / 0.43</td><td>— / —</td><td>1.00 / 1.00</td><td>1.90 / 0.00</td><td>6 cm / —</td></tr>
-<tr><td>L x1.3</td><td>0.089 / 0.161</td><td>33% / 22%</td><td>0.74 / 0.20</td><td>— / —</td><td>1.00 / 1.00</td><td>1.00 / 0.00</td><td>24 cm / —</td></tr>
-<tr><td>T x1.3</td><td>0.084 / 0.161</td><td>31% / 22%</td><td>0.69 / 0.20</td><td>— / —</td><td>1.00 / 1.00</td><td>1.10 / 0.00</td><td>14 cm / —</td></tr>
-<tr><td>trapezoid x1.2</td><td>0.062 / 0.158</td><td>9% / 11%</td><td>0.85 / 0.47</td><td>— / —</td><td>1.00 / 1.00</td><td>1.10 / 0.00</td><td>21 cm / —</td></tr>
-<tr><td>pentagon x1.2</td><td>0.061 / 0.143</td><td>9% / 11%</td><td>0.93 / 0.30</td><td>— / —</td><td>1.00 / 1.00</td><td>1.20 / 0.00</td><td>6 cm / —</td></tr>
-<tr><td>long 1.6x1.0</td><td>0.060 / 0.157</td><td>13% / 41%</td><td>0.85 / 0.53</td><td>— / —</td><td>1.00 / 1.00</td><td>2.00 / 0.00</td><td>6 cm / —</td></tr>
+<tr><td>1.2x1.3</td><td>0.060 / 0.152</td><td>11% / 11%</td><td>0.79 / 0.37</td><td>— / —</td><td>1.00 / 1.00</td><td>1.80 / 0.00</td><td>7 cm / —</td></tr>
+<tr><td>1.5x1.1+cut</td><td>0.079 / 0.147</td><td>20% / 41%</td><td>0.89 / 0.43</td><td>— / —</td><td>1.00 / 1.00</td><td>1.90 / 0.00</td><td>6 cm / —</td></tr>
+<tr><td>L x1.3</td><td>0.089 / 0.161</td><td>33% / 22%</td><td>0.74 / 0.20</td><td>— / —</td><td>1.00 / 1.00</td><td>1.10 / 0.00</td><td>24 cm / —</td></tr>
+<tr><td>T x1.3</td><td>0.085 / 0.161</td><td>31% / 22%</td><td>0.71 / 0.20</td><td>— / —</td><td>1.00 / 1.00</td><td>1.30 / 0.00</td><td>13 cm / —</td></tr>
+<tr><td>trapezoid x1.2</td><td>0.062 / 0.158</td><td>9% / 11%</td><td>0.90 / 0.47</td><td>— / —</td><td>1.00 / 1.00</td><td>1.20 / 0.00</td><td>20 cm / —</td></tr>
+<tr><td>pentagon x1.2</td><td>0.061 / 0.143</td><td>9% / 11%</td><td>0.93 / 0.30</td><td>— / —</td><td>1.00 / 1.00</td><td>1.30 / 0.00</td><td>6 cm / —</td></tr>
+<tr><td>long 1.6x1.0</td><td>0.061 / 0.157</td><td>13% / 41%</td><td>0.85 / 0.53</td><td>— / —</td><td>1.00 / 1.00</td><td>2.00 / 0.00</td><td>5 cm / —</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 28.</strong> Outline test per column, IntentFlow / LEGO-Net. Door relations are undefined in these references.</p>
 <h3>C. Training curve</h3>
