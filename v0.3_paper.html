@@ -1,0 +1,539 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IntentFlow</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css"
+      integrity="sha384-n8MVd4RsNIU0tAv4ct0nTaAbDJwPJzDEaqSD1odI+WdtXRGWt2kTvGFasHpSy3SV" crossorigin="anonymous">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"
+        integrity="sha384-XjKyOOlGwcjNTAIQHIpgOno0Hl1YQqzUOEleOLALmuqehneUG+vnGctmUb0ZY0l8" crossorigin="anonymous"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"
+        integrity="sha384-+VBxd3r6XgURycqtZ117nYw44OOcIax56Z4dCRWbxyPt0Koah1uHoK0o4+/RRE05" crossorigin="anonymous"
+        onload="renderMathInElement(document.body,{delimiters:[{left:'$$',right:'$$',display:true},{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});"></script>
+<style>
+  :root{--ink:#111;--mut:#5c5c5c;--line:#e6e6e6;--acc:#a8412a;--acc2:#2a6f7a;--panel:#f7f7f7;--good:#2a7a2a;}
+  *{box-sizing:border-box}
+  html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+  body{margin:0;background:#fff;color:var(--ink);
+       font:17px/1.68 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:880px;margin:0 auto;padding:34px 22px 60px}
+  h1{font-size:30px;margin:0 0 6px;font-weight:700;letter-spacing:-.01em;line-height:1.22}
+  .authors{color:var(--mut);font-size:16px;margin:2px 0 2px}
+  .venue{color:var(--acc);font-size:14px;font-weight:600;margin:0 0 12px}
+  h2{font-size:22px;margin:48px 0 12px;font-weight:700;padding-bottom:6px;border-bottom:2px solid var(--ink)}
+  h3{font-size:18px;margin:26px 0 6px;font-weight:600}
+  h4{font-size:15.5px;margin:18px 0 4px;font-weight:600;color:#333}
+  p{margin:0 0 14px}
+  ul,ol{margin:0 0 14px;padding-left:22px} li{margin-bottom:6px}
+  .mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em}
+  code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;font-size:.88em;background:var(--panel);padding:1px 5px;border-radius:3px}
+  .note{background:var(--panel);border-left:3px solid var(--acc);padding:12px 16px;border-radius:0 3px 3px 0;font-size:15px;margin:18px 0;color:#3c3c3c}
+  .note strong{color:var(--ink)} .note.warn{border-left-color:#b0752a}
+  .tag{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:10px;background:var(--acc);color:#fff;vertical-align:middle;margin-left:6px}
+  .tag.g{background:var(--good)} .tag.b{background:var(--acc2)}
+  a.cite{color:var(--acc2);text-decoration:none;font-weight:600} a.cite:hover{text-decoration:underline}
+  figure{margin:22px 0}
+  figure img{width:100%;display:block;border-radius:3px;background:#fff;border:1px solid var(--line)}
+  figcaption{color:var(--mut);font-size:13.5px;margin-top:8px;line-height:1.55}
+  figcaption strong{color:var(--ink)}
+  .fig{border:1px solid var(--line);border-radius:6px;background:#fff;padding:14px;margin:22px 0}
+  .fig svg{display:block;width:100%;height:auto}
+  table{border-collapse:collapse;width:100%;font-size:14px;margin:8px 0 16px}
+  .tw{overflow-x:auto}
+.impl td{white-space:normal;word-break:break-word;text-align:left}
+  th,td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;vertical-align:top;white-space:nowrap}
+  th:first-child,td:first-child{text-align:left;white-space:normal}
+  thead th{font-weight:600;border-bottom:1.5px solid var(--ink)}
+  tbody tr:hover{background:#fafafa} tr.ours td{background:#fbf3f0}
+  .win{font-weight:700;color:var(--good)} .bad{color:var(--acc)}
+  .lead{font-size:15px;color:var(--mut);margin:-2px 0 16px}
+  .links{margin:6px 0 6px;font-size:14.5px} .links a{color:var(--acc);margin-right:14px}
+  .abstract{background:var(--panel);border:1px solid var(--line);border-radius:6px;padding:16px 20px;margin:18px 0;font-size:15.5px}
+  .refs{font-size:13.5px;line-height:1.5;color:#3a3a3a} .refs ol{padding-left:26px} .refs li{margin-bottom:7px}
+  .refs a{color:var(--acc2);text-decoration:none} .refs a:hover{text-decoration:underline}
+  .svglabel{font:600 11px ui-monospace,SFMono-Regular,Menlo,monospace;fill:var(--mut)}
+  footer{margin:52px 0 0;padding-top:20px;border-top:1px solid var(--line);color:var(--mut);font-size:14px} footer a{color:var(--acc)}
+  tr.grp td{background:#f3f3f3} .katex .tag{background:none;color:inherit;padding:0;border-radius:0;font-size:inherit;font-weight:normal;margin:0;vertical-align:baseline}
+  .katex-display{overflow-x:auto;overflow-y:hidden;padding:2px 0} .tw th{white-space:normal} .small{font-size:14px;color:var(--mut)}
+  .sigt td:first-child{white-space:nowrap} .tw,.katex-display{position:relative} figure svg{max-width:100%;height:auto}
+</style>
+</head>
+<body><div class="wrap">
+<h1>IntentFlow: Moving a Home's Arrangement into Another Room with One Transformer</h1>
+<p class="authors">Anonymous submission</p>
+<p class="links"><a href="#method">Method</a><a href="#experiments">Experiments</a><a href="#refs">References</a><a href="#appendix">Appendix</a></p>
+<figure id="fig-teaser"><img src="assets/v03/render3d_paper_real_cap18.png" alt="teaser" loading="lazy"><figcaption><strong>Figure 1.</strong> Moving a home's arrangement into another room (held-out real pairs of the validation split, one per reference room type, rendered with the 3D-FUTURE assets; PhyScene's boxes are shown with the asset of its class nearest in size). Columns: the reference room A; IntentFlow in the empty room of a second designer's home B; LEGO-Net and PhyScene; designer B's own arrangement. IntentFlow keeps A's bed group and sofa group and fits them to the new walls; in the smaller bedroom the wardrobe becomes a smaller asset of the same 3D-FUTURE fine category. LEGO-Net stacks the wardrobe on the bed; PhyScene lays out its own furniture for the floor plan. Walls are cut at 1.1 m; doors red, windows blue.</figcaption></figure>
+<div class="abstract"><p><strong>Abstract.</strong> People who like the arrangement of another home want it in their own: the same kind of furniture, arranged the same way,
+in a room with another size and outline and with doors and windows elsewhere. A designer doing this keeps what matters, drops what no longer fits, adds what the new room
+calls for, and places everything so that the groups and their relations to the walls survive. We present IntentFlow, one transformer that makes all of these decisions.
+The reference's furniture, carried into the target room, and the room's walls, doors and windows are tokens of a single attention trunk; from it, heads predict which pieces
+a designer keeps, how strongly each relation between pieces is held and which pieces a designer adds, and a rectified-flow velocity head places the furniture. The keep,
+relation and addition heads are supervised by pairs of real rooms furnished by two designers with similar furniture, with no hand-written relation types or rules; hard
+constraints are enforced afterwards by a projection in an arrangement metric, and a style token changes the furniture's appearance without changing the arrangement. On a
+frozen held-out test set of 300 real room pairs and 700 reshaped and rescaled targets, IntentFlow keeps the reference arrangement
+with a relation distance \(D_A=0.082\), against 0.184 for LEGO-Net and 0.386 for PhyScene (p&lt;0.001 and p&lt;0.001),
+leaves 0.3% of pieces outside the room (LEGO-Net 17.5%, PhyScene 15.9%), and adds pieces with a precision of
+0.41 against the designers' additions.</p></div>
+
+<h2 id="intro">1. Introduction</h2>
+<p>A person browsing furnished homes finds an arrangement they like and wants it in their own home — the same kind of furniture, arranged the same way. Their room has
+another size and outline, and its doors and windows are elsewhere. An interior designer given this job would keep the pieces that carry the design, drop the ones that no
+longer fit, add what the new room calls for, and place everything so that the groups hold together and stand against the right walls (<a href="#fig-teaser">Fig. 1</a>). We study this
+<em>reference-to-room arrangement transfer</em>: given a reference scene \(S_\text{ref}\) and an empty target room \(P_t\), produce a furnished \(P_t\) that keeps how
+\(S_\text{ref}\) is arranged and is physically valid.</p>
+<p>The task is hard for three reasons. First, the decisions interact: what fits depends on where things go, where things go depends on what is kept, and what a designer
+adds depends on both. Second, "how a room is arranged" is not a fixed list of relation types; two designers furnishing similar furniture keep some relations and change
+others, and which ones survive depends on the room. Third, the result must be feasible — inside the room, free of interpenetration, with doorways clear — while a model
+that places furniture meets such constraints only up to its position error. Existing methods address neighbouring problems: scene generators
+[<a class="cite" href="#ref-atiss">1</a>, <a class="cite" href="#ref-sceneformer">2</a>, <a class="cite" href="#ref-diffuscene">3</a>, <a class="cite" href="#ref-instructscene">4</a>, <a class="cite" href="#ref-physcene">5</a>] sample new layouts for a room, rearrangement models [<a class="cite" href="#ref-legonet">6</a>] move a given layout toward a
+regular one, and layout optimisation [<a class="cite" href="#ref-makeithome">7</a>, <a class="cite" href="#ref-merrell">8</a>] scores layouts with hand-designed terms. None takes a reference arrangement and reproduces it in another
+room.</p>
+<p>IntentFlow makes the decisions with one network (Fig. 2). The reference's pieces are carried into the target room by an affine transplant and become tokens
+of one attention trunk together with the room's wall and opening tokens. Read once at flow time \(\tau=0\), the trunk predicts which pieces a designer keeps, how strongly
+each relation is held and, as set completion, which pieces a designer adds; along the flow, a velocity head moves the pieces to their places. Pairs of real rooms furnished
+by two designers with similar furniture supervise keeping, relation strength and additions directly. A projection enforces the hard constraints in an arrangement metric that
+moves neighbouring pieces together, and a style token changes the furniture's appearance without touching the arrangement.</p>
+<p>Our contributions are:</p>
+<ul>
+<li><strong>One transformer that keeps, weighs, adds and places</strong> (§3.2): keep, relation-weight and addition heads share the attention trunk of a rectified-flow placement
+model and are learned from real designer pairs, with no hand-written relation types, hierarchy or addition rules.</li>
+<li><strong>Additions as set completion</strong> (§3.3): the model proposes one piece at a time given what is already in the room and stops when the set is likely complete;
+on held-out pairs its additions agree with the designers' with precision 0.41.</li>
+<li><strong>A feasibility projection in an arrangement metric</strong> (§3.4): displacement plus the change of neighbour offsets, weighted by the learned relations, so that a piece
+pushed out of an overlap takes its group along.</li>
+<li><strong>A frozen evaluation</strong> (§5) on 700 reshaped and rescaled targets and 300 held-out real pairs, with PhyScene and LEGO-Net
+run once and re-scored by the same code; IntentFlow keeps the reference arrangement closer than both at a fraction of their out-of-room rate.</li>
+</ul>
+<h2 id="related">2. Related Work</h2>
+<p><strong>Indoor scene synthesis.</strong> Learned generators produce furniture layouts for a given floor plan autoregressively [<a class="cite" href="#ref-atiss">1</a>, <a class="cite" href="#ref-sceneformer">2</a>], by denoising
+diffusion [<a class="cite" href="#ref-diffuscene">3</a>] or conditioned on a semantic graph [<a class="cite" href="#ref-instructscene">4</a>]; PhyScene [<a class="cite" href="#ref-physcene">5</a>] adds collision and reachability guidance to a diffusion
+sampler. PlanIT [<a class="cite" href="#ref-planit">9</a>] plans a relation graph and instantiates it. These methods sample a plausible layout; they do not take a reference arrangement to preserve.
+Earlier systems optimise interior-design guidelines written as energies [<a class="cite" href="#ref-makeithome">7</a>, <a class="cite" href="#ref-merrell">8</a>].</p>
+<p><strong>Rearrangement.</strong> LEGO-Net [<a class="cite" href="#ref-legonet">6</a>] learns to move a messy layout toward a regular one by iterative denoising. Given the transplant of a reference as
+its input, it moves the pieces toward the arrangements it was trained on, not toward the reference.</p>
+<p><strong>Relations and sets.</strong> Scene-graph methods use a fixed vocabulary of relation types [<a class="cite" href="#ref-planit">9</a>, <a class="cite" href="#ref-instructscene">4</a>]. IntentFlow instead gives every pair the same
+geometric descriptor and learns how strongly a relation is kept from real designer pairs; pairwise terms enter as additive attention biases, as in Graphormer
+[<a class="cite" href="#ref-graphormer">10</a>]. Deciding what to add is a completion problem over a set of furniture, related to set-based networks [<a class="cite" href="#ref-deepsets">11</a>, <a class="cite" href="#ref-settransformer">12</a>] and to
+recommendation by graph completion [<a class="cite" href="#ref-gcmc">13</a>, <a class="cite" href="#ref-pinsage">14</a>]; we complete the set one piece at a time with a stopping rule.</p>
+<p><strong>Flows and transformers.</strong> Flow matching [<a class="cite" href="#ref-fm">15</a>] and rectified flow [<a class="cite" href="#ref-rf">16</a>] regress a velocity along straight paths between two distributions; an
+informative source lets IntentFlow start from the affine transplant rather than from noise. The network is a permutation-equivariant transformer [<a class="cite" href="#ref-attn">17</a>] with adaptive
+layer-norm conditioning [<a class="cite" href="#ref-adaln">18</a>] as in DiT [<a class="cite" href="#ref-dit">19</a>]. The projection is solved by an augmented Lagrangian [<a class="cite" href="#ref-bertsekas">20</a>].</p>
+<h2 id="method">3. Method</h2>
+<figure id="fig-method"><div class="fig"><svg viewBox="0 0 920 318" font-family="-apple-system,Segoe UI,sans-serif" font-size="11.5">
+<defs><marker id="pa" markerWidth="9" markerHeight="9" refX="7.5" refY="4.5" orient="auto"><path d="M0 0 L9 4.5 L0 9 z" fill="#555"/></marker></defs>
+<g fill="none" stroke="#333" stroke-width="1.3">
+<rect x="4" y="34" width="122" height="170" rx="6" fill="#f7f7f7"/>
+<rect x="142" y="10" width="200" height="210" rx="6" fill="#eef5f6"/>
+<rect x="358" y="10" width="196" height="210" rx="6" fill="#fbf3f0"/>
+<rect x="570" y="10" width="168" height="210" rx="6" fill="#eef5f6"/>
+<rect x="754" y="10" width="162" height="210" rx="6" fill="#fbf3f0"/>
+<rect x="142" y="236" width="596" height="72" rx="6" fill="#fafafa" stroke-dasharray="4 3"/></g>
+<g stroke="#555" stroke-width="1.4" marker-end="url(#pa)">
+<line x1="126" y1="118" x2="140" y2="118"/><line x1="342" y1="118" x2="356" y2="118"/><line x1="554" y1="118" x2="568" y2="118"/><line x1="738" y1="118" x2="752" y2="118"/></g>
+<g text-anchor="middle" fill="#111">
+<text x="65" y="56" font-weight="600">input</text><text x="65" y="78">reference S<tspan baseline-shift="sub" font-size="8.5">ref</tspan></text><text x="65" y="95">(c, s, p, θ, a)</text><text x="65" y="118">target room P<tspan baseline-shift="sub" font-size="8.5">t</tspan>:</text>
+<text x="65" y="135">walls, doors,</text><text x="65" y="152">windows</text><text x="65" y="180" fill="#5c5c5c">style token z*, λ</text>
+<text x="242" y="31" font-weight="600">(a) read (τ = 0)</text><text x="242" y="53">one transformer over the</text><text x="242" y="70">reference pieces carried into</text>
+<text x="242" y="87">P<tspan baseline-shift="sub" font-size="8.5">t</tspan> (transplant T<tspan baseline-shift="sub" font-size="8.5">q</tspan>) and the</text><text x="242" y="104">wall / door / window tokens</text><text x="242" y="130">keep head κ<tspan baseline-shift="sub" font-size="8.5">i</tspan></text>
+<text x="242" y="147">relation head ŵ<tspan baseline-shift="sub" font-size="8.5">ij</tspan></text><text x="242" y="164">add head r<tspan baseline-shift="sub" font-size="8.5">c</tspan> (Poisson rates)</text><text x="242" y="198" fill="#5c5c5c">supervised by real designer pairs</text>
+<text x="456" y="31" font-weight="600">(b) decide</text><text x="456" y="53">keep: remove the piece with</text><text x="456" y="70">least κ<tspan baseline-shift="sub" font-size="8.5">i</tspan> Σ<tspan baseline-shift="sub" font-size="8.5">j</tspan>(ŵ<tspan baseline-shift="sub" font-size="8.5">ij</tspan> + ŵ<tspan baseline-shift="sub" font-size="8.5">ji</tspan>)</text>
+<text x="456" y="87">until the density budget holds;</text><text x="456" y="104">extra drops only if κ<tspan baseline-shift="sub" font-size="8.5">i</tspan> &lt; ½</text><text x="456" y="128">add: c* = argmax r<tspan baseline-shift="sub" font-size="8.5">c</tspan></text>
+<text x="456" y="145">until e<tspan baseline-shift="super" font-size="8.5">−Σ r</tspan><tspan baseline-shift="super" font-size="8.5"><tspan baseline-shift="sub" font-size="8.5">c</tspan></tspan> &gt; ½</text><text x="456" y="170" fill="#5c5c5c">style: swap a prefix of units</text>
+<text x="456" y="187" fill="#5c5c5c">by gain (share λ), same</text><text x="456" y="204" fill="#5c5c5c">3D-FUTURE fine category</text>
+<text x="654" y="31" font-weight="600">(c) place (τ: 0 → 1)</text><text x="654" y="53">same transformer,</text><text x="654" y="70">velocity head v<tspan baseline-shift="sub" font-size="8.5">ϑ</tspan></text>
+<text x="654" y="93">x<tspan baseline-shift="sub" font-size="8.5">0</tspan> = T<tspan baseline-shift="sub" font-size="8.5">q</tspan>(S<tspan baseline-shift="sub" font-size="8.5">ref</tspan>, P<tspan baseline-shift="sub" font-size="8.5">t</tspan>)</text><text x="654" y="110">50 Euler steps</text><text x="654" y="134">conditions: reference</text>
+<text x="654" y="151">relations, votes, ties to</text><text x="654" y="168">walls / doors / windows ν<tspan baseline-shift="sub" font-size="8.5">i</tspan></text><text x="654" y="198" fill="#5c5c5c">wall / parallel heads</text>
+<text x="835" y="31" font-weight="600">(d) project Π<tspan baseline-shift="sub" font-size="8.5">θ</tspan></text><text x="835" y="53">arrangement metric:</text><text x="835" y="70">moves + neighbour offsets</text>
+<text x="835" y="94">pen(i, j) ≤ α<tspan baseline-shift="sub" font-size="8.5">ij</tspan></text><text x="835" y="111">corners inside P<tspan baseline-shift="sub" font-size="8.5">t</tspan></text><text x="835" y="128">door boxes clear</text><text x="835" y="145">θ<tspan baseline-shift="sub" font-size="8.5">i</tspan> ∈ Θ<tspan baseline-shift="sub" font-size="8.5">i</tspan></text>
+<text x="835" y="162">model's wall contacts</text><text x="835" y="198" font-weight="600">→ layout in P<tspan baseline-shift="sub" font-size="8.5">t</tspan></text>
+<text x="440" y="262" font-weight="600">(a) and (c) are two passes of one network: the same attention trunk, different heads</text>
+<text x="440" y="286" fill="#5c5c5c">each added piece is placed by (c) with the others fixed and kept only if (d) stays feasible and walkable</text>
+</g></svg></div>
+<figcaption><strong>Figure 2.</strong> IntentFlow. (a) One transformer reads the reference's furniture carried into the target room together with the room's
+walls and openings, and predicts at flow time \(\tau=0\) which pieces a designer keeps (\(\kappa_i\)), how much each pairwise relation is kept (\(\hat w_{ij}\)) and what a designer
+adds (\(r_c\)). (b) The kept set, additions and furniture appearance follow from these readings (§3.3, §3.5). (c) The same network places the pieces as a rectified flow from
+the affine transplant. (d) A projection in an arrangement metric enforces non-penetration, containment and door clearance (§3.4).</figcaption></figure>
+<h3>3.1. Problem formulation</h3>
+<p>A reference scene is \(S_\text{ref}=\{(c_i,s_i,p_i,\theta_i,a_i)\}_{i=1}^N\) with category \(c_i\), 3-D size \(s_i\in\mathbb R^3_{&gt;0}\), floor position \(p_i\in\mathbb R^2\),
+yaw \(\theta_i\) and asset \(a_i\) (a 3D-FUTURE model [<a class="cite" href="#ref-future">21</a>]). The target room \(P_t\) is a simple polygon with door and window segments. Optionally a style token
+\(z^\star\in\mathbb S^{31}\) and a degree of change \(\lambda\in[0,1]\) are given. The output is a layout \(\{(c_i,s_i',p_i',\theta_i',a_i')\}\) in \(P_t\) in which pieces
+may be removed, replaced by a smaller or restyled asset of the same kind, or added.</p>
+<p><strong>Arrangement distance.</strong> For pieces \(u,v\), the descriptor \(\phi_{uv}\in\mathbb R^6\) holds \(v\)'s offset in \(u\)'s frame, \(\cos\) and \(\sin\) of the relative
+yaw, the footprint gap and the centre distance. Walls, doors and windows are nodes framed by their segment midpoint and inward normal and use the same descriptor. The
+per-relation distance</p>
+$$\begin{aligned}d(\phi,\phi')=\tfrac{1}{3.5}\Big[&\tfrac{1-\cos\angle(\phi_{1:2},\phi'_{1:2})}{2}+\tfrac{1-\cos(\Delta\theta-\Delta\theta')}{2}\\&+\min\!\Big(\tfrac{|\log(\phi'_6/\phi_6)|}{\log 3},1\Big)+\tfrac12\,\big[\,[\phi_5&lt;0.05]\neq[\phi'_5&lt;0.05]\,\big]\Big]\in[0,1]\end{aligned}\tag{1}$$
+<p>combines offset direction, relative orientation, log distance ratio and contact (gap below 5 cm). Between two layouts of corresponding pieces,</p>
+$$D(S,S')=\frac{1}{|\mathcal E|}\sum_{(i,j)\in\mathcal E}d\big(\phi_{ij},\phi'_{ij}\big),\tag{2}$$
+<p>over all ordered pairs \(\mathcal E\) of pieces present in both. We write \(D\) for the distance of an output to its reference and \(D_A\) for the same on real pairs, where
+\(A\) is the reference room.</p>
+<h3>3.2. IntentFlow: one transformer</h3>
+<p><strong>Tokens.</strong> Each reference piece is carried into \(P_t\) by the affine transplant \(\mathcal T_q\): its pose mapped proportionally between the minimum rotated
+rectangles of the two rooms, under the quarter turn \(q\) that best overlaps the outlines. A furniture token holds the piece's category, log size, elevation and current state
+\(x_{\tau,i}=(p_i/L,\cos\theta_i,\sin\theta_i)\) (\(L=3\) m) with Fourier features, the distances of its sides to the walls now and in the reference, the
+<em>votes</em> of the other pieces (where each other piece's reference relation puts it, given that piece's current pose), and its reference functional relations \(\nu_i\): offset,
+relative yaw and gap to the nearest wall, door and window, and what is left to undo in \(P_t\). Wall segments and openings (with their clearance boxes) of \(P_t\) are tokens of
+the same attention. Pairwise terms — the current geometry, the reference relation of the same pair and the offset still to undo — are added to the attention logits
+[<a class="cite" href="#ref-graphormer">10</a>]. Adaptive layer norm [<a class="cite" href="#ref-adaln">18</a>] injects the flow time, room descriptors and a pooled code \(\zeta_\text{ref}\) of the reference's room-free relations.
+The trunk has 8 blocks of width 256 with 8 heads and is permutation-equivariant; the answer never enters an input.</p>
+<p><strong>Analysis heads.</strong> Read once at \(\tau=0\) with every piece at its transplant pose,</p>
+$$\begin{gathered}\kappa_i=\operatorname{sigmoid}\big(\mathrm{MLP}_\kappa(e_i)\big),\qquad \hat w_{ij}=\operatorname{sigmoid}\big(\mathrm{MLP}_w[e_i,e_j]\big),\\ r=\operatorname{softplus}\big(\mathrm{MLP}_r[\bar e_F,\bar e_R,c]\big)\in\mathbb R_{\ge0}^{64},\end{gathered}\tag{3}$$
+<p>with \(e_i\) the final token of piece \(i\), \(\bar e_F\), \(\bar e_R\) the means over furniture and room tokens and \(c\) the conditioning vector. \(\kappa_i\) is the probability that a
+designer keeps piece \(i\) in this room, \(\hat w_{ij}\in[0,1]\) how much of the relation \(i\to j\) a designer keeps, and \(r_c\) the expected number of pieces of category \(c\)
+still to add.</p>
+<p><strong>Supervision from real designer pairs.</strong> A real pair is a room \(A\) and a room \(B\) of the same type from another home whose category-family sets have
+Jaccard similarity above 0.6 and whose area ratio lies in [0.5, 2]; pieces are matched within families by footprint size
+[<a class="cite" href="#ref-hungarian">22</a>]. Carrying \(A\)'s pieces into \(B\)'s empty room, a floor piece is labelled kept (\(y^\text{keep}_i=1\)) if matched and dropped if unmatched while \(B\) contains its
+family; a matched pair \((i,j)\leftrightarrow(k,l)\) carries the preservation \(y_{ij}\). Additions are learned as set completion: a row carries \(A\)'s kept pieces and a random
+part of what \(B\) added, and \(n_c\) counts what \(B\) added beyond it, zero once the set is complete. The loss of the analysis heads is</p>
+$$\begin{gathered}\mathcal L_\text{ana}=\mathrm{BCE}\big(\kappa_i,y^\text{keep}_i\big)+\frac{1}{|\mathcal Y|}\sum_{(i,j)\in\mathcal Y}\big(\hat w_{ij}-y_{ij}\big)^2+\frac{1}{3}\sum_c\big(r_c-n_c\log r_c\big),\\ y_{ij}=1-d\big(\phi^A_{ij},\phi^B_{kl}\big),\end{gathered}\tag{4}$$
+<p>a binary cross-entropy, a squared error and a Poisson negative log-likelihood. No annotation or rule enters the labels.</p>
+<p><strong>Placement head.</strong> Placement is a rectified flow [<a class="cite" href="#ref-rf">16</a>, <a class="cite" href="#ref-fm">15</a>] from \(x_0=\mathcal T_q(S_\text{ref},P_t)\): positions move on straight paths and yaws along the
+shorter arc,</p>
+$$\begin{gathered}x_\tau=\big((1-\tau)p_0+\tau p_1,\ \theta_0+\tau\,\Delta\theta\big),\\ \mathcal L_\text{FM}=\mathbb E_{\tau}\sum_{i}m_i\Big(\big\lVert v^p_{\vartheta,i}-(p_{1,i}-p_{0,i})\big\rVert^2+R_i^2\big\lVert v^\theta_{\vartheta,i}-\Delta\theta_i\,\mathbf e_\perp(\theta_{\tau,i})\big\rVert^2\Big),\end{gathered}\tag{5}$$
+<p>in metres: \(R_i\) is the piece's half diagonal, so a yaw error counts as corner displacement; \(\mathbf e_\perp(\theta)=(-\sin\theta,\cos\theta)\); \(m_i\) masks supervised pieces.
+Wall-contact and wall-parallel heads are trained with binary cross-entropy (contact within 5 cm, yaw within 4° of the room axes), and a relative
+term (weight 1) keeps the offsets of neighbouring pieces (within 0.3 m). Sampling takes 50 Euler steps. Analysis and placement rows
+share every trunk parameter.</p>
+<h3>3.3. Inference: what to keep and what to add</h3>
+<p><strong>Keeping.</strong> Pieces that cannot fit at all go first. Then pieces are removed in the order of least expected relation mass, re-read on the remaining pieces after
+every removal, until the footprint fits the density budget \(B(P_t)\), with \(\rho\) the area ratio of target and reference and \(q_{95}\) the 95th percentile of furniture
+density in the corpus:</p>
+$$\begin{gathered}i^\ast=\arg\min_{i\in K}\ \kappa_i\sum_{j\in K}\big(\hat w_{ij}+\hat w_{ji}\big)\quad\text{while}\quad\sum_{i\in K}\mathrm{fp}_i>B(P_t),\\ B(P_t)=\max\big(\mathrm{fp}_\text{ref}\min(1,\rho+0.14),\ q_{95}\,|P_t|\big),\end{gathered}\tag{6}$$
+<p>If the projected layout is still infeasible or less walkable than the reference, up to 3 further pieces may go, but only pieces with \(\kappa_i&lt;\tfrac12\) — pieces a
+designer is more likely to drop than to keep. Pieces with \(\kappa_i\approx1\) act as anchors without any list of anchor categories. A free-standing piece takes as host the piece
+it is most strongly related to among those with higher \(\kappa\) and keeps its host's direction in the projection. If the kept set is still infeasible, smaller assets of the same
+3D-FUTURE fine category are tried, then the other ambiguous quarter turns. Candidates are compared lexicographically: feasible, as walkable as the reference, fewest
+departures, smallest \(\hat w\)-weighted relation loss.</p>
+<p><strong>Adding.</strong> Additions are made one piece at a time. With \(K\) the kept pieces and \(A\) the additions so far, the add head gives the rates \(r_c(K\cup A)\), and</p>
+$$\begin{gathered}c^\ast=\arg\max_{c\notin\mathcal X}r_c(K\cup A)\\ \text{while}\quad P(\text{no further piece})=\exp\Big(-\sum_{c\notin\mathcal X}r_c(K\cup A)\Big)\le\tfrac12,\end{gathered}\tag{7}$$
+<p>where \(\mathcal X\) holds catch-all categories (misc, decoration, other), which name no kind of furniture, and categories that did not fit. The piece is placed by the
+flow with the rest fixed and kept if the projected layout stays feasible and walkable; at most 6 pieces are added. An added piece starts next to its most frequent
+partner category already in the room, at an offset drawn from corpus statistics.</p>
+<h3>3.4. Feasibility projection \(\Pi_\theta\)</h3>
+<p>\(\Pi_\theta\) returns the feasible layout closest to the placed poses \((\hat p,\hat\theta)\) in an arrangement metric:</p>
+$$\begin{aligned}&\min_{p,\theta}\ \sum_i\lVert p_i-\hat p_i\rVert^2+\big(R_i(\theta_i-\hat\theta_i)\big)^2+0.5\sum_{i\neq j}\bar w_{ij}\big\lVert(p_i-p_j)-(\hat p_i-\hat p_j)\big\rVert^2\\\text{s.t.}\ &\mathrm{pen}(i,j)\le\alpha_{ij}\ \ (i,j\ \text{overlapping in height}),\qquad \text{corners}(p_i,\theta_i)\subset P_t,\\&\mathrm{pen}(i,b)\le0\ \ (b\in\mathcal D),\qquad \theta_i\in\Theta_i\ \ (i\ \text{locked}),\qquad \mathrm{gap}(i,\ell_i)\le0.03\,\text{m}\ \ (i\in\mathcal C)\end{aligned}\tag{8}$$
+<p>The first two terms are each piece's move (angles as corner arc length); the third changes the offsets between neighbours, with
+\(\bar w_{ij}=\tfrac12(\hat w_{ij}+\hat w_{ji})\) for pieces within 0.3 m of each other and 0 otherwise, so that a piece pushed out of an overlap takes its group along.
+\(\mathrm{pen}\) is the separating-axis penetration depth of two oriented boxes; the allowance \(\alpha_{ij}=o_{c_ic_j}\min(R_i,R_j)\) is the corpus overlap rate of the two
+categories times the smaller half diagonal (a chair may slide under a table). \(\mathcal D\) are door clearance boxes of the door's width (at least 1 m) and
+0.9 m depth. The orientation set \(\Theta_i\) is the nearest wall's direction \(+k\pi/2\), or the host's direction for a hosted piece; a piece parallel to the walls
+in the reference stays parallel, other pieces are locked when the wall-parallel head says so, and added pieces always take the orientation set. Pieces the wall-contact head
+marks (\(\mathcal C\)) end within 3 cm of their nearest wall \(\ell_i\). The problem is solved by an augmented Lagrangian [<a class="cite" href="#ref-bertsekas">20</a>] (20 Adam steps per
+outer iteration, penalty doubled when the violation does not fall below 0.25 of the previous one, stop at 1 cm).</p>
+<p>The hard constraints are not learned. On the endpoint estimate \(\hat x_1=\mathbb E[x_1\mid x_\tau]\) a non-convex feasible set can make them infeasible even for the exact
+flow (the mean of a chair left and right of a doorway lies in the doorway), and on samples any position error violates constraints on whose boundary the training targets lie.
+The projection enforces them per sample instead.</p>
+<h3>3.5. Style token</h3>
+<p>Style means the furniture's appearance. Each catalogue asset \(k\) gets an appearance vector \(z_k\in\mathbb S^{31}\), an MLP of its room co-membership
+embedding (a PPMI factorisation, cf. [<a class="cite" href="#ref-glove">23</a>]), its CLIP image features [<a class="cite" href="#ref-clip">24</a>] and its 3D-FUTURE style, theme and material labels, trained to rank the designer's
+asset of a held-out piece against same-category assets by the mean appearance of the room's other pieces [<a class="cite" href="#ref-cpc">25</a>], with a supervised contrastive term on the style label
+[<a class="cite" href="#ref-supcon">26</a>]:</p>
+$$\mathcal L_z=-\log\frac{\exp(\langle z_{k^\ast},\bar z_{\text{room}\setminus k^\ast}\rangle/\gamma)}{\sum_{k\in\mathrm{cat}(k^\ast)}\exp(\langle z_k,\bar z_{\text{room}\setminus k^\ast}\rangle/\gamma)}+\mu\,\mathcal L_\text{SupCon}(z;\text{style label}),\tag{9}$$
+<p>with \(\gamma=0.1\). A token \(z^\star\) is the mean appearance of a style label. Pieces are grouped into units of identical assets; a unit's candidate is the
+asset of the same category and the same 3D-FUTURE fine category closest to \(z^\star\) within a size tolerance (tried as 12%, 20%, 30% per dimension).
+Units are ordered by their gain toward \(z^\star\), \(u_1,u_2,\dots\), and a prefix is swapped whose piece count is nearest to \(\lambda N\):</p>
+$$U(\lambda)=\{u_1,\dots,u_m\},\qquad m=\arg\min_{m'}\Big|\sum_{k\le m'}|u_k|-\lambda N\Big|.\tag{10}$$
+<p>so the swapped set only grows with \(\lambda\). The swap happens before placement, so the arrangement passes through the placement and projection unchanged.</p>
+<h2 id="data">4. Data and Training</h2>
+<p><strong>Corpus.</strong> We use 3D-FRONT [<a class="cite" href="#ref-front">27</a>] rooms with 5–24 pieces after duplicate removal (13,729 rooms) and the 3D-FUTURE assets
+[<a class="cite" href="#ref-future">21</a>], split by house into 10,988 training, 1,402 validation and 1,339 test rooms. No model sees validation or test rooms in training.</p>
+<p><strong>Real designer pairs.</strong> Training rooms and their partners give 31,112 real pairs from 9,205 rooms for the keep, relation and addition heads.
+Two designers' arrangements of matched pieces are a median \(D=0.35\) apart, and designer \(B\) adds pieces in 87% of pairs (2.82 per pair; measured on 6,828 pairs). Placement rows use pairs whose relation change is
+small (\(D\le0.15\), 3,350 pairs), the matched pieces carried from \(A\) into \(B\)'s room and placed as \(B\)'s designer did.</p>
+<p><strong>Augmentation.</strong> Real pairs rarely cover strongly reshaped or rescaled rooms. For 2,990 training rooms, target rooms of other outlines and sizes
+(L 705, pentagon 666, T 716, trapezoid 679, size 793, delete 2,127, big 2,982 targets) receive layouts from a constraint-aware, relation-preserving layout optimisation of the reference that keeps the reference's wall sides; they are used only
+as augmentation for placement, never for the keep, relation or addition heads.</p>
+<p><strong>Label fixes.</strong> The corpus preprocessing had labelled the 3D-FUTURE fine category “Footstool / Sofastool / Bed End Stool / Stool” as <em>double bed</em>
+(2,849 of 8,169 pieces; median footprint 0.30 m² against 4.72 m² for the beds). We relabel these pieces as
+<em>misc</em>. Other mixed labels remain: <em>wardrobe</em> includes “Bookcase / jewelry Armoire” (3,178 of 9,210); <em>sofa</em> includes “Lazy Sofa” (167 of 3,499); <em>l sofa</em> includes “Chaise Longue Sofa” (52 of 900). Asset substitution picks within the same fine category.</p>
+<p><strong>Training.</strong> The trunk is first trained for placement and then with all heads, on mixed batches of placement and analysis rows (AdamW, learning rate
+0.0003, batch 64, EMA 0.999, bf16); the final stage runs 20,000 steps. Appendix A lists all settings and the training stages.</p>
+<h2 id="experiments">5. Experiments</h2>
+<h3>5.1. Setup</h3>
+<p><strong>Test sets.</strong> The main comparison (§5.2) and the style test (§5.5) use a test set frozen once from the held-out test rooms with fixed selection rules and never used for
+training, model selection or any design decision: 700 standard-test targets (50 rooms with 6–12 pieces including a bed, a sofa
+with a TV or a dining set; each scaled by 0.7×, 0.8×, 0.9×, 1.0×, 1.1×, 1.2×, 1.3× and reshaped into seven outlines no smaller than the reference) and 300 real pairs \((A,B)\), in which
+a method furnishes \(B\)'s empty room from \(A\). The set is stored with a sha256 manifest; each baseline was run once on it and its layouts are re-scored by the same code. Ablations (§5.4) and qualitative results (§5.3) use the validation split, whose
+standard tests have 10 rooms and whose real-pair set has 120 pairs.</p>
+<p><strong>Metrics.</strong> \(D\) and \(D_A\) (eq. 2, over kept pieces) measure how well the reference arrangement is kept; <em>kept</em> is the share of reference pieces in the
+output. <em>Torn pairs</em>: of the floor pairs touching in the reference (gap ≤ 5 cm) and both kept, the share more than 30 cm apart. <em>Wall kept</em>:
+the share of the reference's wall contacts (same side) that survive, for categories where wall contact matters. <em>Out of room</em>: floor pieces more than 5% outside;
+<em>collision</em>: floor pairs overlapping by more than 2% of the smaller footprint (10% on real pairs), nestable pairs excluded; <em>door blocked</em>:
+door boxes more than 5% covered. On real pairs, <em>keep F1</em> compares the kept pieces of \(A\) with those designer \(B\) kept; <em>add F1</em>, precision and
+recall compare the added categories with \(B\)'s additions.</p>
+<p><strong>Baselines.</strong> Both use their released living-room checkpoints on all room types. <em>LEGO-Net</em> [<a class="cite" href="#ref-legonet">6</a>] receives the affine transplant of every reference
+piece its vocabulary covers (58% of the pieces on real pairs) with the target floor plan and denoises it with the authors' settings; other pieces stay at the transplant;
+it keeps everything and adds nothing. <em>PhyScene</em> [<a class="cite" href="#ref-physcene">5</a>] receives only the target floor plan — its released model has no object-list or arrangement
+conditioning — and samples with its collision, room-layout and reachability guidance; its objects are matched to \(A\)'s pieces by category (43% of \(A\)'s pieces matched on
+real pairs), and \(D\) is computed over the matched pieces.</p>
+<p><strong>Statistics.</strong> Differences are mean paired differences over the same targets or pairs, with 95% intervals and two-sided \(p\) from a bootstrap that resamples rooms
+or pairs (10,000 resamples). Appendix Table 10 lists all tests.</p>
+<h3>5.2. Main results</h3>
+<div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (kept pieces)</th><th>kept</th><th>added / room</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>out of room ↓</th><th>collision ↓</th><th>door blocked ↓</th></tr></thead><tbody>
+<tr class="grp"><td>affine transplant (input, not a method)</td><td>0.056</td><td>1.00</td><td>0.00</td><td>4.3%</td><td>0.81</td><td>16.4%</td><td>2.7%</td><td>32%</td></tr>
+<tr><td>LEGO-Net</td><td>0.158</td><td>1.00</td><td>0.00</td><td>9.2%</td><td>0.43</td><td>16.5%</td><td>6.9%</td><td>28%</td></tr>
+<tr><td>PhyScene</td><td>0.379</td><td>0.36</td><td>5.84</td><td>26.8%</td><td>0.30</td><td>11.6%</td><td>9.3%</td><td>54%</td></tr>
+<tr class="ours"><td>IntentFlow (ours)</td><td>0.060</td><td>0.94</td><td>1.13</td><td>6.7%</td><td>0.84</td><td>0.1%</td><td>0.1%</td><td>0%</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 1.</strong> Large frozen test split, scale test: 50 held-out rooms, each scaled by 0.7×, 0.8×, 0.9×, 1.0×, 1.1×, 1.2×, 1.3× (means over columns). \(D\) is over kept pieces and must be read with <em>kept</em>. The affine transplant is the input IntentFlow starts from, shown as a reference: it keeps every relation by construction and ignores the room.</p>
+<div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (kept pieces)</th><th>kept</th><th>added / room</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>out of room ↓</th><th>collision ↓</th><th>door blocked ↓</th></tr></thead><tbody>
+<tr class="grp"><td>affine transplant (input, not a method)</td><td>0.073</td><td>1.00</td><td>0.00</td><td>26.5%</td><td>0.58</td><td>13.0%</td><td>1.1%</td><td>28%</td></tr>
+<tr><td>LEGO-Net</td><td>0.141</td><td>1.00</td><td>0.00</td><td>26.6%</td><td>0.26</td><td>9.4%</td><td>4.6%</td><td>18%</td></tr>
+<tr><td>PhyScene</td><td>0.371</td><td>0.40</td><td>7.25</td><td>39.9%</td><td>0.34</td><td>10.0%</td><td>5.3%</td><td>53%</td></tr>
+<tr class="ours"><td>IntentFlow (ours)</td><td>0.066</td><td>1.00</td><td>1.91</td><td>18.6%</td><td>0.73</td><td>0.0%</td><td>0.1%</td><td>0%</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 2.</strong> Large frozen test split, outline test: the same 50 rooms reshaped into seven outlines no smaller than the reference (1.2x1.3; 1.5x1.1+cut; L x1.3; T x1.3; trapezoid x1.2; pentagon x1.2; long 1.6x1.0).</p>
+<div class="tw"><table><thead><tr><th>method</th><th>\(D_A\) ↓ (primary)</th><th>keep F1 ↑</th><th>add F1 ↑</th><th>add precision / recall</th><th>added / pair (method / designer)</th><th>torn pairs ↓</th><th>out of room ↓</th><th>collision ↓</th><th>\(D_B\) (reference only)</th></tr></thead><tbody>
+<tr class="grp"><td>affine transplant (input, not a method)</td><td>0.069</td><td>0.864</td><td>0.127</td><td>— / —</td><td>0.00 / 3.02</td><td>12.6%</td><td>30.7%</td><td>9.8%</td><td>0.341</td></tr>
+<tr><td>LEGO-Net</td><td>0.184</td><td>0.864</td><td>0.127</td><td>— / —</td><td>0.00 / 3.02</td><td>18.6%</td><td>17.5%</td><td>18.6%</td><td>0.379</td></tr>
+<tr><td>PhyScene</td><td>0.386</td><td>0.489</td><td>0.184</td><td>— / —</td><td>5.74 / 3.02</td><td>34.6%</td><td>15.9%</td><td>13.2%</td><td>0.379</td></tr>
+<tr class="ours"><td>IntentFlow (ours)</td><td>0.082</td><td>0.864</td><td>0.247</td><td>0.41 / 0.15</td><td>1.34 / 3.02</td><td>17.9%</td><td>0.3%</td><td>6.7%</td><td>0.340</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 3.</strong> Large frozen test split, 300 held-out real pairs: a method receives room A and the empty room of a second designer's home B. \(D_A\) is the primary arrangement measure; \(D_B\), the distance to designer B, who never saw A, is a reference only. Add precision and recall are not part of the baselines' stored scores; LEGO-Net adds nothing.</p>
+<p>On real pairs IntentFlow keeps the reference arrangement at \(D_A=0.082\), against 0.184 for LEGO-Net (−0.102 [−0.111, −0.093], p&lt;0.001, 300 pairs) and
+0.386 for PhyScene (−0.298 [−0.316, −0.281], p&lt;0.001, 214 pairs), with 0.3% of pieces out of the room and 6.7% colliding pairs
+(LEGO-Net 17.5% / 18.6%, PhyScene 15.9% / 13.2%). It keeps the pieces
+the designer kept as well as LEGO-Net, which keeps everything (p=0.816; IntentFlow's keep F1 differs on 55 of 300 pairs, higher on 29 and
+lower on 26), and better than PhyScene (p&lt;0.001); its additions reach add F1
+0.247 (precision 0.41, recall 0.15), above LEGO-Net (p&lt;0.001) and PhyScene
+(p=0.010). It tears fewer groups than PhyScene (p=0.035); against LEGO-Net the difference is not significant
+(p=0.875).</p>
+<p>On the standard tests IntentFlow's \(D\) is 0.060 / 0.066 (scale / outline), against 0.158 / 0.141
+for LEGO-Net and 0.379 / 0.371 for PhyScene (p&lt;0.001 in all four comparisons), and it keeps 0.84 /
+0.73 of the reference's wall contacts (LEGO-Net 0.43 / 0.26, PhyScene 0.30 /
+0.34). It tears fewer groups than PhyScene on both tests (p=0.002, p&lt;0.001); against LEGO-Net
+the torn-pair differences are not significant (p=0.312, p=0.115). Its largest out-of-room, collision or door-blocking rate
+over all columns is 1.8%. The affine transplant keeps the arrangement best — \(D_A=0.069\) — but leaves 30.7% of pieces outside
+the room: \(D\) measures arrangement, not feasibility, and the gap between the transplant and IntentFlow is what feasibility costs.</p>
+<h3>5.3. Qualitative results</h3>
+<p><a href="#fig-teaser">Fig. 1</a> shows held-out real pairs of the validation split. IntentFlow keeps the reference's bed and sofa groups against the walls of the new room; LEGO-Net moves the transplanted pieces but can
+stack them (the wardrobe on the bed); PhyScene furnishes the floor plan with its own furniture. <a href="#fig-render_std">Fig. 3</a> shows the standard tests; Appendix E adds 2D views of the validation standard tests and of the style test.</p>
+<figure id="fig-render_std"><img src="assets/v03/render3d_paper_std_cap18.png" alt="render_std" loading="lazy"><figcaption><strong>Figure 3.</strong> Standard tests in 3D (validation rooms). Rows: a dining room, a bedroom and a living room; columns: the reference, the room scaled to 0.8× and 1.2×, an L-shaped and a trapezoid room. Titles give pieces kept / reference pieces and pieces added. In the shrunk bedroom fewer pieces are kept and the bed becomes a smaller asset of the same fine category; in the trapezoid and partly in the L room dining chairs drift toward the walls (§5.4).</figcaption></figure>
+<h3>5.4. Ablations</h3>
+<p><strong>Additions.</strong> Table 4 compares addition rules. Proposing one piece at a time and stopping when the set is likely complete, with catch-all categories
+excluded, raises add F1 from 0.196 to 0.244 over stopping as soon as no single category is likely, at lower precision
+(0.51 → 0.37) and higher recall (0.09 → 0.15). At head level
+(Table 5) the add head reaches add F1 0.316, against 0.144 for a room-type prior and 0.141 for adding nothing. All rules add fewer pieces than the
+designers.</p>
+<div class="tw"><table><thead><tr><th>addition rule</th><th>add F1 ↑</th><th>precision ↑</th><th>recall ↑</th><th>added / pair (method / designer)</th><th>\(D_A\) ↓</th></tr></thead><tbody>
+<tr><td>one-shot rates \(n_c=\mathrm{round}(r_c)\), checkpoint trained without set-completion rows</td><td>0.214</td><td>—</td><td>—</td><td>0.72 / 2.68</td><td>0.086</td></tr>
+<tr><td>sequential, stop when no category is likely (\(\max_c P(n_c\ge1)\le\tfrac12\))</td><td>0.196</td><td>0.51</td><td>0.09</td><td>0.50 / 2.68</td><td>0.085</td></tr>
+<tr><td>sequential, completeness stop \(e^{-\sum r_c}>\tfrac12\), catch-all categories excluded</td><td>0.244</td><td>0.37</td><td>0.15</td><td>1.36 / 2.68</td><td>0.086</td></tr>
+<tr class="ours"><td>the same rule, final IntentFlow checkpoint</td><td>0.226</td><td>0.41</td><td>0.14</td><td>1.04 / 2.68</td><td>0.082</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 4.</strong> Additions on the validation real pairs (full pipeline, 120 pairs). Rows 2–3 use the same checkpoint and differ only in the stopping rule; row 1 is a checkpoint whose add head was trained on one-shot counts instead of set completion. Precision and recall were not recorded for row 1.</p>
+<p><strong>One network or separate networks.</strong> The keep, relation and add heads share the placement trunk. Separately trained networks for keep and relations and for
+additions reach keep AUC 0.879, relation Spearman 0.427 and add F1 0.383, against 0.850, 0.391 and 0.316 for the shared heads
+(Table 5); the shared relation head is close to the category-pair mean (0.369).</p>
+<div class="tw"><table><thead><tr><th>model</th><th>keep AUC ↑</th><th>relation Spearman ↑</th><th>add F1 ↑</th><th>added / pair (model / designer)</th></tr></thead><tbody>
+<tr class="ours"><td>IntentFlow: keep, relation and add heads on the shared trunk</td><td>0.850</td><td>0.391</td><td>0.316</td><td>1.42 / 2.67</td></tr>
+<tr><td>separate models: graph transformer (keep, relations) and addition network†</td><td>0.879</td><td>0.427</td><td>0.383</td><td>1.58 / 2.65</td></tr>
+<tr><td>room-type prior (additions)</td><td>—</td><td>—</td><td>0.144</td><td>0.45 / 2.65</td></tr>
+<tr><td>add nothing</td><td>—</td><td>—</td><td>0.141</td><td>0.00 / 2.65</td></tr>
+<tr><td>category-pair mean (relations)</td><td>—</td><td>0.369</td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 5.</strong> Analysis heads on 2,587 held-out validation pairs: keep AUC against the designer's keep label, Spearman correlation of relation weights with the measured preservation of matched piece pairs, add F1 with \(n_c=\mathrm{round}(r_c)\). †The separate models were evaluated before the label fix of §4, on 2,575 pairs, so the comparison is indicative.</p>
+<p><strong>Projection metric.</strong> Moving neighbours together in \(\Pi_\theta\) lowers torn pairs on outline targets (−2.4 pts [−4.2, −0.8], p=0.001, 9 rooms); on scaled rooms the change is not significant
+(p=0.421; Table 6).</p>
+<div class="tw"><table><thead><tr><th>setting</th><th>scale: \(D\) ↓</th><th>scale: torn pairs ↓</th><th>scale: wall kept ↑</th><th>scale: \(\Pi_\theta\) move</th><th>outline: \(D\) ↓</th><th>outline: torn pairs ↓</th><th>outline: wall kept ↑</th><th>outline: \(\Pi_\theta\) move</th></tr></thead><tbody>
+<tr><td>Euclidean projection</td><td>0.071</td><td>5.8%</td><td>0.79</td><td>10 cm</td><td>0.060</td><td>12.7%</td><td>0.62</td><td>8 cm</td></tr>
+<tr><td>arrangement-metric projection</td><td>0.068</td><td>5.0%</td><td>0.77</td><td>11 cm</td><td>0.060</td><td>10.3%</td><td>0.61</td><td>10 cm</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 6.</strong> Projection metric on the standard tests (validation): Euclidean projection (\(\bar w=0\) in eq. 8) against the arrangement metric, same flow model and seed. Both rows use an earlier placement checkpoint with separately trained keep and relation networks, evaluated before the label fix.</p>
+<p><strong>Walls against groups.</strong> Forcing every reference wall side in \(\Pi_\theta\) raises wall contacts on outline targets (+0.23 [+0.15, +0.33], p&lt;0.001, 10 rooms) and, with them, torn pairs
+(+7.9 pts [+2.4, +15.1], p=0.002, 9 rooms) and \(D\) (+0.011 [+0.004, +0.020], p=0.002, 10 rooms) (Table 7): in a reshaped room a group's wall sides and its internal contacts cannot all be kept. The same trade-off appears
+in training, because the augmentation keeps the reference's wall sides: on validation outline targets, torn pairs rise from 15.4% to 19.0% over the final
+training stage while wall contacts go from 0.79 to 0.83. Designers face the conflict too: a second designer with similar furniture pulls apart
+23.5% of the first designer's touching pairs and keeps 66% of the wall sides.</p>
+<div class="tw"><table><thead><tr><th>setting</th><th>scale: \(D\) ↓</th><th>scale: torn pairs ↓</th><th>scale: wall kept ↑</th><th>scale: \(\Pi_\theta\) move</th><th>outline: \(D\) ↓</th><th>outline: torn pairs ↓</th><th>outline: wall kept ↑</th><th>outline: \(\Pi_\theta\) move</th></tr></thead><tbody>
+<tr><td>model's own wall contacts</td><td>0.069</td><td>6.4%</td><td>0.76</td><td>10 cm</td><td>0.059</td><td>10.8%</td><td>0.61</td><td>9 cm</td></tr>
+<tr><td>reference wall sides forced</td><td>0.076</td><td>10.0%</td><td>0.93</td><td>16 cm</td><td>0.071</td><td>18.8%</td><td>0.84</td><td>17 cm</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 7.</strong> Forcing every reference wall side as a hard constraint of \(\Pi_\theta\), against the model's own wall contacts (validation; an earlier placement checkpoint with separately trained keep, relation and addition networks, evaluated before the label fix).</p>
+<h3>5.5. Style token</h3>
+<div class="tw"><table><thead><tr><th>\(\lambda\)</th><th>Japanese: changed / labelled / \(D\)</th><th>Light Luxury: changed / labelled / \(D\)</th><th>New Chinese: changed / labelled / \(D\)</th></tr></thead><tbody>
+<tr><td>0.00</td><td>0.07 / 0.16 / 0.024</td><td>0.07 / 0.03 / 0.024</td><td>0.07 / 0.03 / 0.024</td></tr>
+<tr><td>0.25</td><td>0.28 / 0.40 / 0.032</td><td>0.25 / 0.25 / 0.031</td><td>0.30 / 0.23 / 0.029</td></tr>
+<tr><td>0.50</td><td>0.52 / 0.61 / 0.030</td><td>0.56 / 0.55 / 0.030</td><td>0.57 / 0.45 / 0.029</td></tr>
+<tr><td>0.75</td><td>0.77 / 0.74 / 0.028</td><td>0.73 / 0.73 / 0.032</td><td>0.70 / 0.58 / 0.030</td></tr>
+<tr><td>1.00</td><td>0.82 / 0.81 / 0.029</td><td>0.78 / 0.76 / 0.032</td><td>0.73 / 0.61 / 0.032</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 8.</strong> Style token on the large test split (50 test rooms, each room itself as target, 3 style labels): share of floor pieces whose asset changed / share carrying the target style label / \(D\) to the reference, per degree of change \(\lambda\).</p>
+<p>The share of swapped pieces increases monotonically with \(\lambda\) (on average
+0.07, 0.28, 0.55, 0.73, 0.78); at \(\lambda=1\) between 0.61 and 0.81 of the
+floor pieces carry the target label, while \(D\) stays between 0.024 and 0.032. At \(\lambda=0\), 0.07
+of the pieces change size where the furniture does not fit, not style.</p>
+<h3>5.6. Consistency across evaluation sets</h3>
+<p>A smaller test split frozen earlier from the test rooms (140 targets, 120 pairs) and the validation split give the same ranking
+(Table 9).</p>
+<div class="tw"><table><thead><tr><th>method</th><th>real pairs: \(D_A\) ↓</th><th>real pairs: add F1 ↑</th><th>real pairs: out of room ↓</th><th>scale: \(D\) ↓</th><th>outline: \(D\) ↓</th></tr></thead><tbody>
+<tr class="grp"><td colspan="6"><em>large test split (main)</em></td></tr>
+<tr class="ours"><td>IntentFlow</td><td>0.082</td><td>0.247</td><td>0.3%</td><td>0.060</td><td>0.066</td></tr>
+<tr><td>LEGO-Net</td><td>0.184</td><td>0.127</td><td>17.5%</td><td>0.158</td><td>0.141</td></tr>
+<tr><td>PhyScene</td><td>0.386</td><td>0.184</td><td>15.9%</td><td>0.379</td><td>0.371</td></tr>
+<tr class="grp"><td colspan="6"><em>smaller test split</em></td></tr>
+<tr class="ours"><td>IntentFlow, earlier checkpoint‡</td><td>0.087</td><td>0.207</td><td>0.6%</td><td>0.063</td><td>0.060</td></tr>
+<tr><td>LEGO-Net</td><td>0.184</td><td>0.125</td><td>17.0%</td><td>0.131</td><td>0.128</td></tr>
+<tr><td>PhyScene</td><td>0.380</td><td>0.171</td><td>14.1%</td><td>0.358</td><td>0.367</td></tr>
+<tr class="grp"><td colspan="6"><em>validation split</em></td></tr>
+<tr class="ours"><td>IntentFlow</td><td>0.082</td><td>0.226</td><td>0.9%</td><td>0.069</td><td>0.071</td></tr>
+<tr><td>LEGO-Net</td><td>0.187</td><td>0.125</td><td>17.5%</td><td>0.158</td><td>0.154</td></tr>
+<tr><td>PhyScene</td><td>0.371</td><td>0.115</td><td>14.3%</td><td>0.356</td><td>0.358</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 9.</strong> The large test split, a smaller test split frozen earlier from the same test rooms, and the validation split. ‡The smaller test split was evaluated with an earlier checkpoint of IntentFlow.</p>
+<h2 id="limits">6. Limitations</h2>
+<p>The keep head saturates for large pieces: when a bed and another large piece both get keep probabilities near 1 and the density budget cannot hold both, relation mass
+decides, and in very small bedrooms the bed can be dropped. IntentFlow adds fewer pieces than designers (1.34 against 3.02 per real
+pair, recall 0.15), and some additions are implausible, such as a second wardrobe beside the first. In reshaped rooms, keeping wall sides and keeping groups
+conflict, and the model inherits the wall-side preference of its augmentation (§5.4). The shared heads remain below separately trained networks. Mixed category labels remain in
+the corpus. The baselines are living-room checkpoints run on all room types, PhyScene cannot receive the reference, and LEGO-Net sees only pieces in its vocabulary. The
+pipeline takes 86 s per real pair on CPU (the structure step can place several candidates and each addition is placed and projected), whereas
+LEGO-Net takes 7 s and PhyScene 120 s under their own settings. Windows constrain nothing in \(\Pi_\theta\), and human
+clearances such as room to pull out a chair are not modelled.</p>
+<h2 id="conclusion">7. Conclusion</h2>
+<p>IntentFlow moves a home's arrangement into another room with one transformer: from a shared attention trunk it decides what a designer keeps, how strongly each relation
+is held, what to add, and where every piece goes, and a projection in an arrangement metric makes the result feasible. Learned from pairs of real rooms furnished by two
+designers, it keeps the reference arrangement closer than LEGO-Net and PhyScene on a frozen held-out test set (\(D_A\) 0.082 against 0.184 and
+0.386) with almost no pieces outside the room. Adding as many pieces as designers do, and resolving the conflict between walls and groups in irregular
+rooms, remain open.</p>
+<h2 id="refs">References</h2>
+<div class="refs"><ol>
+<li id="ref-atiss">D. Paschalidou, A. Kar, M. Shugrina, K. Kreis, A. Geiger, S. Fidler. <em>ATISS: Autoregressive Transformers for Indoor Scene Synthesis.</em> NeurIPS 2021. <a href="https://arxiv.org/abs/2110.03675">arXiv:2110.03675</a></li>
+<li id="ref-sceneformer">X. Wang, C. Yeshwanth, M. Nießner. <em>SceneFormer: Indoor Scene Generation with Transformers.</em> 3DV 2021. <a href="https://arxiv.org/abs/2012.09793">arXiv:2012.09793</a></li>
+<li id="ref-diffuscene">J. Tang, Y. Nie, L. Markhasin, A. Dai, J. Thies, M. Nießner. <em>DiffuScene: Denoising Diffusion Models for Generative Indoor Scene Synthesis.</em> CVPR 2024. <a href="https://arxiv.org/abs/2303.14207">arXiv:2303.14207</a></li>
+<li id="ref-instructscene">C. Lin, Y. Mu. <em>InstructScene: Instruction-Driven 3D Indoor Scene Synthesis with Semantic Graph Prior.</em> ICLR 2024. <a href="https://arxiv.org/abs/2402.04717">arXiv:2402.04717</a></li>
+<li id="ref-physcene">Y. Yang, B. Jia, P. Zhi, S. Huang. <em>PhyScene: Physically Interactable 3D Scene Synthesis for Embodied AI.</em> CVPR 2024. <a href="https://arxiv.org/abs/2404.09465">arXiv:2404.09465</a></li>
+<li id="ref-legonet">Q. A. Wei, S. Ding, J. J. Park, R. Sajnani, A. Poulenard, S. Sridhar, L. Guibas. <em>LEGO-Net: Learning Regular Rearrangements of Objects in Rooms.</em> CVPR 2023. <a href="https://arxiv.org/abs/2301.09629">arXiv:2301.09629</a></li>
+<li id="ref-makeithome">L.-F. Yu, S. K. Yeung, C.-K. Tang, D. Terzopoulos, T. F. Chan, S. Osher. <em>Make It Home: Automatic Optimization of Furniture Arrangement.</em> ACM TOG (SIGGRAPH) 2011.</li>
+<li id="ref-merrell">P. Merrell, E. Schkufza, Z. Li, M. Agrawala, V. Koltun. <em>Interactive Furniture Layout Using Interior Design Guidelines.</em> ACM TOG (SIGGRAPH) 2011.</li>
+<li id="ref-planit">K. Wang, Y.-A. Lin, B. Weissmann, M. Savva, A. X. Chang, D. Ritchie. <em>PlanIT: Planning and Instantiating Indoor Scenes with Relation Graph and Spatial Prior Networks.</em> SIGGRAPH 2019. <a href="https://arxiv.org/abs/1908.00889">arXiv:1908.00889</a></li>
+<li id="ref-graphormer">C. Ying, T. Cai, S. Luo, S. Zheng, G. Ke, D. He, Y. Shen, T.-Y. Liu. <em>Do Transformers Really Perform Bad for Graph Representation?</em> NeurIPS 2021. <a href="https://arxiv.org/abs/2106.05234">arXiv:2106.05234</a></li>
+<li id="ref-deepsets">M. Zaheer, S. Kottur, S. Ravanbakhsh, B. Póczos, R. Salakhutdinov, A. Smola. <em>Deep Sets.</em> NeurIPS 2017. <a href="https://arxiv.org/abs/1703.06114">arXiv:1703.06114</a></li>
+<li id="ref-settransformer">J. Lee, Y. Lee, J. Kim, A. R. Kosiorek, S. Choi, Y. W. Teh. <em>Set Transformer: A Framework for Attention-based Permutation-Invariant Neural Networks.</em> ICML 2019. <a href="https://arxiv.org/abs/1810.00825">arXiv:1810.00825</a></li>
+<li id="ref-gcmc">R. van den Berg, T. N. Kipf, M. Welling. <em>Graph Convolutional Matrix Completion.</em> arXiv 2017. <a href="https://arxiv.org/abs/1706.02263">arXiv:1706.02263</a></li>
+<li id="ref-pinsage">R. Ying, R. He, K. Chen, P. Eksombatchai, W. L. Hamilton, J. Leskovec. <em>Graph Convolutional Neural Networks for Web-Scale Recommender Systems.</em> KDD 2018. <a href="https://arxiv.org/abs/1806.01973">arXiv:1806.01973</a></li>
+<li id="ref-fm">Y. Lipman, R. T. Q. Chen, H. Ben-Hamu, M. Nickel, M. Le. <em>Flow Matching for Generative Modeling.</em> ICLR 2023. <a href="https://arxiv.org/abs/2210.02747">arXiv:2210.02747</a></li>
+<li id="ref-rf">X. Liu, C. Gong, Q. Liu. <em>Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow.</em> ICLR 2023. <a href="https://arxiv.org/abs/2209.03003">arXiv:2209.03003</a></li>
+<li id="ref-attn">A. Vaswani et al. <em>Attention Is All You Need.</em> NeurIPS 2017. <a href="https://arxiv.org/abs/1706.03762">arXiv:1706.03762</a></li>
+<li id="ref-adaln">E. Perez, F. Strub, H. de Vries, V. Dumoulin, A. Courville. <em>FiLM: Visual Reasoning with a General Conditioning Layer.</em> AAAI 2018. <a href="https://arxiv.org/abs/1709.07871">arXiv:1709.07871</a></li>
+<li id="ref-dit">W. Peebles, S. Xie. <em>Scalable Diffusion Models with Transformers.</em> ICCV 2023. <a href="https://arxiv.org/abs/2212.09748">arXiv:2212.09748</a></li>
+<li id="ref-bertsekas">D. P. Bertsekas. <em>Constrained Optimization and Lagrange Multiplier Methods.</em> Academic Press, 1982.</li>
+<li id="ref-future">H. Fu, R. Jia, L. Gao, M. Gong, B. Zhao, S. Maybank, D. Tao. <em>3D-FUTURE: 3D Furniture Shape with TextURE.</em> IJCV 2021. <a href="https://arxiv.org/abs/2009.09633">arXiv:2009.09633</a></li>
+<li id="ref-hungarian">H. W. Kuhn. <em>The Hungarian Method for the Assignment Problem.</em> Naval Research Logistics Quarterly, 1955.</li>
+<li id="ref-glove">O. Levy, Y. Goldberg. <em>Neural Word Embedding as Implicit Matrix Factorization.</em> NeurIPS 2014.</li>
+<li id="ref-clip">A. Radford et al. <em>Learning Transferable Visual Models From Natural Language Supervision.</em> ICML 2021. <a href="https://arxiv.org/abs/2103.00020">arXiv:2103.00020</a></li>
+<li id="ref-cpc">A. van den Oord, Y. Li, O. Vinyals. <em>Representation Learning with Contrastive Predictive Coding.</em> arXiv 2018. <a href="https://arxiv.org/abs/1807.03748">arXiv:1807.03748</a></li>
+<li id="ref-supcon">P. Khosla, P. Teterwak, C. Wang, A. Sarna, Y. Tian, P. Isola, A. Maschinot, C. Liu, D. Krishnan. <em>Supervised Contrastive Learning.</em> NeurIPS 2020. <a href="https://arxiv.org/abs/2004.11362">arXiv:2004.11362</a></li>
+<li id="ref-front">H. Fu, B. Cai, L. Gao, L.-X. Zhang, J. Wang, C. Li, Q. Zeng, C. Sun, R. Jia, B. Zhao, H. Zhang. <em>3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics.</em> ICCV 2021. <a href="https://arxiv.org/abs/2011.09127">arXiv:2011.09127</a></li>
+</ol></div>
+<h2 id="appendix">Appendix</h2>
+<h3>A. Implementation details</h3>
+<div class="tw"><table class="impl"><thead><tr><th>component</th><th>setting</th></tr></thead><tbody>
+<tr><td>corpus</td><td>3D-FRONT [<a class="cite" href="#ref-front">27</a>], 5–24 pieces, house-disjoint split 10% / 10% (seed 0); assets 3D-FUTURE [<a class="cite" href="#ref-future">21</a>]</td></tr>
+<tr><td>real pairs</td><td>same type, other house, family Jaccard &gt; 0.6, area ratio [0.5, 2]; 31,112 full pairs from 9,205 rooms; placement rows: \(D\le0.15\) pairs</td></tr>
+<tr><td>trunk</td><td>8 blocks, width 256, 8 heads; reference encoder 4 blocks, width 256; \(\zeta_\text{ref}\in\mathbb R^{32}\), null with p 0.15; Fourier features 6 bands; ≤ 24 pieces, 24 wall and 8 opening tokens; 14.85 M parameters, of which 0.41 M in the keep, relation and add heads</td></tr>
+<tr><td>analysis heads</td><td>keep MLP \(d\to d\to1\); relation MLP \(2d\to d\to1\); add MLP \(3d\to d\to64\), softplus; loss eq. 4 (count term divided by 3)</td></tr>
+<tr><td>training</td><td>AdamW lr 0.0003, weight decay 0.0001, OneCycle (warm-up 3%), gradient clip 1, EMA 0.999, batch 64, bf16; infill rows p 0.2; final stage 20,000 steps (stages in Table 12)</td></tr>
+<tr><td>inference</td><td>50 Euler steps, seed 0; budget slack 0.14; ≤ 3 extra drops (\(\kappa&lt;\tfrac12\)); shrinks 0.9, 0.8, 0.7, 0.6, 0.5, 0.4; turn tolerance 0.05 IoU; walkability tolerance 0.05; ≤ 6 additions</td></tr>
+<tr><td>\(\Pi_\theta\)</td><td>AL: 20 Adam steps (lr 0.03) per outer iteration, ≤ 60 outer, penalty 2 doubled when the violation does not fall below 0.25×, stop at 1 cm; neighbour weight 0.5 within 0.3 m; door box ≥ 1 m × 0.9 m; wall contacts within 3 cm</td></tr>
+<tr><td>appearance \(z\)</td><td>MLP hidden 256, \(z\in\mathbb S^{31}\), temperature 0.1, 63 negatives, batch 128, 6,000 steps, AdamW lr 0.001; size ladder 12%, 20%, 30%</td></tr>
+<tr><td>environment</td><td>Python 3.11.15, PyTorch 2.6.0+cu124; evaluation on AMD EPYC 7551P 32-Core Processor (64 threads), 56 worker processes</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 11.</strong> Hyper-parameters, read from the code and the checkpoint at build time.</p>
+<div class="tw"><table><thead><tr><th>run</th><th>steps</th><th>initialised from</th><th>rooms per training kind (log)</th></tr></thead><tbody>
+<tr><td>cap18</td><td>20,000</td><td>cap17</td><td>shape 1389, size 793, delete 2127, real 1899, big 2942</td></tr>
+<tr><td>cap17</td><td>6,000</td><td>cap16</td><td>shape 463, size 462, delete 277, real 1899, big 463</td></tr>
+<tr><td>cap16</td><td>6,000</td><td>cap14</td><td>shape 463, size 462, delete 277, real 1899, big 463</td></tr>
+<tr><td>cap14</td><td>6,000</td><td>cap13</td><td>shape 463, size 462, delete 277, real 1899, big 463</td></tr>
+<tr><td>cap13</td><td>6,000</td><td>cap12</td><td>shape 463, size 462, delete 277, real 1899, big 463</td></tr>
+<tr><td>cap12</td><td>3,000</td><td>cap9</td><td>shape 463, size 462, delete 277, real 1899, big 463</td></tr>
+<tr><td>cap9</td><td>6,000</td><td>cap8</td><td>shape 463, size 462, delete 277, real 1899, big 463</td></tr>
+<tr><td>cap8</td><td>6,000</td><td>cap7</td><td>shape 463, size 462, delete 277, real 1899</td></tr>
+<tr><td>cap7</td><td>6,000</td><td>st2s</td><td>shape 463, size 462, delete 277, real 1899</td></tr>
+<tr><td>st2s</td><td>3,000</td><td>st1i</td><td>L 481, pentagon 475</td></tr>
+<tr><td>st1i</td><td>4,000</td><td>st1g</td><td>—</td></tr>
+<tr><td>st1g</td><td>4,000</td><td>st1f</td><td>—</td></tr>
+<tr><td>st1f</td><td>8,000</td><td>st1d/step2000.pt</td><td>—</td></tr>
+<tr><td>st1d</td><td>2,000</td><td>—</td><td>—</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 12.</strong> Training stages of the model shown in this paper (checkpoint cap18), read from the training logs and checkpoints: each stage is initialised from the previous one.</p>
+<p><strong>Checkpoints.</strong> All results of IntentFlow in §5.2, §5.3 and §5.5 come from <code>outputs/cap18/last.pt</code>. The smaller test split of §5.6 was evaluated with
+<code>outputs/cap16/last.pt</code>. Table 4: rows 1–4 are <code>cap16</code>, <code>cap17</code> with the stopping rule of row 2, <code>cap17</code> and <code>cap18</code>.
+Table 5: the separate models are those evaluated in <code>dig_eval.json</code> (keep and relations) and <code>addnet_eval.json</code> (additions).
+Table 6 and Table 7 use the placement checkpoint <code>cap9</code>.</p>
+<h3>B. Statistical tests</h3>
+<div class="tw"><table class="sigt"><thead><tr><th>IntentFlow</th><th>test</th><th>metric</th><th>mean (IntentFlow / baseline)</th><th>difference</th><th>95% interval</th><th>p</th><th>rooms / pairs</th></tr></thead><tbody>
+<tr><td>vs. LEGO-Net</td><td>scale</td><td>\(D\)</td><td>0.060 / 0.158</td><td>−0.098</td><td>[−0.117, −0.082]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
+<tr><td>vs. LEGO-Net</td><td>scale</td><td>wall kept</td><td>0.84 / 0.43</td><td>+0.41</td><td>[+0.34, +0.48]</td><td><b>p&lt;0.001</b></td><td>48</td></tr>
+<tr><td>vs. LEGO-Net</td><td>scale</td><td>torn pairs (pts)</td><td>6.6% / 9.2%</td><td>−2.6</td><td>[−7.9, +2.2]</td><td>p=0.312</td><td>39</td></tr>
+<tr><td>vs. PhyScene</td><td>scale</td><td>\(D\)</td><td>0.059 / 0.374</td><td>−0.315</td><td>[−0.336, −0.296]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
+<tr><td>vs. PhyScene</td><td>scale</td><td>wall kept</td><td>0.85 / 0.31</td><td>+0.54</td><td>[+0.48, +0.60]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
+<tr><td>vs. PhyScene</td><td>scale</td><td>torn pairs (pts)</td><td>9.9% / 28.5%</td><td>−18.6</td><td>[−32.6, −6.6]</td><td><b>p=0.002</b></td><td>24</td></tr>
+<tr><td>vs. LEGO-Net</td><td>outline</td><td>\(D\)</td><td>0.066 / 0.141</td><td>−0.075</td><td>[−0.090, −0.061]</td><td><b>p&lt;0.001</b></td><td>50</td></tr>
+<tr><td>vs. LEGO-Net</td><td>outline</td><td>wall kept</td><td>0.73 / 0.26</td><td>+0.47</td><td>[+0.41, +0.53]</td><td><b>p&lt;0.001</b></td><td>46</td></tr>
+<tr><td>vs. LEGO-Net</td><td>outline</td><td>torn pairs (pts)</td><td>18.6% / 26.6%</td><td>−8.0</td><td>[−17.9, +2.0]</td><td>p=0.115</td><td>40</td></tr>
+<tr><td>vs. PhyScene</td><td>outline</td><td>\(D\)</td><td>0.066 / 0.372</td><td>−0.306</td><td>[−0.327, −0.286]</td><td><b>p&lt;0.001</b></td><td>49</td></tr>
+<tr><td>vs. PhyScene</td><td>outline</td><td>wall kept</td><td>0.73 / 0.34</td><td>+0.38</td><td>[+0.31, +0.46]</td><td><b>p&lt;0.001</b></td><td>44</td></tr>
+<tr><td>vs. PhyScene</td><td>outline</td><td>torn pairs (pts)</td><td>17.3% / 39.9%</td><td>−22.6</td><td>[−35.5, −9.9]</td><td><b>p&lt;0.001</b></td><td>24</td></tr>
+<tr><td>vs. LEGO-Net</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.184</td><td>−0.102</td><td>[−0.111, −0.093]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
+<tr><td>vs. LEGO-Net</td><td>real</td><td>keep F1</td><td>0.86 / 0.86</td><td>±0.00</td><td>[−0.01, +0.00]</td><td>p=0.816</td><td>300</td></tr>
+<tr><td>vs. LEGO-Net</td><td>real</td><td>add F1</td><td>0.25 / 0.13</td><td>+0.12</td><td>[+0.08, +0.16]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
+<tr><td>vs. LEGO-Net</td><td>real</td><td>torn pairs (pts)</td><td>17.9% / 18.6%</td><td>−0.4</td><td>[−5.1, +4.3]</td><td>p=0.875</td><td>264</td></tr>
+<tr><td>vs. PhyScene</td><td>real</td><td>\(D_A\)</td><td>0.082 / 0.386</td><td>−0.298</td><td>[−0.316, −0.281]</td><td><b>p&lt;0.001</b></td><td>214</td></tr>
+<tr><td>vs. PhyScene</td><td>real</td><td>keep F1</td><td>0.86 / 0.49</td><td>+0.37</td><td>[+0.34, +0.41]</td><td><b>p&lt;0.001</b></td><td>300</td></tr>
+<tr><td>vs. PhyScene</td><td>real</td><td>add F1</td><td>0.25 / 0.18</td><td>+0.06</td><td>[+0.02, +0.11]</td><td><b>p=0.010</b></td><td>300</td></tr>
+<tr><td>vs. PhyScene</td><td>real</td><td>torn pairs (pts)</td><td>17.9% / 34.6%</td><td>−9.2</td><td>[−17.9, −0.7]</td><td><b>p=0.035</b></td><td>111</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 10.</strong> All bootstrap tests of §5.2 (large test split; 10,000 resamples, clustered by room or pair). Means are over the rooms or pairs on which both methods define the metric (for example, PhyScene's \(D\) needs matched pieces, torn pairs need touching pairs), so they can differ from the table means. Bold \(p\) marks \(p&lt;0.05\).</p>
+<h3>C. Per-column results</h3>
+<div class="tw"><table><thead><tr><th>scale target (IntentFlow / LEGO-Net)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
+<tr><td>x0.7</td><td>0.121 / 0.192</td><td>10% / 3%</td><td>0.79 / 0.59</td><td>1.00 / 0.80</td><td>0.73 / 1.00</td><td>0.18 / 0.00</td><td>13 cm / —</td></tr>
+<tr><td>x0.8</td><td>0.083 / 0.177</td><td>6% / 4%</td><td>0.85 / 0.56</td><td>0.71 / 0.70</td><td>0.89 / 1.00</td><td>0.16 / 0.00</td><td>10 cm / —</td></tr>
+<tr><td>x0.9</td><td>0.049 / 0.161</td><td>6% / 4%</td><td>0.86 / 0.50</td><td>0.88 / 0.60</td><td>0.96 / 1.00</td><td>0.42 / 0.00</td><td>9 cm / —</td></tr>
+<tr><td>x1.0</td><td>0.025 / 0.140</td><td>2% / 5%</td><td>0.88 / 0.48</td><td>0.80 / 0.50</td><td>1.00 / 1.00</td><td>0.92 / 0.00</td><td>7 cm / —</td></tr>
+<tr><td>x1.1</td><td>0.036 / 0.148</td><td>4% / 8%</td><td>0.88 / 0.38</td><td>0.70 / 0.40</td><td>1.00 / 1.00</td><td>1.56 / 0.00</td><td>7 cm / —</td></tr>
+<tr><td>x1.2</td><td>0.049 / 0.148</td><td>9% / 10%</td><td>0.81 / 0.27</td><td>0.90 / 0.30</td><td>1.00 / 1.00</td><td>2.08 / 0.00</td><td>7 cm / —</td></tr>
+<tr><td>x1.3</td><td>0.059 / 0.141</td><td>9% / 29%</td><td>0.78 / 0.20</td><td>0.70 / 0.30</td><td>1.00 / 1.00</td><td>2.60 / 0.00</td><td>10 cm / —</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 13.</strong> Scale test per column on the large test split, IntentFlow / LEGO-Net. LEGO-Net has no projection step (—).</p>
+<div class="tw"><table><thead><tr><th>shape target (IntentFlow / LEGO-Net)</th><th>\(D\) ↓</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>door kept ↑</th><th>kept</th><th>added / room</th><th>\(\Pi_\theta\) displacement</th></tr></thead><tbody>
+<tr><td>1.2x1.3</td><td>0.056 / 0.137</td><td>8% / 18%</td><td>0.74 / 0.21</td><td>0.43 / 0.14</td><td>1.00 / 1.00</td><td>2.24 / 0.00</td><td>10 cm / —</td></tr>
+<tr><td>1.5x1.1+cut</td><td>0.077 / 0.138</td><td>25% / 35%</td><td>0.76 / 0.31</td><td>0.14 / 0.00</td><td>1.00 / 1.00</td><td>2.60 / 0.00</td><td>10 cm / —</td></tr>
+<tr><td>L x1.3</td><td>0.070 / 0.145</td><td>21% / 33%</td><td>0.70 / 0.15</td><td>0.43 / 0.00</td><td>1.00 / 1.00</td><td>1.86 / 0.00</td><td>7 cm / —</td></tr>
+<tr><td>T x1.3</td><td>0.073 / 0.149</td><td>30% / 32%</td><td>0.59 / 0.20</td><td>0.14 / 0.00</td><td>1.00 / 1.00</td><td>1.34 / 0.00</td><td>13 cm / —</td></tr>
+<tr><td>trapezoid x1.2</td><td>0.056 / 0.140</td><td>9% / 16%</td><td>0.72 / 0.27</td><td>0.57 / 0.29</td><td>1.00 / 1.00</td><td>1.40 / 0.00</td><td>8 cm / —</td></tr>
+<tr><td>pentagon x1.2</td><td>0.070 / 0.143</td><td>17% / 15%</td><td>0.77 / 0.25</td><td>0.43 / 0.14</td><td>1.00 / 1.00</td><td>1.54 / 0.00</td><td>9 cm / —</td></tr>
+<tr><td>long 1.6x1.0</td><td>0.063 / 0.137</td><td>20% / 38%</td><td>0.81 / 0.44</td><td>0.43 / 0.14</td><td>1.00 / 1.00</td><td>2.36 / 0.00</td><td>9 cm / —</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 14.</strong> Outline test per column on the large test split, IntentFlow / LEGO-Net.</p>
+<h3>D. Frozen test sets</h3>
+<p>The test sets were built by <code>scripts/freeze_testset.py</code> from the house-disjoint test split with the validation set's selection rules and stored with the reference and
+target scenes, the targets given to the baselines, the baselines' layouts and scores, and a sha256 manifest. Each baseline was run once per set; all scores are recomputed from the
+stored layouts with the evaluation code of this paper. On the large set PhyScene ran in more shards with a larger batch than on the smaller set, which changes its sampling noise,
+not the method.</p>
+<div class="tw"><table><thead><tr><th>set</th><th>standard-test targets</th><th>real pairs</th><th>style rooms</th><th>manifest files</th></tr></thead><tbody>
+<tr><td>large test split (main)</td><td>700</td><td>300</td><td>50</td><td>68</td></tr>
+<tr><td>smaller test split</td><td>140</td><td>120</td><td>10</td><td>37</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 15.</strong> Frozen test sets: targets, real pairs, style rooms and the number of files in each sha256 manifest. Both sets use the validation set's selection rules on the held-out test rooms.</p>
+<h3>E. Additional qualitative results</h3>
+<figure id="fig-std_scale"><img src="assets/v03/std_scale_p4_cap18.png" alt="std_scale" loading="lazy"><figcaption><strong>Figure 4.</strong> Scale test in 2D (validation). One reference per row (left), then the room scaled from 0.7× to 1.3×; titles give pieces kept / reference pieces and pieces added; door boxes red, wall-touching sides red, added pieces green. Additions include a sideboard in the dining room and wardrobes in the bedrooms of the enlarged rooms; at 0.7× dining chairs crowd the table.</figcaption></figure>
+<figure id="fig-std_shape"><img src="assets/v03/std_shape_p4_cap18.png" alt="std_shape" loading="lazy"><figcaption><strong>Figure 5.</strong> Outline test in 2D (validation). Living rooms keep their groups; dining chairs drift to the walls in the trapezoid and partly in the L outline, and the bedroom in the long 1.6x1.0 room receives a second wardrobe and a dining chair.</figcaption></figure>
+<figure id="fig-style"><img src="assets/v03/std_style_p4_cap18.png" alt="style" loading="lazy"><figcaption><strong>Figure 6.</strong> Style token (validation, first room): each row is one style and degree of change \(\lambda\); left, the layout; right, the product image of each floor piece (asterisk: the asset carries the target style label).</figcaption></figure>
+<h3>F. Symbols</h3>
+<div class="tw"><table class="impl"><thead><tr><th>symbol</th><th>meaning</th></tr></thead><tbody>
+<tr><td>\(S_\text{ref}\), \(N\), \(P_t\)</td><td>reference scene, its number of pieces, target room</td></tr>
+<tr><td>\(c_i,s_i,p_i,\theta_i,a_i\)</td><td>category, size, position, yaw, asset of piece \(i\)</td></tr>
+<tr><td>\(\phi_{uv}\), \(d\), \(D\), \(D_A\)</td><td>relation descriptor, per-relation distance (eq. 1), arrangement distance (eq. 2), on real pairs</td></tr>
+<tr><td>\(\mathcal T_q\), \(x_\tau\), \(\tau\), \(v_\vartheta\)</td><td>affine transplant under quarter turn \(q\), piece states, flow time, velocity head</td></tr>
+<tr><td>\(\nu_i\), \(\zeta_\text{ref}\), \(e_i\), \(c\)</td><td>functional relations to walls / doors / windows, pooled reference code, final token, conditioning vector</td></tr>
+<tr><td>\(\kappa_i\), \(\hat w_{ij}\), \(r_c\)</td><td>keep probability, relation weight, rate of pieces of category \(c\) still to add</td></tr>
+<tr><td>\(y^\text{keep}_i\), \(y_{ij}\), \(n_c\)</td><td>keep label, relation preservation, count still to add</td></tr>
+<tr><td>\(K\), \(A\), \(\mathcal X\), \(B(P_t)\)</td><td>kept pieces, additions, excluded categories, density budget</td></tr>
+<tr><td>\(\Pi_\theta\), \(\bar w_{ij}\), \(\mathrm{pen}\), \(\alpha_{ij}\), \(R_i\)</td><td>projection, neighbour weight, penetration depth, allowance, half diagonal</td></tr>
+<tr><td>\(\mathcal D\), \(\Theta_i\), \(\mathcal C\), \(\ell_i\)</td><td>door boxes, orientation set, wall contacts held, contact wall</td></tr>
+<tr><td>\(z_k\), \(z^\star\), \(\lambda\), \(u_k\), \(\gamma\), \(\mu\)</td><td>appearance vector, style token, degree of change, unit of identical assets, temperature, label-term weight</td></tr>
+</tbody></table></div>
+<p class="lead"><strong>Table 16.</strong> Symbols used in this paper.</p>
+</div></body></html>
