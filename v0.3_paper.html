@@ -238,6 +238,13 @@ walkable than the reference (by more than 0.05 of free floor), up to 3 further p
 \(\kappa_i&lt;\tfrac12\). A free-standing piece takes as host the largest piece it touches after the flow, if larger than itself, and keeps its host's direction in the
 projection. If the kept set is still infeasible, smaller assets of the same 3D-FUTURE fine category are tried, then the other ambiguous quarter turns. Candidates are
 compared lexicographically: feasible, as walkable as the reference, fewest departures, smallest relation loss.</p>
+<p><strong>Policy and constrained decoding.</strong> Read this way, the keep head is a policy over the designer's actions, and the density budget, the further removals
+and the candidate search are a constrained decoding around it, as in constrained decoding of sequence models: they bound how far the loop may go, the policy decides which
+action comes next. The policy carries the decisions: with the corpus rates in its place (A1) the next action is the designer's in 59.4% instead of
+73.0% of held-out states, and on smaller real targets a core piece the designer kept is given up in 3.6% instead of
+2.9% of the pairs (§5.4). The bounds are needed as well: without the budget the policy's own stop gives up too much (R1: keep F1
+0.847 against 0.864, 88.0% of the pieces kept on scaled rooms against
+93.9%).</p>
 <p><strong>Additions.</strong> In a room that calls for more, the add head reads the current set \(K\cup A\) and pieces are added one at a time:</p>
 $$\begin{gathered}c^\ast=\arg\max_{c\notin\mathcal X}r_c(K\cup A)\\ \text{while}\quad P(\text{no further piece})=\exp\Big(-\sum_{c\notin\mathcal X}r_c(K\cup A)\Big)\le\tfrac12,\end{gathered}\tag{7}$$
 <p>where \(\mathcal X\) holds the catch-all categories (misc, decoration, other), which name no kind of furniture, categories that did not fit, and every category of the
@@ -278,6 +285,13 @@ $$\begin{aligned}&\min_{p,\theta}\ \sum_i\lVert p_i-\hat p_i\rVert^2+\big(R_i(\t
 touching in the reference (gap below 5 cm) that the flow placed touching. The flow has decided that they belong together, and the projection may move such a
 group out of an overlap but not tear it apart (for example, the nightstands beside a bed); without \(\mathcal F\) the projection tears
 19.7% of the reference's touching pairs on real pairs, with it 13.1% (§5.4).</p>
+<p><strong>What is emergent.</strong> \(\mathcal F\) is a subset of the reference's contacts: the flow does not invent relations, it decides which of the reference's
+contacts survive in the new room, and that selection is what is learned. Holding every reference contact is not a choice in a reshaped room, where a group's internal
+contacts and its wall sides cannot all be kept (forcing every wall side raises torn pairs, Table 14). Selecting the contacts by a rule instead — those that survive
+the affine transplant, without the flow (B1) — leaves 25.5% of the touching pairs torn on real pairs, against
+13.1%. Before the projection the flow pulls apart only 13.3% of the reference's touching pairs
+on outline targets and 2.0% on scaled ones; \(\Pi_\theta\) holds the contacts it keeps while it moves pieces out of overlaps
+and walls.</p>
 <p><strong>Penetration and allowances.</strong> \(\mathrm{pen}\) is the separating-axis penetration depth of two oriented boxes. Instead of zero penetration for every pair,
 which designers' rooms contradict, the allowance \(\alpha_{ij}=o_{c_ic_j}\min(R_i,R_j)\) uses the 95th percentile \(o_{c_ic_j}\) of the penetration of the two categories
 in the training rooms, times the smaller half diagonal (a dining chair may slide under its table). \(\mathcal D\) are door clearance boxes of the door's width (at least
@@ -316,7 +330,10 @@ are defined on footprints, so a new asset only has to fit within the size tolera
 smaller assets (§3.3), a swapped piece takes the smaller asset within the style label, or the smaller version of its own asset if the label has none; unswapped pieces
 shrink within their own appearance. The density budget of Eq. 6 is computed with the assets the pieces will have, so a restyle alone never removes a piece. On the large test
 split the arrangement drifts by \(D\) 0.02–0.03 across all degrees of change (§5.5): the appearance changes, the arrangement stays close to
-the reference.</p>
+the reference. That the network does not see appearance is only half of it: assets of the same category in another style differ in size and aspect ratio, by up to the
+retrieval tolerance (12%, 20%, 30% per dimension), and the layout has to absorb these changes of footprint, which the flow and \(\Pi_\theta\)
+do. We do not compare against a placement without the flow under restyling, so how much of the stability is due to the flow rather than to the projection is not
+measured.</p>
 <h2 id="data">4. Data and Training</h2>
 <p><strong>Corpus.</strong> We use 3D-FRONT [<a class="cite" href="#ref-front">34</a>] rooms with 5–24 pieces after duplicate removal (13,729 rooms) and the 3D-FUTURE assets
 [<a class="cite" href="#ref-future">28</a>], split by house into 10,988 training, 1,402 validation and 1,339 test rooms. No model sees validation or test rooms in training.</p>
@@ -394,7 +411,7 @@ or pairs (10,000 resamples). Appendix Table 21 lists all tests.</p>
 <tr><td><em>designer B's own room (reference only)</em></td><td>0.332</td><td>26.3%</td><td>7.0%</td><td>6.7%</td><td>14.1%</td></tr>
 </tbody></table></div>
 <p class="lead"><strong>Table 2.</strong> All methods followed by the same feasibility projection \(\Pi_\theta\), on the 300 real pairs of the large frozen test split (baselines as in §5.4: no contacts held, the orientation set for every piece; IntentFlow as shown). Bold: lowest in the column; *: IntentFlow lower than every baseline with \(p&lt;0.001\) (pair-clustered paired bootstrap). Realism (FD) was measured on the methods' own outputs and is reported separately (Table 6). Last row: designer \(B\)'s own layout scored against \(A\) with the same measures (scripts/designer_b_metrics.py): a second designer keeps \(A\)'s arrangement only in part, and the corpus rooms themselves have pieces crossing walls by these thresholds.</p>
-<p><strong>Every method through the same projection.</strong> Table 2 passes every baseline through the same \(\Pi_\theta\) (no contacts held, the orientation set for every piece), so placement quality is separated from collision resolution. IntentFlow keeps the reference's groups best: it tears 13.1% of the touching pairs, against 22.3%–40.1% for the baselines after projection (all p&lt;0.001). Its \(D_A\) is lower than every baseline's except the energy optimisation followed by \(\Pi_\theta\) (0.079, p=0.420), which optimises a form of \(D\) and tears 22.3% of the pairs. Out-of-room pieces are fewest with IntentFlow (0.4%). Colliding pairs, a measure that also counts chairs under their table (§5.1), are fewer for PhyScene + \(\Pi_\theta\) and affine transplant + \(\Pi_\theta\) (B2) than for IntentFlow (6.4%); windows are blocked by a tall piece in 1.8% of the cases, significantly fewer than for LEGO-Net + \(\Pi_\theta\) and affine transplant + \(\Pi_\theta\) (B2).</p>
+<p><strong>Every method through the same projection.</strong> Table 2 passes every baseline through the same \(\Pi_\theta\) (no contacts held, the orientation set for every piece), so placement quality is separated from collision resolution. IntentFlow keeps the reference's groups best: it tears 13.1% of the touching pairs, against 22.3%–40.1% for the baselines after projection (all p&lt;0.001). Its \(D_A\) is lower than every baseline's except the energy optimisation followed by \(\Pi_\theta\) (0.079, p=0.420), which optimises a form of \(D\) and tears 22.3% of the pairs. Out-of-room pieces are fewest with IntentFlow (0.4%). Colliding pairs, a measure that also counts chairs under their table (§5.1), are fewer for PhyScene + \(\Pi_\theta\) and affine transplant + \(\Pi_\theta\) (B2) than for IntentFlow (6.4%); of IntentFlow's colliding pairs 99.6% are category pairs that designers' rooms let overlap, 55.7% of them a dining chair under its table, and designer \(B\)'s own rooms collide at 6.7% by the same measure (93.6% such pairs): the measure counts nesting that the projection allows, not a failure of it; windows are blocked by a tall piece in 1.8% of the cases, significantly fewer than for LEGO-Net + \(\Pi_\theta\) and affine transplant + \(\Pi_\theta\) (B2).</p>
 <div class="tw"><table><thead><tr><th>method</th><th>\(D\) ↓ (kept pieces)</th><th>kept</th><th>added / room</th><th>torn pairs ↓</th><th>wall kept ↑</th><th>out of room ↓</th><th>collision ↓</th><th>door blocked ↓</th></tr></thead><tbody>
 <tr class="grp"><td>affine transplant (input, not a method)</td><td>0.056</td><td>1.00</td><td>0.00</td><td>4.3%</td><td>0.81</td><td>16.4%</td><td>2.7%</td><td>32%</td></tr>
 <tr><td>LEGO-Net</td><td>0.158</td><td>1.00</td><td>0.00</td><td>9.2%</td><td>0.43</td><td>16.5%</td><td>6.9%</td><td>28%</td></tr>
