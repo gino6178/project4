@@ -76,7 +76,7 @@ overlaps and keeps doorways clear, and no separate relation model is needed. The
 designer's next action, the add head on pairs of real rooms furnished by two designers, and the placement on such pairs and on augmented targets; a style token
 changes the furniture's appearance without changing the arrangement. On a
 frozen held-out test set of 300 real room pairs and 700 reshaped and rescaled targets, IntentFlow keeps the reference arrangement
-with a relation distance \(D_A=0.077\), against 0.184 for LEGO-Net and 0.386 for PhyScene (p&lt;0.001 and p&lt;0.001),
+with a relation distance \(D_A=0.077\), against 0.184 for LEGO-Net and 0.386 for PhyScene (both p&lt;0.001),
 leaves 0.5% of pieces outside the room (LEGO-Net 17.5%, PhyScene 15.9%), and adds pieces with a precision of
 0.41 and an F1 of 0.23 against the designers' additions. Against the transplant followed by the same projection, the learned placement
 lowers \(D_A\) from 0.089–0.093 to 0.077; holding the flow's contacts in the projection pulls apart 10.0% of the
@@ -179,7 +179,7 @@ what \(B\) added beyond it, zero once the set is complete. The keep head is lear
 furnished with part of \(X\)'s furniture: a row is a state of the pair, a random part of the designer's actions already applied to \(X\) (pieces \(Y\) gave up removed, pieces
 \(Y\) replaced by another category of their family given \(Y\)'s category and size), read in \(Y\)'s room or in \(X\)'s room scaled to \(Y\)'s area. Rows of larger rooms, where
 nothing is given up, teach the head when to keep everything. With \(\mathcal A\) the actions on the state (give up or replace a floor piece), \(\mathcal R\subseteq\mathcal A\)
-those the designer took and that are not yet applied, and \(y_i\) what finally happens to piece \(i\),</p>
+those the designer took and that are not yet applied, \(K\) the pieces still in the state and \(y_i\) what finally happens to piece \(i\),</p>
 $$\begin{gathered}\mathcal L_\text{add}=\frac{1}{3}\sum_c\big(r_c-n_c\log r_c\big),\qquad \mathcal L_\text{keep}=-\log\frac{\sum_{a\in\mathcal R}e^{s(a)}}{\sum_{a\in\mathcal A}e^{s(a)}}-\frac{1}{|K|}\sum_{i\in K}\log\pi_i^{y_i},\\ s(\text{drop}\,i)=\log\frac{\pi_i^\text{drop}}{\pi_i^\text{keep}},\qquad s(\text{replace}\,i)=\log\frac{\pi_i^\text{repl}}{\pi_i^\text{keep}},\end{gathered}\tag{4}$$
 <p>\(\mathcal L_\text{keep}\) is the likelihood that the next action is one the designer took, the order among them unknown, plus a cross-entropy on the final outcome; \(\mathcal L_\text{add}\)
 is a Poisson negative log-likelihood. No annotation enters the labels. The trunk was trained with the add loss, the placement loss below and two auxiliary readings of real
@@ -204,7 +204,7 @@ remaining piece as kept and the order between them carries no information, so th
 layout is still infeasible or less walkable than the reference, up to 3 further pieces may go, lowest \(\kappa_i\) first, and only pieces with \(\kappa_i&lt;\tfrac12\),
 which a designer is more likely to give up than to keep. A free-standing piece takes as host the largest piece it touches after the flow, if larger than itself, and keeps
 its host's direction in the projection. If the kept set is still infeasible, smaller assets of the same 3D-FUTURE fine category are tried, then the other ambiguous quarter
-turns. Candidates are compared lexicographically: feasible, as walkable as the reference, fewest departures, smallest relation loss.</p>
+turns. Candidates are compared lexicographically: feasible, as walkable as the reference, fewest departures, smallest relation loss (all relations weighted alike).</p>
 <p><strong>Adding.</strong> Additions are made one piece at a time. With \(K\) the kept pieces and \(A\) the additions so far, the add head gives the rates \(r_c(K\cup A)\), and</p>
 $$\begin{gathered}c^\ast=\arg\max_{c\notin\mathcal X}r_c(K\cup A)\\ \text{while}\quad P(\text{no further piece})=\exp\Big(-\sum_{c\notin\mathcal X}r_c(K\cup A)\Big)\le\tfrac12,\end{gathered}\tag{7}$$
 <p>where \(\mathcal X\) holds catch-all categories (misc, decoration, other), which name no kind of furniture, and categories that did not fit. The piece is placed by the
@@ -261,7 +261,7 @@ pieces shrink within their own appearance. The density budget of Eq. 6 is comput
 <h2 id="data">4. Data and Training</h2>
 <p><strong>Corpus.</strong> We use 3D-FRONT [<a class="cite" href="#ref-front">34</a>] rooms with 5–24 pieces after duplicate removal (13,729 rooms) and the 3D-FUTURE assets
 [<a class="cite" href="#ref-future">28</a>], split by house into 10,988 training, 1,402 validation and 1,339 test rooms. No model sees validation or test rooms in training.</p>
-<p><strong>Real designer pairs.</strong> Training rooms and their partners give 31,112 real pairs from 9,205 rooms for the keep, relation and addition heads.
+<p><strong>Real designer pairs.</strong> Training rooms and their partners give 31,112 real pairs from 9,205 rooms for the add head and, while the trunk was trained, its auxiliary keep and relation readings.
 Two designers' arrangements of matched pieces are a median \(D=0.35\) apart, and designer \(B\) adds pieces in 87% of pairs (2.82 per pair; measured on 6,828 pairs). Placement rows use pairs whose relation change is
 small (\(D\le0.15\), 3,350 pairs), the matched pieces carried from \(A\) into \(B\)'s room and placed as \(B\)'s designer did.</p>
 <p><strong>Downsizing pairs.</strong> Two training rooms of the same type form a downsizing pair when the smaller (at most 95% of the larger's area) holds a sub-multiset
@@ -281,12 +281,12 @@ trunk frozen (AdamW, learning rate 0.001, batch 64; rows in the given room, in t
 0.375 : 0.375 : 0.25). Appendix A lists all settings and the training stages.</p>
 <h2 id="experiments">5. Experiments</h2>
 <h3>5.1. Setup</h3>
-<p><strong>Test sets.</strong> The main comparison (§5.2), the style test (§5.5) and the augmentation ablation of §5.4 use a test set frozen once from the held-out test rooms with
+<p><strong>Test sets.</strong> The main comparison (§5.2), the pipeline ablations, the downsizing tests and the augmentation ablation of §5.4 and the style test (§5.5) use a test set frozen once from the held-out test rooms with
 fixed selection rules and never used for training or tuning (between the two trunks trained for 20,000 steps with and without the wall-side constraint in the augmentation, §5.4, the one shown is
 the one with the lower \(D_A\) on the validation real pairs, the primary metric: 0.082 against 0.084; the keep head was
 selected on its held-out downsizing pairs): 700 standard-test targets (50 rooms with 6–12 pieces including a bed, a sofa
 with a TV or a dining set; each scaled by 0.7×, 0.8×, 0.9×, 1.0×, 1.1×, 1.2×, 1.3× and reshaped into seven outlines no smaller than the reference) and 300 real pairs \((A,B)\), in which
-a method furnishes \(B\)'s empty room from \(A\). The set is stored with a sha256 manifest; each baseline was run once on it and its layouts are re-scored by the same code. The other ablations (§5.4) and the qualitative results (§5.3) use the validation split, whose
+a method furnishes \(B\)'s empty room from \(A\). The set is stored with a sha256 manifest; each baseline was run once on it and its layouts are re-scored by the same code. The comparisons of addition rules, projection metrics and forced wall sides (§5.4) and the qualitative results (§5.3) use the validation split, whose
 standard tests have 10 rooms and whose real-pair set has 120 pairs.</p>
 <p><strong>Metrics.</strong> \(D\) and \(D_A\) (eq. 2, over kept pieces) measure how well the reference arrangement is kept; <em>kept</em> is the share of reference pieces in the
 output. <em>Torn pairs</em>: of the floor pairs touching in the reference (gap ≤ 5 cm) and both kept, the share more than 30 cm apart. <em>Wall kept</em>:
@@ -330,13 +330,12 @@ or pairs (10,000 resamples). Appendix Table 13 lists all tests.</p>
 the designer kept as well as LEGO-Net, which keeps everything (p=0.655; IntentFlow's keep F1 differs on 74 of 300 pairs, higher on 42 and
 lower on 32), and better than PhyScene (p&lt;0.001); its additions reach add F1
 0.231 (precision 0.41, recall 0.15), above LEGO-Net (p&lt;0.001) and PhyScene
-(p=0.044). It tears fewer groups than PhyScene (p&lt;0.001); against LEGO-Net the difference is not significant
-(p&lt;0.001).</p>
+(p=0.044). It tears fewer groups than PhyScene (p&lt;0.001) and than LEGO-Net (p&lt;0.001).</p>
 <p>On the standard tests IntentFlow's \(D\) is 0.058 / 0.063 (scale / outline), against 0.158 / 0.141
 for LEGO-Net and 0.379 / 0.371 for PhyScene (p&lt;0.001 in all four comparisons), and it keeps 0.82 /
 0.74 of the reference's wall contacts (LEGO-Net 0.43 / 0.26, PhyScene 0.30 /
-0.34). It tears fewer groups than PhyScene on both tests (p=0.008, p&lt;0.001); against LEGO-Net
-the torn-pair differences are not significant (p=0.118, p=0.020). Its largest out-of-room, collision or door-blocking rate
+0.34). It tears fewer groups than PhyScene on both tests (p=0.008, p&lt;0.001),
+and than LEGO-Net on outline targets (p=0.020), not significantly on scaled rooms (p=0.118). Its largest out-of-room, collision or door-blocking rate
 over all columns is 1.8%. The affine transplant keeps the arrangement best — \(D_A=0.069\) — but leaves 30.7% of pieces outside
 the room: \(D\) measures arrangement, not feasibility, and the gap between the transplant and IntentFlow is what feasibility costs.</p>
 <h3>5.3. Qualitative results</h3>
@@ -409,7 +408,7 @@ p&lt;0.001; scale 0.80 against 0.82, p=0.026) while outline \(D\)
 (p=0.848) and torn pairs (p=0.787) do not change; holding the predicted wall contacts costs some pieces outside the
 room on real pairs (0.5% against 0.3%, p=0.024).</p>
 <p><strong>Projection metric.</strong> On an earlier placement checkpoint (validation), moving neighbours together in \(\Pi_\theta\) with relation weights lowered torn pairs on
-outline targets (−2.4 pts [−4.2, −0.8], p=0.001, 9 rooms), not significantly on scaled rooms (p=0.430; Table 8). With the final model the relation head's neighbour term adds nothing (A7), and the
+outline targets (−2.4 pts [−4.2, −0.8], p=0.001, 9 rooms), not significantly on scaled rooms (p=0.430; Table 8). With the final model, putting the relation head back with its neighbour term (A7) tears more groups, while the
 contacts of the flow, held as constraints, do what the neighbour term was meant to do (A2).</p>
 <div class="tw"><table><thead><tr><th>setting</th><th>scale: \(D\) ↓</th><th>scale: torn pairs ↓</th><th>scale: wall kept ↑</th><th>scale: \(\Pi_\theta\) move</th><th>outline: \(D\) ↓</th><th>outline: torn pairs ↓</th><th>outline: wall kept ↑</th><th>outline: \(\Pi_\theta\) move</th></tr></thead><tbody>
 <tr><td>Euclidean projection</td><td>0.071</td><td>5.8%</td><td>0.79</td><td>10 cm</td><td>0.060</td><td>12.7%</td><td>0.62</td><td>8 cm</td></tr>
@@ -434,7 +433,7 @@ direction, not significantly at 5% (outline 19.1% → 16.3%, p=0.157; real pairs
 slightly lower (p=0.056; Table 10). The wall-side constraint of the augmentation thus moves the model along the same walls-versus-groups trade-off as
 forcing the constraint at inference: significantly on walls, in the expected direction but not significantly on groups.</p>
 <div class="tw"><table><thead><tr><th>augmentation targets</th><th>scale: wall kept ↑</th><th>scale: torn pairs ↓</th><th>outline: \(D\) ↓</th><th>outline: wall kept ↑</th><th>outline: torn pairs ↓</th><th>real pairs: \(D_A\) ↓</th><th>real pairs: torn pairs ↓</th><th>real pairs: add F1 ↑</th><th>real pairs: add precision ↑</th></tr></thead><tbody>
-<tr class="ours"><td>with the reference's wall sides (IntentFlow)</td><td>0.84</td><td>6.2%</td><td>0.066</td><td>0.73</td><td>19.1%</td><td>0.082</td><td>17.9%</td><td>0.253</td><td>0.43</td></tr>
+<tr class="ours"><td>with the reference's wall sides (IntentFlow's trunk)</td><td>0.84</td><td>6.2%</td><td>0.066</td><td>0.73</td><td>19.1%</td><td>0.082</td><td>17.9%</td><td>0.253</td><td>0.43</td></tr>
 <tr><td>without the wall-side constraint</td><td>0.77</td><td>6.1%</td><td>0.063</td><td>0.63</td><td>16.3%</td><td>0.082</td><td>15.2%</td><td>0.259</td><td>0.45</td></tr>
 <tr class="grp"><td>paired bootstrap, without − with</td><td><b>p&lt;0.001</b></td><td>p=0.948</td><td>p=0.056</td><td><b>p&lt;0.001</b></td><td>p=0.157</td><td>p=0.863</td><td>p=0.087</td><td>p=0.724</td><td>p=0.729</td></tr>
 </tbody></table></div>
@@ -538,7 +537,7 @@ designers do, learning how much a smaller room must lose, and resolving the conf
 <tr><td>real pairs</td><td>same type, other house, family Jaccard &gt; 0.6, area ratio [0.5, 2]; 31,112 full pairs from 9,205 rooms; placement rows: \(D\le0.15\) pairs</td></tr>
 <tr><td>trunk</td><td>8 blocks, width 256, 8 heads; reference encoder 4 blocks, width 256; \(\zeta_\text{ref}\in\mathbb R^{32}\), null with p 0.15; Fourier features 6 bands; ≤ 24 pieces, 24 wall and 8 opening tokens; 14.72 M parameters, of which 0.28 M in the keep and add heads</td></tr>
 <tr><td>analysis heads</td><td>keep MLP \(d\to d\to3\), softmax, trained on downsizing rows with the trunk frozen (4,000 steps, AdamW lr 0.001, batch 64, every 7th room held out); add MLP \(3d\to d\to64\), softplus (count term divided by 3); in the trunk's training also a keep MLP \(d\to d\to1\) on real-pair keep labels (binary cross-entropy) and a relation MLP \(2d\to d\to1\) on the preservation \(1-d\) of matched pairs (squared error), both removed from the final model</td></tr>
-<tr><td>training</td><td>AdamW lr 0.0003, weight decay 0.0001, OneCycle (warm-up 3%), gradient clip 1, EMA 0.999, batch 64, bf16; infill rows p 0.2; final stage 4,000 steps (stages in Table 15)</td></tr>
+<tr><td>training</td><td>AdamW lr 0.0003, weight decay 0.0001, OneCycle (warm-up 3%), gradient clip 1, EMA 0.999, batch 64, bf16; infill rows p 0.2; the trunk's final stage 20,000 steps (stages in Table 15)</td></tr>
 <tr><td>inference</td><td>50 Euler steps, seed 0; budget slack 0.14; downsizing loop stops at \(s(a^\ast)\le0\); ≤ 3 extra drops (\(\kappa&lt;\tfrac12\)); shrinks 0.9, 0.8, 0.7, 0.6, 0.5, 0.4; turn tolerance 0.05 IoU; walkability tolerance 0.05; ≤ 6 additions</td></tr>
 <tr><td>\(\Pi_\theta\)</td><td>AL: 20 Adam steps (lr 0.03) per outer iteration, ≤ 60 outer, penalty 2 doubled when the violation does not fall below 0.25×, stop at 1 cm; contacts of the flow (gap ≤ 5 cm in the reference and after the flow) held within 3 cm; door box ≥ 1 m × 0.9 m; wall contacts within 3 cm</td></tr>
 <tr><td>appearance \(z\)</td><td>MLP hidden 256, \(z\in\mathbb S^{31}\), temperature 0.1, 63 negatives, batch 128, 6,000 steps, AdamW lr 0.001; size ladder 12%, 20%, 30%</td></tr>
