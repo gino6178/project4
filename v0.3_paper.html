@@ -61,30 +61,27 @@
 </style>
 </head>
 <body><div class="wrap">
-<h1>IntentFlow: Reference-to-Room Arrangement Transfer via Rectified Flow and Emergent Contacts</h1>
+<h1>IntentFlow: Reference-to-Room Arrangement Transfer via Rectified Flow and Contact-Preserving Projection</h1>
 <p class="authors">Anonymous submission</p>
 <p class="links"><a href="#method">Method</a><a href="#experiments">Experiments</a><a href="#refs">References</a><a href="#appendix">Appendix</a></p>
 <figure id="fig-teaser"><img src="assets/v03/render3d_paper_real_cap28a.png" alt="teaser" loading="lazy"><figcaption><strong>Figure 1.</strong> Moving a home's arrangement into another room, rendered with the 3D-FUTURE assets (rows: for each reference room type, the held-out validation pair (both baselines' layouts stored, 5–12 pieces, target area differing from the reference's by more than 10%) whose \(D_A\) with IntentFlow is closest to the median of that type: a typical case, not the best). Columns: the reference room A; the target room B as given to the methods (walls, doors, windows; empty); IntentFlow in B; LEGO-Net and PhyScene (stored layouts; PhyScene's boxes are shown with the asset of its class nearest in size); designer B's own arrangement. Rows: bedroom (11.2 → 17.3 m²): IntentFlow keeps 5 of 5 pieces and adds a dressing table; \(D_A\) 0.073 against LEGO-Net 0.114 and PhyScene — (no piece matched); living room (30.7 → 24.5 m²): IntentFlow keeps 9 of 9 pieces (assets at 0.7× where they must shrink); \(D_A\) 0.102 against LEGO-Net 0.176 and PhyScene 0.314; dining room (12.2 → 10.4 m²): IntentFlow keeps 7 of 7 pieces; \(D_A\) 0.038 against LEGO-Net 0.116 and PhyScene 0.091. Beyond the corpus overlap allowance (the measure of \(\Pi_\theta\)), IntentFlow leaves no piece interpenetrating or outside B. LEGO-Net: the single bed and the wardrobe interpenetrate by 83 cm (bedroom); the side table and the sofa interpenetrate by 54 cm and one piece stands outside B (living room); 3 pieces stand outside B (dining room). PhyScene, which lays out its own furniture from its living-room classes: the L-shaped sofa and the dining chair interpenetrate by 78 cm and one piece stands outside B (bedroom); the office chair and the loveseat interpenetrate by 4 cm (living room); the dining chair and the dining table interpenetrate by 52 cm (dining room).  Walls are cut at 1.1 m; doors red, windows blue.</figcaption></figure>
-<div class="abstract"><p><strong>Abstract.</strong> People who like the arrangement of another home want it in their own: the same kind of furniture, arranged the same way,
-in a room with another size and outline and with doors and windows elsewhere. A designer doing this keeps what matters, drops what no longer fits, adds what the new room
-calls for, and places everything so that the groups and their relations to the walls survive. We present IntentFlow, in which a transformer learns these decisions from the
-reference and the target room and places the furniture, and a feasibility projection makes the result physically valid: the network handles the continuous transport of the
-pieces and the discrete decisions of what to keep and add, and the projection is the deterministic boundary that guarantees non-penetration, containment and clear doorways.
-The reference's furniture, carried into the target room, and the room's walls, doors and windows are tokens of a single attention trunk;
-a rectified-flow velocity head places the furniture, a keep head decides what a smaller room gives up or replaces, and an add head decides what a designer adds. The pairs
-the flow places touching form the reference's design-intent graph in the new room, learned rather than written down: a feasibility projection holds them while it removes
-overlaps and keeps doorways clear, and no separate relation model is needed. The keep head is trained on 34,120 downsizing pairs of corpus rooms as the
-designer's next action, the add head on pairs of real rooms furnished by two designers, and the placement on such pairs and on augmented targets; a style token
-changes the furniture's appearance without changing the arrangement. On a
-frozen held-out test set of 300 real room pairs and 700 reshaped and rescaled targets, IntentFlow keeps the reference arrangement
-with a relation distance \(D_A=0.081\), against 0.184 for LEGO-Net and 0.386 for PhyScene (both p&lt;0.001),
-leaves 0.4% of pieces outside the room (LEGO-Net 17.5%, PhyScene 15.9%), and adds pieces with a precision of
-0.43 and an F1 of 0.24 against the designers' additions. Against the transplant followed by the same projection, the learned placement
-lowers \(D_A\) from 0.089–0.094 to 0.081; holding the flow's contacts in the projection pulls apart 13.1% of the
-reference's touching pairs on real pairs, against 19.7% without them. On held-out downsizing pairs the keep head predicts the designer's next
-action more often than corpus rates (73.0% against 59.4%); 0 of
-175 scaled-down bedrooms lose their bed, and on smaller real targets it gives up a core piece the designer kept in
-2.9% of the pairs, against 3.6% with the corpus rates. A transplant optimised for a form of the relation distance itself reaches \(D_A=0.071\) but pulls apart 21.3% of the reference's touching pairs (IntentFlow 13.1%). By the Fréchet distance of DINOv3 features of top-down renders, a measure independent of \(D\), IntentFlow's rooms are as close to real designers' rooms as MiDiffusion's (FD 11.7 against 11.6), which arranges the same objects its own way (\(D_A=0.358\)). With window and clearance constraints in the projection a tall piece stands in front of 1.8% of the windows (designers: 14.1%), and a target takes 1.06 s (median) on a GPU.</p></div>
+<div class="abstract"><p><strong>Abstract.</strong> Reference-to-room arrangement transfer aims to retarget a reference room's furniture layout into an empty target room with a
+different scale, boundary, and door/window configuration, while preserving the functional groupings and spatial intent of the original design. An interior designer performing
+this task jointly determines what to keep, drop, or substitute under space constraints, and rearranges pieces to respect wall relations and operational clearances. We present
+IntentFlow, a framework that unifies learning-based intent reasoning with contact-preserving geometric projection. Conditioned on the reference arrangement and target
+boundaries, a single transformer trunk drives a rectified-flow velocity head to transport furniture from an affine transplant, while auxiliary heads predict discrete
+downsizing actions and set completion. Crucially, the pairwise contacts naturally formed at the flow endpoint define the reference's emergent design-intent graph,
+eliminating the need for an explicit relation model. A GPU-accelerated augmented Lagrangian projection enforces physical non-penetration, doorway clearances, and ergonomic
+functional zones while holding these emergent contacts. Furthermore, by disentangling spatial arrangement from visual appearance, a style token enables swapping 3D assets to
+a target aesthetic with small layout distortion (\(D\) 0.02–0.03). Evaluated on a frozen test set of 300 real room pairs and
+700 reshaped targets, IntentFlow preserves reference arrangements with a relation distance of \(D_A = 0.081\), significantly
+outperforming LEGO-Net (0.184) and PhyScene (0.386; both p&lt;0.001), while leaving only
+0.4% of pieces out-of-room (LEGO-Net 17.5%, PhyScene 15.9%). Holding flow-induced contacts reduces
+torn touching pairs from 19.7% to 13.1%, whereas directly optimizing relation distance reaches
+\(D_A = 0.071\) at the cost of tearing 21.3% of contacts. On visual realism measured by top-down DINOv3 Fréchet
+Distance, IntentFlow (FD 11.7) matches a generative baseline that arranges the reference's objects on its own (MiDiffusion, FD 11.6) while
+maintaining arrangement fidelity (\(D_A = 0.081\) against 0.358). The complete pipeline runs in
+1.06 s median latency on a GPU.</p></div>
 
 <h2 id="intro">1. Introduction</h2>
 <p>A person browsing furnished homes finds an arrangement they like and wants it in their own home — the same kind of furniture, arranged the same way. Their room has
