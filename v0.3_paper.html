@@ -73,7 +73,7 @@ boundaries, a single transformer trunk drives a rectified-flow velocity head to 
 downsizing actions and set completion. Crucially, the pairwise contacts naturally formed at the flow endpoint define the reference's emergent design-intent graph,
 eliminating the need for an explicit relation model. A GPU-accelerated augmented Lagrangian projection enforces physical non-penetration, doorway clearances, and ergonomic
 functional zones while holding these emergent contacts. Furthermore, by disentangling spatial arrangement from visual appearance, a style token enables swapping 3D assets to
-a target aesthetic with small layout distortion (\(D\) 0.02–0.03). Evaluated on a frozen test set of 300 real room pairs and
+a target aesthetic with small layout distortion (\(D\in[0.02, 0.03]\)). Evaluated on a frozen test set of 300 real room pairs and
 700 reshaped targets, IntentFlow preserves reference arrangements with a relation distance of \(D_A = 0.081\), significantly
 outperforming LEGO-Net (0.184) and PhyScene (0.386; both p&lt;0.001), while leaving only
 0.4% of pieces out-of-room (LEGO-Net 17.5%, PhyScene 15.9%). Holding flow-induced contacts reduces
@@ -122,7 +122,7 @@ directly optimizing relation distance tears 21.3% (§5.2, §5.4).</li>
 175 scaled-down bedrooms drop their bed). The add head complements retained sets with precision 0.43 and F1
 0.24 against real designer additions.</li>
 <li><strong>Layout-appearance disentanglement</strong> (§3.5): the network sees a piece's category and size, never its appearance, and the contacts it keeps are defined
-on footprints; swapping assets according to a target style token changes the appearance while the arrangement drifts by \(D\) 0.02–0.03
+on footprints; swapping assets according to a target style token changes the appearance while the arrangement drifts by \(D\in[0.02, 0.03]\)
 (§5.5).</li>
 <li><strong>Contact-preserving ergonomic projection \(\Pi_\theta\)</strong> (§3.4): an augmented Lagrangian solver, run as CUDA graphs, projects the flow's output onto hard
 constraints — non-penetration with corpus-derived overlap allowances, containment, door clearance, window fronts, and functional clearance for seating, beds and storage.
@@ -168,7 +168,7 @@ flow: the pairs placed in contact at the end of the flow define the groups that 
 <h3>3.1. Problem formulation and arrangement distance</h3>
 <p><strong>Problem definition.</strong> A reference room is a set of \(N\) placed pieces \(S_\text{ref}=\{(c_i,s_i,p_i,\theta_i,a_i)\}_{i=1}^N\), where \(c_i\) is the
 category, \(s_i\in\mathbb R^3_{&gt;0}\) the size of the bounding box, \(p_i\in\mathbb R^2\) the floor position, \(\theta_i\in[-\pi,\pi)\) the yaw and \(a_i\) a 3D-FUTURE asset
-[<a class="cite" href="#ref-future">28</a>]. The empty target room \(P_t\) is a simple polygon with the segments of its doors \(\mathcal D\) and windows. Optionally a style token
+[<a class="cite" href="#ref-future">28</a>]. The empty target room \(P_t\) is a simple polygon with the segments of its doors and windows, whose clearance boxes \(\mathcal D\) and \(\mathcal W\) enter the projection (eq. 8). Optionally a style token
 \(z^\star\in\mathbb S^{31}\) and a degree of change \(\lambda\in[0,1]\), the fraction of pieces to restyle, are given. The output is a layout
 \(\{(c_j',s_j',p_j',\theta_j',a_j')\}_{j=1}^{N'}\) in \(P_t\) that keeps the groupings, orientations and wall relations of \(S_\text{ref}\), with pieces removed, replaced
 by a smaller or restyled asset of the same kind, or added (\(N'\neq N\) in general), under hard physical and functional constraints.</p>
@@ -330,7 +330,7 @@ $$U(\lambda)=\{u_1,\dots,u_m\},\qquad m=\arg\min_{m'}\Big|\sum_{k\le m'}|u_k|-\l
 are defined on footprints, so a new asset only has to fit within the size tolerance for the flow and \(\Pi_\theta\) to keep the arrangement. If the kept set must take
 smaller assets (§3.3), a swapped piece takes the smaller asset within the style label, or the smaller version of its own asset if the label has none; unswapped pieces
 shrink within their own appearance. The density budget of Eq. 6 is computed with the assets the pieces will have, so a restyle alone never removes a piece. On the large test
-split the arrangement drifts by \(D\) 0.02–0.03 across all degrees of change (§5.5): the appearance changes, the arrangement stays close to
+split the arrangement drifts by \(D\in[0.02, 0.03]\) across all degrees of change (§5.5): the appearance changes, the arrangement stays close to
 the reference. That the network does not see appearance is only half of it: assets of the same category in another style differ in size and aspect ratio, by up to the
 retrieval tolerance (12%, 20%, 30% per dimension), and the layout has to absorb these changes of footprint, which the flow and \(\Pi_\theta\)
 do. We do not compare against a placement without the flow under restyling, so how much of the stability is due to the flow rather than to the projection is not
@@ -712,7 +712,7 @@ of change \(\lambda\); the method proposes a layout and does not replace a desig
 projection. The transferred furniture and the room's walls and openings are tokens of one attention trunk, and a rectified flow moves the pieces from an affine transplant;
 the reference's groups are not written down as relation categories but read from the contacts at the end of the flow, which an augmented Lagrangian projection holds while it
 makes the layout feasible and keeps windows and usage zones clear. A keep head learned from smaller rooms of the corpus decides what to give up or replace, an add head
-completes the set, and a style token changes the furniture's appearance while the arrangement drifts by \(D\) 0.02–0.03. On a frozen
+completes the set, and a style token changes the furniture's appearance while the arrangement drifts by \(D\in[0.02, 0.03]\). On a frozen
 held-out test set of real cross-home pairs and reshaped targets, IntentFlow reaches \(D_A=0.081\) against 0.184 for LEGO-Net and
 0.386 for PhyScene, tears fewer of the reference's groups than every baseline followed by the same projection, leaves
 0.4% of pieces outside the room, is as close to designers' rooms as MiDiffusion by FD, and runs in
