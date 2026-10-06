@@ -81,69 +81,75 @@ baselines), has the lowest FID / KID of the compared methods against the split's
 6.5 s median per target on a single GPU.</div>
 
 <h2 id="intro">1. Introduction</h2>
-<p>When furnishing a new living space, occupants frequently seek to transfer a proven interior arrangement from a reference home into
-their own — the bed between its nightstands, the sofa facing the television across the coffee table, the chairs around the dining table.
-However, target rooms typically exhibit divergent floor dimensions, non-congruent polygonal outlines, and mismatched door and window
-locations (Fig. 1). An expert interior designer addressing this challenge does not generate a layout from scratch; rather, they perform
-<i>reference-to-room arrangement transfer</i>: determining which signature pieces to retain, dropping or swapping secondary items that no
-longer fit, introducing complementary additions called for by the new room, and adjusting continuous poses so that functional clusters,
-passages, and wall orientations are preserved. Formally, given a furnished reference room \(A\) and an empty target room \(B\), the
-goal is to synthesize a populated layout in \(B\) that preserves the relational design intent of \(A\) while remaining physically
-feasible and usable.</p>
-<p>This task is challenging due to four coupled factors. First, <i>discrete and continuous decisions interact</i>: spatial feasibility
-dictates which items can fit, yet spatial placement itself depends on which items are retained. Second, <i>design intent is not a static
-list of categorical relations</i>; spatial relations deform under aspect-ratio changes, and which of them should survive depends on the
-target boundaries. Third, real-world retargeting often requires <i>layout-appearance disentanglement</i>: homeowners frequently wish to
-renew the furniture's appearance (e.g., moving to another furniture style) while maintaining the familiar spatial grouping. Fourth, the
-generated scene must respect <i>hard architectural constraints</i> — preventing interpenetration, keeping every piece inside the walls and
-out of the doorways, and leaving a free path to every piece — which unconstrained neural generators meet only up to their regression
-error.</p>
-<p>Prior indoor scene generators <a class="cite" href="#ref-atiss">[7]</a> <a class="cite" href="#ref-sceneformer">[8]</a> <a class="cite" href="#ref-diffuscene">[9]</a> <a class="cite" href="#ref-physcene">[6]</a> <a class="cite" href="#ref-midiffusion">[5]</a> sample plausible layouts conditioned on
-boundaries, object lists or text, but discard the specific spatial arrangement of a reference scene; MiDiffusion can be given the
-reference's objects, but not their arrangement. Rearrangement models such as LEGO-Net <a class="cite" href="#ref-legonet">[4]</a> iteratively regularize messy layouts
-toward corpus distributions rather than transferring intent across non-isomorphic spaces. Layout optimization methods <a class="cite" href="#ref-yu">[10]</a> <a class="cite" href="#ref-merrell">[11]</a>
-optimize hand-crafted energy terms without learning from data which piece a designer gives up, what they add, or which wall a group
-belongs to.</p>
-<p>We present IntentFlow, a framework that learns these decisions from designers and keeps physics as a projection (Fig. 2). In 3D-FRONT
-<a class="cite" href="#ref-front">[1]</a> many rooms are furnished from the same 3D-FUTURE <a class="cite" href="#ref-future">[12]</a> assets: two such rooms form a pair in which a designer has carried a
-layout into another room, given up pieces where it was smaller and added pieces where it was larger. Together with rooms whose furniture
-we partly mask out, these pairs supervise every decision. The reference is framed into the target room and processed by one attention trunk
-alongside the walls and openings of both rooms (Fig. 3). Read on the framed reference, a state head decides whether the room loses, keeps
-or gains furniture, two hotspot maps say where designers delete and add, and a next-action head edits the set one step at a time — drop,
-change category, add next to an anchor, stop. Along the flow, a rectified-flow velocity head transports the edited set to its place; a
-same-asset head and a style head choose the 3D assets, with one degree of change towards a target style. Finally, to guarantee physical
-validity without diluting the learned intent, a mesh-level augmented Lagrangian projection \(\Pi_\theta\) enforces non-penetration,
-containment, door clearance and reachability, and restores what the reference itself prescribes: its touching groups, its wall contacts
-and its angles. How many pieces a smaller room loses is not set by any rule: among 16 candidate plans the model's most
-probable one that \(\Pi_\theta\) can make feasible is kept. Table 1 lists which decisions are learned and which are rules, and where every
-constant comes from.</p>
-<p>Our principal contributions are:</p>
+<p>When furnishing a living space, occupants frequently seek to transfer a proven interior arrangement from a reference home into a new
+environment — retaining functional groupings such as the bed framed by its nightstands, or a living-room cluster where the sofa faces the
+media console across a coffee table. However, realistic target rooms rarely share the same spatial configuration; they exhibit divergent
+dimensions, non-congruent polygonal floor outlines, and mismatched door and window placements (Fig. 1). An expert interior
+designer performing this transfer does not generate an arrangement from scratch. Instead, they execute <i>reference-to-room arrangement
+transfer</i>: identifying the groupings to preserve, pruning secondary items that exceed the room's capacity, introducing functional
+additions when the room expands, and adjusting continuous poses so that functional intent, wall orientations, and circulation paths remain
+coherent. Formally, given a furnished reference room \(A\) and an empty polygonal target room \(B\), the objective is to synthesize a
+feasible layout in \(B\) that transfers the relational design intent of \(A\) while complying with architectural and physical
+feasibility.</p>
+<p>Solving this retargeting problem introduces four challenges:</p>
+<ol>
+<li><b>Coupled discrete and continuous decisions.</b> Continuous placement governs which pieces can physically fit, yet placement itself
+depends on which discrete subset of items is retained or added.</li>
+<li><b>Non-rigid deformation of relational intent.</b> Interior design intent is not a static categorical graph (e.g., <i>left-of</i>,
+<i>facing</i>). Spatial relations warp under aspect-ratio distortions, and which relational bonds must survive depends on the target's
+boundary geometry.</li>
+<li><b>Hard architectural constraints.</b> Physical plausibility demands non-penetration, boundary containment, doorway clearance, and open
+circulation paths. Unconstrained neural regressors meet them only up to their regression error, which shows as collisions or pieces
+crossing exterior walls.</li>
+<li><b>Layout-appearance disentanglement.</b> Practical retargeting requires decoupling the spatial configuration from the furniture's
+visual style, so that users can renew the furniture's appearance without changing the arrangement.</li>
+</ol>
+<p>Existing indoor layout synthesizers <a class="cite" href="#ref-atiss">[7]</a> <a class="cite" href="#ref-sceneformer">[8]</a> <a class="cite" href="#ref-diffuscene">[9]</a> <a class="cite" href="#ref-physcene">[6]</a> <a class="cite" href="#ref-midiffusion">[5]</a> sample plausible scenes conditioned
+on floor polygons, object lists or text, but discard the reference's spatial arrangement; MiDiffusion <a class="cite" href="#ref-midiffusion">[5]</a> accepts an object list
+but not its continuous spatial groupings. Rearrangement models such as LEGO-Net <a class="cite" href="#ref-legonet">[4]</a> regularize disordered scenes toward the
+arrangements of their training corpus rather than transferring intent across non-isomorphic floor plans, and without the room's walls as
+constraints they leave 13.0% of the pieces outside the room on our benchmark. Classical layout
+optimization methods <a class="cite" href="#ref-yu">[10]</a> <a class="cite" href="#ref-merrell">[11]</a> optimize hand-crafted energy terms without learning from designers which items to prune, add, or
+anchor.</p>
+<p>To overcome these limitations, we present <b>IntentFlow</b>, a hybrid generative-optimization framework that learns relational design
+transfer from designers' rooms while enforcing physical feasibility by a constrained projection (Fig. 2). We construct
+68,958 pairs of real rooms from 3D-FRONT <a class="cite" href="#ref-front">[1]</a> — rooms sharing furniture, rooms a designer furnished smaller or larger from
+the same set, and rooms with part of their furniture masked out — capturing real layout retargeting across scales, shapes, and partial
+arrangements. A single transformer trunk attends jointly to the reference layout (framed into the target's coordinate frame), the
+boundaries of both rooms, and the generation slots (Fig. 3). Discrete inventory adaptation is governed by a state head, delete and
+add hotspot maps, and a sequential next-action policy. Continuous placement is a rectified flow <a class="cite" href="#ref-rectflow">[2]</a> transporting the pieces from the
+informative framed reference toward the designer's configuration.</p>
+<p>We establish a division of labour between learning and geometric optimization: the network learns the subjective design decisions
+(what to prune, what to add, and the continuous transport), while the physical constraints are resolved by a mesh-level augmented
+Lagrangian projection \(\Pi_\theta\). \(\Pi_\theta\) enforces non-penetration and room containment, with top-view overlap allowances
+measured in real rooms, pursues doorway clearance and reachability, and restores the reference-prescribed groups and wall contacts.
+Spatial capacity is resolved by constrained decoding over 16 candidate edit plans, keeping the most probable plan that
+\(\Pi_\theta\) can make feasible. Finally, a style head decouples appearance from placement, enabling 3D asset style transfer with small
+arrangement drift (\(D\le0.034\)). Table 1 lists which decisions are learned and which are rules.</p>
+<p>Our main contributions are:</p>
 <ul>
-<li><b>A learned edit plan (§3.3).</b> We formulate spatial adaptation as learning designers' sequential edits: a state head, delete and add
-hotspots and a next-action head, trained on the edits of 68,958 real pairs and masked rooms, decide what the room loses,
-keeps or gains, and a search over 16 plans lets physics decide only how far the plan must go. On the
-0.7× targets IntentFlow keeps 0.63 of the pieces with 0.0% out of the room,
-where methods that keep every piece leave 50.6%–52.1%
-out (Table 5); in masked completion it adds the removed category in 0.33 of the rooms, against 0.24 for the
-room type's most frequent category (§5.5).</li>
-<li><b>Placement as transport from the framed reference (§3.2).</b> We formulate arrangement retargeting as a rectified flow from the
-reference framed into the target, conditioned on both rooms, so that keeping the reference is the default and the transport is short where
-the room changes little; added pieces start from how designers place their category next to their anchor. On the test split IntentFlow
-keeps 0.69 of the close relations and tears 0.064 of the touching pairs (LEGO-Net 0.179, MiDiffusion
-0.207, PhyScene 0.334; §5.2).</li>
-<li><b>Reference-prescribed feasibility projection \(\Pi_\theta\) (§3.4).</b> An augmented Lagrangian solver projects every candidate
-onto hard constraints — non-penetration of the meshes' cross-sections with top-view overlap allowances measured in real rooms,
-containment, door clearance and reachability — after restoring the reference's groups, wall contacts and angles. Out-of-room pieces fall to
-0.2% while 0.90 of the reference's wall contacts are kept (baselines
-0.45–0.67).</li>
-<li><b>Layout-appearance disentanglement (§3.5).</b> The trunk never sees the style label; a style head with one scalar \(\lambda\) moves the
-assets from the reference's style towards a target style, so the appearance changes while the arrangement drifts by
-\(D\le0.034\) (§5.6).</li>
-<li><b>Objective evaluation (§5).</b> On a frozen held-out test split (700 targets, 285 real pairs,
-200 completion rooms, 50 style rooms), against LEGO-Net, PhyScene and MiDiffusion with paired bootstrap tests over rooms, IntentFlow reaches
-\(D=0.059\) against 0.149–0.348 and is closer to
-the split's real rooms by PhyScene's realism metrics than the three baselines (FID 15.6 against
-17.1–23.6).</li>
+<li><b>Learned sequential edit policy with constrained decoding (§3.3).</b> We formulate inventory adaptation as sequential decision-making
+over designers' edits. Supervised on 68,958 real room pairs and masked rooms, the state, hotspot and next-action heads replace
+empirical density thresholds. On rooms scaled to 0.7×, IntentFlow keeps 0.63 of the pieces with
+0.0% out of the room, whereas methods that keep every piece (LEGO-Net, the affine transplant) leave
+50.6%–52.1% of them
+outside (Table 5). In masked completion it adds the removed category in 0.33 of the rooms, against 0.24 for
+the room type's most frequent category (§5.5).</li>
+<li><b>Relational retargeting via rectified flow (§3.2).</b> We formulate layout retargeting as a rectified flow initialized from the framed
+reference, with the reference's pairwise geometry as an attention bias <a class="cite" href="#ref-graphormer">[12]</a>. On the frozen held-out tests, IntentFlow keeps
+0.69 of the reference's close relations and tears 0.064 of its touching pairs (LEGO-Net 0.179,
+MiDiffusion 0.207, PhyScene 0.334; §5.2).</li>
+<li><b>Reference-preserving feasibility projection \(\Pi_\theta\) (§3.4).</b> An augmented Lagrangian solver enforces non-penetration of
+mesh cross-sections at 17 heights and boundary containment, and pursues doorway clearance and reachability. With overlap allowances measured
+in real rooms and rigid group-level wall alignment, \(\Pi_\theta\) reduces out-of-room pieces to 0.2% while keeping
+0.90 of the reference's wall contacts (baselines 0.45–0.67).</li>
+<li><b>Disentangled layout and appearance (§3.5).</b> The style label never enters the trunk; a style head moves the assets across styles
+with one scalar \(\lambda\in[0,1]\), changing their appearance while the arrangement drifts by \(D\le0.034\) (§5.6).</li>
+<li><b>Benchmark results (§5).</b> On a frozen test split of 700 scaled and reshaped targets and 285
+real designer pairs, IntentFlow reaches \(D=0.059\) (baselines 0.149–0.348,
+all p&lt;0.001), the lowest FID / KID of the compared methods on the transfer targets (15.6 / 5.12), and
+the highest walkable / reachable shares (0.967 / 0.957), with a median latency of 6.5 s per
+target on a single GPU.</li>
 </ul>
 
 <h2 id="related">2. Related Work</h2>
@@ -165,16 +171,16 @@ the room's walls and doors as constraints, pieces end across walls or in doorway
 predicates (e.g., surrounding, against, supported-by) and then instantiate boxes <a class="cite" href="#ref-planit">[19]</a> <a class="cite" href="#ref-instructscene">[14]</a>. Such categorical abstractions
 are brittle under continuous deformations, where distances and orientations warp non-uniformly. IntentFlow uses no relation categories:
 every pair of the reference's pieces receives the same continuous geometric descriptor, injected as an additive attention bias as in
-Graphormer <a class="cite" href="#ref-graphormer">[20]</a>, and the groups the projection restores are the reference's own touching pairs, not the output of a relation
+Graphormer <a class="cite" href="#ref-graphormer">[12]</a>, and the groups the projection restores are the reference's own touching pairs, not the output of a relation
 classifier. On the discrete side, adapting to a room requires reasoning about how many pieces a set holds. Related to set-based
-architectures <a class="cite" href="#ref-deepsets">[21]</a> <a class="cite" href="#ref-settransformer">[22]</a> and masked modelling <a class="cite" href="#ref-mae">[23]</a>, our next-action head treats downsizing and additions as sequential
+architectures <a class="cite" href="#ref-deepsets">[20]</a> <a class="cite" href="#ref-settransformer">[21]</a> and masked modelling <a class="cite" href="#ref-mae">[22]</a>, our next-action head treats downsizing and additions as sequential
 edits of a set with an explicit stop, learned on random intermediate states between a reference set and a designer's set, and masking
 furniture out of real rooms teaches it what a room lacks and where it belongs.</p>
-<p><b>Flow matching and constrained optimization.</b> Flow matching <a class="cite" href="#ref-flowmatch">[24]</a> and rectified flow <a class="cite" href="#ref-rectflow">[2]</a> regress velocity fields
-along straight paths between two distributions, and stochastic interpolants <a class="cite" href="#ref-interp">[25]</a> add a noise term along the path. Where standard
+<p><b>Flow matching and constrained optimization.</b> Flow matching <a class="cite" href="#ref-flowmatch">[23]</a> and rectified flow <a class="cite" href="#ref-rectflow">[2]</a> regress velocity fields
+along straight paths between two distributions, and stochastic interpolants <a class="cite" href="#ref-interp">[24]</a> add a noise term along the path. Where standard
 rectified flows transport Gaussian noise to data, IntentFlow starts from an informative source, the reference framed into the target, and
 an added piece starts from a designer's pose of its category next to its anchor; sampling uses 100 Euler steps. The
-backbone is a permutation-equivariant transformer <a class="cite" href="#ref-transformer">[26]</a>. Rather than relying on soft penalty losses during generation, we decouple
+backbone is a permutation-equivariant transformer <a class="cite" href="#ref-transformer">[25]</a>. Rather than relying on soft penalty losses during generation, we decouple
 physical validity from learning: non-penetration, containment, door clearance and reachability are resolved by an augmented Lagrangian
 solver <a class="cite" href="#ref-al">[3]</a>, which projects each sample onto the non-convex feasible set.</p>
 
@@ -201,7 +207,7 @@ feasible; the one kept has the highest log-probability, −1.37.</p>
 <h3>3.1. Problem formulation and arrangement distance</h3>
 <p><b>Problem definition.</b> A reference room is a set of \(N\) placed pieces \(A=\{(c_i,s_i,p_i,\theta_i,k_i)\}_{i=1}^N\), where
 \(c_i\) is the category, \(s_i\in\mathbb R^3_{>0}\) the size of the bounding box, \(p_i\in\mathbb R^2\) the floor position,
-\(\theta_i\in[-\pi,\pi)\) the yaw and \(k_i\) a 3D-FUTURE asset <a class="cite" href="#ref-future">[12]</a>. The empty target room \(B\) is a simple polygon \(P_B\) with
+\(\theta_i\in[-\pi,\pi)\) the yaw and \(k_i\) a 3D-FUTURE asset <a class="cite" href="#ref-future">[26]</a>. The empty target room \(B\) is a simple polygon \(P_B\) with
 the segments of its doors and windows; the doors' clearance boxes \(\mathcal D\) enter the projection (Eq. 7). Optionally a target style
 and a degree of change \(\lambda\in[0,1]\) are given. The output is a layout \(\{(c'_j,s'_j,p'_j,\theta'_j,k'_j)\}_{j=1}^{N'}\) in
 \(P_B\) that keeps the groupings, orientations and wall relations of \(A\), with pieces dropped, changed to another category of their kind
@@ -239,13 +245,13 @@ distance asked for between the designer's layout and \(A\) — in training the p
 reference's arrangement; the plan heads read it as unknown, as in their training. A reference slot also receives its own reference piece's token, an added slot its anchor's token, and every slot a
 7×7 occupancy view of the target's floor around its current position; the log areas of both rooms are added to every token and the flow
 time to the slot tokens.</p>
-<p><b>Relational attention bias.</b> The reference's pairwise geometry enters the attention logits <a class="cite" href="#ref-graphormer">[20]</a>: for every head \(h\),
+<p><b>Relational attention bias.</b> The reference's pairwise geometry enters the attention logits <a class="cite" href="#ref-graphormer">[12]</a>: for every head \(h\),
 \(\operatorname{softmax}\big(QK^\top/\sqrt{d_k}+B^{(h)}\big)\) with \(B^{(h)}_{ij}=\mathrm{MLP}(e_{ij})_h\) for two pieces of
 \(A\), where \(e_{ij}\) holds \(j\)'s offset in \(i\)'s frame, their relative yaw and their distance. The trunk (Fig. 3)
 has 8 pre-norm blocks of width 256 with 8 heads (8,242,339 parameters) and is permutation-equivariant;
 the answer never enters an input.</p>
-<p><b>Rectified flow on layouts.</b> Placement is a rectified flow <a class="cite" href="#ref-rectflow">[2]</a> <a class="cite" href="#ref-flowmatch">[24]</a> from the framed reference \(x_0\) to the
-designer's layout \(x_1\), with a stochastic-interpolant noise term <a class="cite" href="#ref-interp">[25]</a> (\(\eta=1\)):</p>
+<p><b>Rectified flow on layouts.</b> Placement is a rectified flow <a class="cite" href="#ref-rectflow">[2]</a> <a class="cite" href="#ref-flowmatch">[23]</a> from the framed reference \(x_0\) to the
+designer's layout \(x_1\), with a stochastic-interpolant noise term <a class="cite" href="#ref-interp">[24]</a> (\(\eta=1\)):</p>
 $$\begin{gathered}x_t=(1-t)\,x_0+t\,x_1+\eta\sin^2(\pi t)\,\varepsilon,\qquad u_t=x_1-x_0+\eta\,\pi\sin(2\pi t)\,\varepsilon,\qquad \varepsilon\sim\mathcal N(0,I),\\
 \mathcal L_\text{FM}=\mathbb E_{t,(A,B),\varepsilon}\Big[\big\lVert v_\vartheta(x_t,t\mid A,B)-u_t\big\rVert^2_{\text{exist, category}}+\big\lVert v_\vartheta(x_t,t\mid A,B)-u_t\big\rVert^2_{\text{box}}\Big],\end{gathered}\tag{4}$$
 <p>the existence-and-category part and the box part averaged separately. In training, the source is the framed reference perturbed by one
@@ -384,7 +390,7 @@ reference (§5.6): the appearance follows the target style while the arrangement
 
 <h2 id="data">4. Data and Training</h2>
 <p><b>Corpus.</b> We use 3D-FRONT <a class="cite" href="#ref-front">[1]</a> rooms with 3 to 24 pieces after removing ceiling and pendant lamps, none more than 20% outside
-the room, and the 3D-FUTURE assets <a class="cite" href="#ref-future">[12]</a>, split by house into training, validation and test (80 / 10 / 10%). No model sees validation or
+the room, and the 3D-FUTURE assets <a class="cite" href="#ref-future">[26]</a>, split by house into training, validation and test (80 / 10 / 10%). No model sees validation or
 test rooms in training, and training rooms whose design reappears in the validation or test split are removed.</p>
 <p><b>Real designer pairs.</b> The training set has 68,958 pairs (293 validation), in four kinds. Partner pairs
 (6,480) are rooms of the same type from different homes whose category-family sets have Jaccard similarity above 0.6
@@ -398,7 +404,7 @@ applied to pairs whose arrangement the designer kept (\(D&lt;0.15\)) and to the 
 such pairs, and rows are reweighted to balance the area ratios (bins at 0.7, 0.9, 1.1, 1.44, 2.0).</p>
 <p><b>Masked rooms.</b> Real pairs rarely tell where a missing piece belongs in this very room. With probability 0.7 a self pair becomes a
 completion row: 1 to 30% of its pieces (at most 8) are removed from \(A\) and become \(B\)'s added pieces at their own poses, so the
-model learns which piece a room lacks and where it belongs <a class="cite" href="#ref-mae">[23]</a>.</p>
+model learns which piece a room lacks and where it belongs <a class="cite" href="#ref-mae">[22]</a>.</p>
 <p><b>Label fixes.</b> The corpus preprocessing had merged two 3D-FUTURE fine categories into other classes: footstools (“Footstool /
 Sofastool / Bed End Stool / Stool”) were labelled double bed, and bookcases wardrobe. We relabel them stool and bookcase. Category changes
 and asset retrieval stay within these labels.</p>
@@ -673,12 +679,12 @@ designers add them, matching designers' rooms when the target's designer chose a
 walls and groups in irregular rooms remain open.</p>
 
 <h2 id="refs">References</h2>
-<div class="refs"><ol class="refs"><li id="ref-front">H. Fu et al. 3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics. ICCV 2021.</li><li id="ref-rectflow">X. Liu, C. Gong, Q. Liu. Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow. ICLR 2023.</li><li id="ref-al">J. Nocedal, S. J. Wright. Numerical Optimization, 2nd ed., ch. 17 (augmented Lagrangian methods). Springer 2006.</li><li id="ref-legonet">Q. A. Wei, S. Ding, J. J. Park, R. Sajnani, A. Poulenard, S. Sridhar, L. Guibas. LEGO-Net: Learning Regular Rearrangements of Objects in Rooms. CVPR 2023.</li><li id="ref-midiffusion">S. Hu, D. M. Arroyo, S. Debats, F. Manhardt, L. Carlone, F. Tombari. Mixed Diffusion for 3D Indoor Scene Synthesis (MiDiffusion). arXiv 2405.21066, 2024.</li><li id="ref-physcene">Y. Yang, B. Jia, P. Zhi, S. Huang. PhyScene: Physically Interactable 3D Scene Synthesis for Embodied AI. CVPR 2024.</li><li id="ref-atiss">D. Paschalidou, A. Kar, M. Shugrina, K. Kreis, A. Geiger, S. Fidler. ATISS: Autoregressive Transformers for Indoor Scene Synthesis. NeurIPS 2021.</li><li id="ref-sceneformer">X. Wang, C. Yeshwanth, M. Nießner. SceneFormer: Indoor Scene Generation with Transformers. 3DV 2021.</li><li id="ref-diffuscene">J. Tang, Y. Nie, L. Markhasin, A. Dai, J. Thies, M. Nießner. DiffuScene: Denoising Diffusion Models for Generative Indoor Scene Synthesis. CVPR 2024.</li><li id="ref-yu">L.-F. Yu, S.-K. Yeung, C.-K. Tang, D. Terzopoulos, T. F. Chan, S. J. Osher. Make It Home: Automatic Optimization of Furniture Arrangement. SIGGRAPH 2011.</li><li id="ref-merrell">P. Merrell, E. Schkufza, Z. Li, M. Agrawala, V. Koltun. Interactive Furniture Layout Using Interior Design Guidelines. SIGGRAPH 2011.</li><li id="ref-future">H. Fu et al. 3D-FUTURE: 3D Furniture Shape with TextURE. IJCV 2021.</li><li id="ref-graph2scene">H. Dhamo, F. Manhardt, N. Navab, F. Tombari. Graph-to-3D: End-to-End Generation and Manipulation of 3D Scenes Using Scene Graphs. ICCV 2021.</li><li id="ref-instructscene">C. Lin, Y. Mu. InstructScene: Instruction-Driven 3D Indoor Scene Synthesis with Semantic Graph Prior. ICLR 2024.</li><li id="ref-layoutgpt">W. Feng et al. LayoutGPT: Compositional Visual Planning and Generation with Large Language Models. NeurIPS 2023.</li><li id="ref-holodeck">Y. Yang et al. Holodeck: Language Guided Generation of 3D Embodied AI Environments. CVPR 2024.</li><li id="ref-layoutvlm">F.-Y. Sun et al. LayoutVLM: Differentiable Optimization of 3D Layout via Vision-Language Models. CVPR 2025.</li><li id="ref-fisher">M. Fisher, D. Ritchie, M. Savva, T. Funkhouser, P. Hanrahan. Example-based Synthesis of 3D Object Arrangements. SIGGRAPH Asia 2012.</li><li id="ref-planit">K. Wang, Y.-A. Lin, B. Weissmann, M. Savva, A. X. Chang, D. Ritchie. PlanIT: Planning and Instantiating Indoor Scenes with Relation Graph and Spatial Prior Networks. SIGGRAPH 2019.</li><li id="ref-graphormer">C. Ying et al. Do Transformers Really Perform Badly for Graph Representation? (Graphormer). NeurIPS 2021.</li><li id="ref-deepsets">M. Zaheer, S. Kottur, S. Ravanbakhsh, B. Poczos, R. Salakhutdinov, A. Smola. Deep Sets. NeurIPS 2017.</li><li id="ref-settransformer">J. Lee, Y. Lee, J. Kim, A. Kosiorek, S. Choi, Y. W. Teh. Set Transformer. ICML 2019.</li><li id="ref-mae">K. He, X. Chen, S. Xie, Y. Li, P. Dollár, R. Girshick. Masked Autoencoders Are Scalable Vision Learners. CVPR 2022.</li><li id="ref-flowmatch">Y. Lipman, R. T. Q. Chen, H. Ben-Hamu, M. Nickel, M. Le. Flow Matching for Generative Modeling. ICLR 2023.</li><li id="ref-interp">M. S. Albergo, N. M. Boffi, E. Vanden-Eijnden. Stochastic Interpolants: A Unifying Framework for Flows and Diffusions. arXiv 2303.08797, 2023.</li><li id="ref-transformer">A. Vaswani et al. Attention Is All You Need. NeurIPS 2017.</li><li id="ref-adam">D. P. Kingma, J. Ba. Adam: A Method for Stochastic Optimization. ICLR 2015.</li><li id="ref-ppmi">O. Levy, Y. Goldberg. Neural Word Embedding as Implicit Matrix Factorization. NeurIPS 2014.</li><li id="ref-clip">A. Radford et al. Learning Transferable Visual Models From Natural Language Supervision. ICML 2021.</li><li id="ref-infonce">A. van den Oord, Y. Li, O. Vinyals. Representation Learning with Contrastive Predictive Coding. arXiv 1807.03748, 2018.</li><li id="ref-supcon">P. Khosla et al. Supervised Contrastive Learning. NeurIPS 2020.</li><li id="ref-hungarian">H. W. Kuhn. The Hungarian Method for the Assignment Problem. Naval Research Logistics Quarterly, 1955.</li><li id="ref-adamw">I. Loshchilov, F. Hutter. Decoupled Weight Decay Regularization. ICLR 2019.</li><li id="ref-onecycle">L. N. Smith, N. Topin. Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates. 2019.</li><li id="ref-fid">M. Heusel, H. Ramsauer, T. Unterthiner, B. Nessler, S. Hochreiter. GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium. NeurIPS 2017.</li><li id="ref-kid">M. Bińkowski, D. J. Sutherland, M. Arbel, A. Gretton. Demystifying MMD GANs. ICLR 2018.</li><li id="ref-cleanfid">G. Parmar, R. Zhang, J.-Y. Zhu. On Aliased Resizing and Surprising Subtleties in GAN Evaluation. CVPR 2022.</li><li id="ref-bootstrap">B. Efron, R. J. Tibshirani. An Introduction to the Bootstrap. Chapman &amp; Hall 1993.</li><li id="ref-calib">C. Guo, G. Pleiss, Y. Sun, K. Q. Weinberger. On Calibration of Modern Neural Networks. ICML 2017.</li></ol></div>
+<div class="refs"><ol class="refs"><li id="ref-front">H. Fu et al. 3D-FRONT: 3D Furnished Rooms with layOuts and semaNTics. ICCV 2021.</li><li id="ref-rectflow">X. Liu, C. Gong, Q. Liu. Flow Straight and Fast: Learning to Generate and Transfer Data with Rectified Flow. ICLR 2023.</li><li id="ref-al">J. Nocedal, S. J. Wright. Numerical Optimization, 2nd ed., ch. 17 (augmented Lagrangian methods). Springer 2006.</li><li id="ref-legonet">Q. A. Wei, S. Ding, J. J. Park, R. Sajnani, A. Poulenard, S. Sridhar, L. Guibas. LEGO-Net: Learning Regular Rearrangements of Objects in Rooms. CVPR 2023.</li><li id="ref-midiffusion">S. Hu, D. M. Arroyo, S. Debats, F. Manhardt, L. Carlone, F. Tombari. Mixed Diffusion for 3D Indoor Scene Synthesis (MiDiffusion). arXiv 2405.21066, 2024.</li><li id="ref-physcene">Y. Yang, B. Jia, P. Zhi, S. Huang. PhyScene: Physically Interactable 3D Scene Synthesis for Embodied AI. CVPR 2024.</li><li id="ref-atiss">D. Paschalidou, A. Kar, M. Shugrina, K. Kreis, A. Geiger, S. Fidler. ATISS: Autoregressive Transformers for Indoor Scene Synthesis. NeurIPS 2021.</li><li id="ref-sceneformer">X. Wang, C. Yeshwanth, M. Nießner. SceneFormer: Indoor Scene Generation with Transformers. 3DV 2021.</li><li id="ref-diffuscene">J. Tang, Y. Nie, L. Markhasin, A. Dai, J. Thies, M. Nießner. DiffuScene: Denoising Diffusion Models for Generative Indoor Scene Synthesis. CVPR 2024.</li><li id="ref-yu">L.-F. Yu, S.-K. Yeung, C.-K. Tang, D. Terzopoulos, T. F. Chan, S. J. Osher. Make It Home: Automatic Optimization of Furniture Arrangement. SIGGRAPH 2011.</li><li id="ref-merrell">P. Merrell, E. Schkufza, Z. Li, M. Agrawala, V. Koltun. Interactive Furniture Layout Using Interior Design Guidelines. SIGGRAPH 2011.</li><li id="ref-graphormer">C. Ying et al. Do Transformers Really Perform Badly for Graph Representation? (Graphormer). NeurIPS 2021.</li><li id="ref-graph2scene">H. Dhamo, F. Manhardt, N. Navab, F. Tombari. Graph-to-3D: End-to-End Generation and Manipulation of 3D Scenes Using Scene Graphs. ICCV 2021.</li><li id="ref-instructscene">C. Lin, Y. Mu. InstructScene: Instruction-Driven 3D Indoor Scene Synthesis with Semantic Graph Prior. ICLR 2024.</li><li id="ref-layoutgpt">W. Feng et al. LayoutGPT: Compositional Visual Planning and Generation with Large Language Models. NeurIPS 2023.</li><li id="ref-holodeck">Y. Yang et al. Holodeck: Language Guided Generation of 3D Embodied AI Environments. CVPR 2024.</li><li id="ref-layoutvlm">F.-Y. Sun et al. LayoutVLM: Differentiable Optimization of 3D Layout via Vision-Language Models. CVPR 2025.</li><li id="ref-fisher">M. Fisher, D. Ritchie, M. Savva, T. Funkhouser, P. Hanrahan. Example-based Synthesis of 3D Object Arrangements. SIGGRAPH Asia 2012.</li><li id="ref-planit">K. Wang, Y.-A. Lin, B. Weissmann, M. Savva, A. X. Chang, D. Ritchie. PlanIT: Planning and Instantiating Indoor Scenes with Relation Graph and Spatial Prior Networks. SIGGRAPH 2019.</li><li id="ref-deepsets">M. Zaheer, S. Kottur, S. Ravanbakhsh, B. Poczos, R. Salakhutdinov, A. Smola. Deep Sets. NeurIPS 2017.</li><li id="ref-settransformer">J. Lee, Y. Lee, J. Kim, A. Kosiorek, S. Choi, Y. W. Teh. Set Transformer. ICML 2019.</li><li id="ref-mae">K. He, X. Chen, S. Xie, Y. Li, P. Dollár, R. Girshick. Masked Autoencoders Are Scalable Vision Learners. CVPR 2022.</li><li id="ref-flowmatch">Y. Lipman, R. T. Q. Chen, H. Ben-Hamu, M. Nickel, M. Le. Flow Matching for Generative Modeling. ICLR 2023.</li><li id="ref-interp">M. S. Albergo, N. M. Boffi, E. Vanden-Eijnden. Stochastic Interpolants: A Unifying Framework for Flows and Diffusions. arXiv 2303.08797, 2023.</li><li id="ref-transformer">A. Vaswani et al. Attention Is All You Need. NeurIPS 2017.</li><li id="ref-future">H. Fu et al. 3D-FUTURE: 3D Furniture Shape with TextURE. IJCV 2021.</li><li id="ref-adam">D. P. Kingma, J. Ba. Adam: A Method for Stochastic Optimization. ICLR 2015.</li><li id="ref-ppmi">O. Levy, Y. Goldberg. Neural Word Embedding as Implicit Matrix Factorization. NeurIPS 2014.</li><li id="ref-clip">A. Radford et al. Learning Transferable Visual Models From Natural Language Supervision. ICML 2021.</li><li id="ref-infonce">A. van den Oord, Y. Li, O. Vinyals. Representation Learning with Contrastive Predictive Coding. arXiv 1807.03748, 2018.</li><li id="ref-supcon">P. Khosla et al. Supervised Contrastive Learning. NeurIPS 2020.</li><li id="ref-hungarian">H. W. Kuhn. The Hungarian Method for the Assignment Problem. Naval Research Logistics Quarterly, 1955.</li><li id="ref-adamw">I. Loshchilov, F. Hutter. Decoupled Weight Decay Regularization. ICLR 2019.</li><li id="ref-onecycle">L. N. Smith, N. Topin. Super-Convergence: Very Fast Training of Neural Networks Using Large Learning Rates. 2019.</li><li id="ref-fid">M. Heusel, H. Ramsauer, T. Unterthiner, B. Nessler, S. Hochreiter. GANs Trained by a Two Time-Scale Update Rule Converge to a Local Nash Equilibrium. NeurIPS 2017.</li><li id="ref-kid">M. Bińkowski, D. J. Sutherland, M. Arbel, A. Gretton. Demystifying MMD GANs. ICLR 2018.</li><li id="ref-cleanfid">G. Parmar, R. Zhang, J.-Y. Zhu. On Aliased Resizing and Surprising Subtleties in GAN Evaluation. CVPR 2022.</li><li id="ref-bootstrap">B. Efron, R. J. Tibshirani. An Introduction to the Bootstrap. Chapman &amp; Hall 1993.</li><li id="ref-calib">C. Guo, G. Pleiss, Y. Sun, K. Q. Weinberger. On Calibration of Modern Neural Networks. ICML 2017.</li></ol></div>
 
 <h2 id="appendix">Appendix</h2>
 <h3>A. Implementation details</h3>
 <div class="tw"><table class="impl"><thead><tr><th>component</th><th>setting</th></tr></thead><tbody>
-<tr><td>corpus</td><td>3D-FRONT <a class="cite" href="#ref-front">[1]</a>, 3–24 pieces after removing ceiling and pendant lamps, none more than 20% outside; house-disjoint split 80 / 10 / 10%; assets 3D-FUTURE <a class="cite" href="#ref-future">[12]</a></td></tr>
+<tr><td>corpus</td><td>3D-FRONT <a class="cite" href="#ref-front">[1]</a>, 3–24 pieces after removing ceiling and pendant lamps, none more than 20% outside; house-disjoint split 80 / 10 / 10%; assets 3D-FUTURE <a class="cite" href="#ref-future">[26]</a></td></tr>
 <tr><td>network</td><td>transformer, 8 layers, width 256, 8 heads, feed-forward 1024, pre-norm, GELU; 8,242,339 parameters</td></tr>
 <tr><td>slots and tokens</td><td>24 reference + 8 added slots (79-d: existence, 38 categories, log size, elevation, position, cos / sin yaw, 32-d appearance); up to 24 wall segments and 8 openings per room; condition token with the room type and the relation distance asked for</td></tr>
 <tr><td>flow</td><td>source noise \(\sigma_p\sim|\mathcal N(0,0.15)|\), \(\sigma_\theta\sim|\mathcal N(0,\pi/4)|\) per scene (training); interpolant noise \(\eta=1\); 100 Euler steps</td></tr>
