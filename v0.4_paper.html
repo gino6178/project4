@@ -53,35 +53,32 @@
 </style>
 </head>
 <body><div class="wrap">
-<h1>IntentFlow: Reference-to-Room Arrangement Transfer Learned from Designers' Room Pairs</h1>
+<h1>IntentFlow: Geometry-Preserving Arrangement Transfer via Rectified Flow and Constrained Feasibility Projection</h1>
 <div class="authors">Anonymous submission</div>
 <div class="links"><a href="#method">Method</a><a href="#experiments">Experiments</a><a href="#refs">References</a><a href="#appendix">Appendix</a></div>
 <figure id="fig-teaser"><img src="v04/teaser3d.png" alt="teaser"><figcaption><strong>Figure 1.</strong> Moving a room's arrangement into another floor plan: for each room type, the test-split target whose relation distance \(D\) is the median of IntentFlow's on that type (not selected by appearance). Columns: the reference, IntentFlow, LEGO-Net, PhyScene, MiDiffusion; 3D-FUTURE assets, doors red, windows blue. PhyScene and MiDiffusion generate their own arrangement; LEGO-Net keeps the pieces but leaves some outside the room.</figcaption></figure>
 
-<div class="abstract"><b>Abstract.</b> Reference-to-room arrangement transfer aims to retarget a reference room's furniture layout into an
-empty target room with a different scale, boundary, and door/window configuration, while preserving the functional groupings and spatial
-intent of the original design. An interior designer performing this task jointly determines what to keep, drop, or substitute under space
-constraints and what to add when the room grows, and rearranges pieces to respect wall relations and passages. We present IntentFlow, a
-framework that learns these decisions from 68,958 pairs of real 3D-FRONT rooms <a class="cite" href="#ref-front">[1]</a> — rooms that share furniture, rooms a
-designer furnished smaller or larger from the same set, and rooms with part of their furniture masked out — and leaves to rules only
-physics, with tolerances measured in real rooms. Conditioned on the reference framed into the target and on the target's walls and
-openings, a single transformer trunk drives a rectified-flow <a class="cite" href="#ref-rectflow">[2]</a> velocity head that transports the furniture to its new place,
-while a state head (delete / keep / add), two hotspot maps (where designers delete and add) and a next-action head edit the furniture set
-one step at a time. How many pieces a smaller room loses is set by no rule: among 16 candidate edit plans, the
-most probable one that the feasibility projection can resolve is kept. A mesh-level augmented Lagrangian projection \(\Pi_\theta\) <a class="cite" href="#ref-al">[3]</a>
-enforces non-penetration, containment, door clearance and reachability while restoring what the reference prescribes — its touching
-groups, its wall contacts and its angles. By disentangling arrangement from appearance, a style head with one degree of change
-\(\lambda\) swaps the 3D assets towards a target style with small layout distortion (\(D\le0.034\)). Evaluated on a frozen
-held-out test split of 700 rescaled and reshaped targets, IntentFlow keeps 0.69 of the reference's close relations at a
-relation distance of \(D=0.059\), significantly outperforming LEGO-Net <a class="cite" href="#ref-legonet">[4]</a> (0.51 / 0.149),
+<div class="abstract"><b>Abstract.</b> Transferring an established interior arrangement from a reference room to an empty target room —
+under arbitrary scaling, non-congruent polygonal boundaries, and mismatched door/window configurations — requires joint continuous spatial
+retargeting and discrete furniture editing while preserving relational design intent. Existing generative scene synthesizers either sample
+layouts from scratch or violate hard architectural boundaries through their regression errors. We present <b>IntentFlow</b>, a framework
+that unifies discrete set editing, continuous generative transport, and constrained geometric optimization. Conditioned on the framed
+reference and the architectural boundaries, a single transformer trunk drives a state head, delete and add hotspots, and a sequential
+next-action policy, learned from 68,958 pairs of real 3D-FRONT rooms <a class="cite" href="#ref-front">[1]</a>. A rectified-flow <a class="cite" href="#ref-rectflow">[2]</a> velocity head
+transports the retargeted furniture, and discrete spatial adaptation is formulated as constrained decoding over 16
+candidate edit plans, which resolves capacity limits without hand-crafted density budgets. To satisfy hard architectural boundaries without
+diluting the learned intent, an augmented Lagrangian projection \(\Pi_\theta\) <a class="cite" href="#ref-al">[3]</a> enforces mesh-level non-penetration, containment,
+door clearance and reachability on the non-convex feasible set, with top-view overlap allowances measured in real rooms, while restoring the
+reference-prescribed groups, wall contacts and orientations. A style head disentangles spatial arrangement from visual appearance, enabling
+stylistic asset substitution with small layout drift (\(D\le0.034\)). On a frozen held-out benchmark of 700
+rescaled and reshaped targets, IntentFlow reaches the lowest relation distance of the compared methods, \(D=0.059\), and retains
+0.69 of the reference's close relations, outperforming LEGO-Net <a class="cite" href="#ref-legonet">[4]</a> (0.51 / 0.149),
 MiDiffusion <a class="cite" href="#ref-midiffusion">[5]</a> (0.26 / 0.300) and PhyScene <a class="cite" href="#ref-physcene">[6]</a>
-(0.15 / 0.348; all p&lt;0.001), while leaving only 0.2% of pieces out of the room
-(10.8%–13.0%). On
-visual realism by PhyScene's metrics against the split's real rooms, its layouts have the lowest FID / KID of the compared methods
-(15.6 / 5.12) and the highest walkable / reachable shares (0.967 /
-0.957); on 285 real designer pairs, MiDiffusion, which generates its own arrangement, is closer to
-the designers' rooms by FID, KID and SCA. The complete pipeline runs in 6.5 s median per target on one
-GPU.</div>
+(0.15 / 0.348; all p&lt;0.001). IntentFlow leaves 0.2% of its pieces outside the room
+(10.8%–13.0% for the
+baselines), has the lowest FID / KID of the compared methods against the split's real rooms on these targets (15.6 /
+5.12), the highest walkable / reachable shares (0.967 / 0.957), and runs in
+6.5 s median per target on a single GPU.</div>
 
 <h2 id="intro">1. Introduction</h2>
 <p>When furnishing a new living space, occupants frequently seek to transfer a proven interior arrangement from a reference home into
