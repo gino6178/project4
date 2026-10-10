@@ -100,6 +100,13 @@ pieces of the category; 132 cases), and within one category across pairs
 <p>Within a pair the policy ranks the pieces as well as the category frequency; neither separates pieces of the same category in one room.
 Across rooms, the policy separates the dropped pieces of a category from the kept ones (AUC 0.63, 95% interval
 [0.60, 0.67]), which a per-category table cannot; the room's size change alone reaches 0.59.</p>
+<h2>S4. Runtime</h2>
+<p class="tcap"><b>Table S8.</b> Seconds per target on one NVIDIA A100 40GB (Google Cloud a2-highgpu-4g), 126 test-split
+targets, one target at a time.</p>
+<div class="tw"><table><thead><tr><th>path</th><th>features, plan heads, flow</th><th>\(\Pi_\theta\) of the plan (with further deletions, GPU)</th><th>choice</th><th>reachability rounds</th><th>other</th><th>total (mean)</th><th>total median / p90</th></tr></thead><tbody><tr class="ours"><td>IntentFlow, 100 Euler steps</td><td>1.27</td><td>0.50</td><td>0.00</td><td>0.98</td><td>0.01</td><td>2.76</td><td>1.85 / 5.38</td></tr></tbody></table></div>
+<p>A target takes 1.85 s median (5.38 s at the 90th percentile): 1.27 s for the
+transformer readings and the flow, 0.50 s for the projection of the plan (and of its further deletions where needed),
+and 0.98 s for the reachability rounds.</p>
 <footer>IntentFlow v0.5 supplementary material. Every number on this page is read from the evaluation files of the final model; the page is
 generated, not edited.</footer>
 </div></body></html>
